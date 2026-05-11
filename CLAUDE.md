@@ -1,4 +1,4 @@
-# Study Agent
+# LearnKit
 ## General-Purpose University Course Study Assistant
 
 ---
@@ -31,7 +31,7 @@ Governs every response, study guide, quiz, summary.
 ## SECTION 2 — PROJECT IDENTITY
 
 ```
-Agent name  : Study Agent
+Agent name  : LearnKit
 Shell       : PowerShell
 Python pkgs : pdfplumber, python-pptx, python-docx
 
@@ -107,7 +107,7 @@ Test-Path $savedataRoot
 ```
 Missing → print new-user banner and STOP (do not run Steps 2–5):
 ```
-Study Agent — Welcome
+LearnKit — Welcome
 ──────────────────────────────────────────────────────
 No study data found. Run /setup to get started.
   /setup will configure Python, create your savedata/ folder,
@@ -136,14 +136,14 @@ Fails → warn, don't block:
 
 No active courses:
 ```
-Study Agent — Ready{if $userName: " · {$userName}"}
+LearnKit — Ready{if $userName: " · {$userName}"}
 No courses loaded yet.
 Drop a syllabus into savedata\raw\ or paste its path, then run /ingest to get started.
 ```
 
 Active courses exist:
 ```
-Study Agent — Ready{if $userName: " · {$userName}"}
+LearnKit — Ready{if $userName: " · {$userName}"}
 Active courses: N  |  Files waiting in raw\: N
 ──────────────────────────────────────────────────────────────
   [BIOL 201  ]  Units: 4/6  Progress: 62%  Next deadline: May 21 — Midterm 1 (10d) ← URGENT
@@ -857,7 +857,7 @@ $savedataRoot = Join-Path $projectRoot "savedata"
 ```
 Print:
 ```
-Study Agent — Setup
+LearnKit — Setup
 ──────────────────────────────────────────────────────
 Project root : {$projectRoot}
 savedata/    : {$savedataRoot}
@@ -917,7 +917,7 @@ Blank → use `"Student"` as default.
 **Step 5 — Savedata remote (optional private repo for sync)**
 ```
 Private repo for cross-machine sync (optional).
-This is YOUR personal private repo — separate from the public Study Agent framework repo.
+This is YOUR personal private repo — separate from the public LearnKit framework repo.
 
 Enter your savedata remote URL, or press Enter to skip:
   (e.g., https://github.com/yourname/my-study-data.git)
