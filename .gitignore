@@ -1,0 +1,22 @@
+# Per-user study data (each user manages their own private savedata repo)
+savedata/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temp extraction output
+scripts/tmp_extract.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~

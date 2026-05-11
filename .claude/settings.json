@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python*)",
+      "Bash(*python.exe*)",
+      "Bash(git*)",
+      "PowerShell(New-Item*)",
+      "PowerShell(Copy-Item*)",
+      "PowerShell(Move-Item*)",
+      "PowerShell(Remove-Item*)",
+      "PowerShell(Test-Path*)",
+      "PowerShell(Get-ChildItem*)",
+      "PowerShell(Set-Content*)",
+      "PowerShell(Get-Content*)",
+      "PowerShell(ConvertFrom-Json*)",
+      "PowerShell(ConvertTo-Json*)",
+      "PowerShell(Out-File*)",
+      "PowerShell(Rename-Item*)"
+    ]
+  }
+}
