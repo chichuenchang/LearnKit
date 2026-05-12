@@ -37,7 +37,7 @@ On confirm: **copy** into project. Never delete or move originals.
    - `announcement` — "announcement", "reminder", "please note", deadline language without study content
    - `other` — anything else
 
-4. **If syllabus**: Check if `course_structure.json` has units populated. No → run Section 7 (CLAUDE.md). Yes → offer to update.
+4. **If syllabus**: Check if `course_structure.json` has units populated. No → run **Syllabus Processing Branch** (below). Yes → offer to update.
 
 5. **Identify unit** (non-syllabus): Compare text vs `keywords` in all units of `course_structure.json`. Assign highest overlap (minimum 2 matches). File spans multiple units → ask:
    ```
@@ -108,6 +108,69 @@ On confirm: **copy** into project. Never delete or move originals.
    ```
 
 10. **Write log entries** after report. One entry per course (grouped) to both `data\activity_log.md` and each affected course's `activity_log.md`. See Section 11 of CLAUDE.md.
+
+---
+
+## Syllabus Processing Branch
+
+Entered from step 4 above when: file type = `syllabus` AND `course_structure.json` has no units.
+
+1. **Extract from syllabus text**:
+   - Course code and name
+   - Semester
+   - Instructor name
+   - Grading breakdown (components + weights)
+   - Unit/topic structure (week schedule → logical units)
+   - Exam/quiz schedule (titles, dates, times, locations, coverage)
+   - Assignment and lab deadlines
+
+2. **Build `course_structure.json`**: Map weeks → units. Extract 8-15 subject-specific keywords per unit (terminology, procedure names, key concepts). Drive course ID and unit assignment.
+
+3. **Initialize `progress.json`**: Per unit: `status: "not_started"`, `materials_ingested: 0`, `study_sessions: 0`, `quiz_history: []`, `weak_areas: []`, `confidence_level: 0`.
+
+4. **Write deadlines** to `data\global_deadlines.json`. Apply duplicate detection (Section 6 of CLAUDE.md).
+
+5. **Update `courses_index.json`** via `index update`: Set `syllabus_ingested: true`, `units_total`, `next_deadline_date`, `next_deadline_title`.
+
+6. **Write `courses\{slug}\materials\syllabus\course_overview.md`**:
+   ```markdown
+   # {Course Code} — {Course Name}
+   **Semester**: {semester} | **Instructor**: {instructor} | **Ingested**: {date}
+
+   ## Grading
+   | Component | Weight | Notes |
+   |-----------|--------|-------|
+   | {component} | {pct}% | |
+
+   ## Unit Structure
+   | Unit | Weeks | Topics | Exam |
+   |------|-------|--------|------|
+   | Unit 1: {name} | Week 1-3 | {topics} | Exam 1 |
+
+   ## Exam & Quiz Schedule
+   | Assessment | Covers | Date | Time | Location |
+   |------------|--------|------|------|----------|
+   | Exam 1 | Units 1-2 | May 21 | 10:00 | GH 150 |
+
+   ## Key Policies
+   [Attendance, late policy, exam format, anything that affects grades]
+   ```
+
+7. **Ensure `misc.md` and `activity_log.md` exist**: Course created inline (not via `/lkcourse add`) → create both using the `/lkcourse add` templates in Section 6 of CLAUDE.md (steps 6–7).
+
+8. **Confirm**:
+   ```
+   Syllabus processed — {course_code}
+   Units loaded   : {N}
+   Deadlines added: {N} ({breakdown, e.g. 2 exams, 1 lab practical, 1 assignment})
+   Next exam      : {title} on {date} ({N} days)
+   ```
+
+9. **Unclassified materials exist**: `"You have N unclassified files from before syllabus load. Re-classify now? [Y/n]"` Y → run unit identification against new keywords, move to correct folders.
+
+Return to main pipeline at step 7 (generate study notes) after branch completes.
+
+---
 
 **Edge cases:**
 - **Path doesn't exist**: `Test-Path` before processing → `"File not found: {path}" — skipped`

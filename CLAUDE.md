@@ -744,62 +744,8 @@ savedata/ already exists. What would you like to do?
 
 ## SECTION 7 — SYLLABUS PROCESSING
 
-Triggered: file classified as `syllabus` + course has no unit structure yet.
-
-### Steps:
-
-1. **Extract from syllabus text**:
-   - Course code and name
-   - Semester
-   - Instructor name
-   - Grading breakdown (components + weights)
-   - Unit/topic structure (week schedule → logical units)
-   - Exam/lkquiz schedule (titles, dates, times, locations, coverage)
-   - Assignment and lab deadlines
-
-2. **Build `course_structure.json`**: Map weeks → units. Extract 8-15 subject-specific keywords per unit (terminology, procedure names, key concepts). Drive course ID and unit assignment.
-
-3. **Initialize `progress.json`**: Per unit: `status: "not_started"`, `materials_ingested: 0`, `study_sessions: 0`, `quiz_history: []`, `weak_areas: []`, `confidence_level: 0`.
-
-4. **Write deadlines** to `data\global_deadlines.json`. Apply Section 6 duplicate detection.
-
-5. **Update `courses_index.json`**: Set `syllabus_ingested: true`, `units_total`, `next_deadline_date`, `next_deadline_title`.
-
-6. **Write `courses\{slug}\materials\syllabus\course_overview.md`**:
-   ```markdown
-   # {Course Code} — {Course Name}
-   **Semester**: {semester} | **Instructor**: {instructor} | **Ingested**: {date}
-
-   ## Grading
-   | Component | Weight | Notes |
-   |-----------|--------|-------|
-   | {component} | {pct}% | |
-
-   ## Unit Structure
-   | Unit | Weeks | Topics | Exam |
-   |------|-------|--------|------|
-   | Unit 1: {name} | Week 1-3 | {topics} | Exam 1 |
-
-   ## Exam & Quiz Schedule
-   | Assessment | Covers | Date | Time | Location |
-   |------------|--------|------|------|----------|
-   | Exam 1 | Units 1-2 | May 21 | 10:00 | GH 150 |
-
-   ## Key Policies
-   [Attendance, late policy, exam format, anything that affects grades]
-   ```
-
-7. **Ensure `misc.md` and `activity_log.md` exist**: Course created inline (not via `/lkcourse add`) → create both using Section 6 `/lkcourse add` templates (steps 6–7).
-
-8. **Confirm**:
-   ```
-   Syllabus processed — {course_code}
-   Units loaded   : {N}
-   Deadlines added: {N} ({breakdown, e.g. 2 exams, 1 lab practical, 1 assignment})
-   Next exam      : {title} on {date} ({N} days)
-   ```
-
-9. **Unclassified materials exist**: `"You have N unclassified files from before syllabus load. Re-classify now? [Y/n]"` Y → run unit identification against new keywords, move to correct folders.
+Triggered within `/lkingest` when file is classified as `syllabus` and course has no unit structure.
+Full spec in `.claude/commands/lkingest.md` — see "Syllabus Processing Branch" section.
 
 ---
 
