@@ -71,40 +71,13 @@ All relative paths like `data\`, `courses\`, `archive\`, `raw\` throughout this 
 
 ## SECTION 3 — STARTUP BEHAVIOR
 
-Run at start of every session.
+Run at start of every session. All checks informational only — never block startup.
 
-### Step 0 — Detect project root
-```powershell
-$projectRoot  = (git rev-parse --show-toplevel 2>$null)
-if (-not $projectRoot) { $projectRoot = (Get-Location).Path }
-$savedataRoot = Join-Path $projectRoot "savedata"
-$scriptsRoot  = Join-Path $projectRoot "scripts"
-```
+**Step 0**: Resolve `$projectRoot` (git rev-parse, fallback cwd) → derive `$savedataRoot`, `$scriptsRoot` (see Section 2).
 
-### Step 0.5 — Load config files
-```powershell
-$pythonExe = "python"
-$userName  = $null
-$machineConfig = Join-Path $savedataRoot "machine.config.json"
-$userConfig    = Join-Path $savedataRoot "user.config.json"
+**Step 0.5**: Read `machine.config.json` → `$pythonExe` (fallback `"python"`). Read `user.config.json` → `$userName`. Store for session — never re-read mid-session.
 
-if (Test-Path $machineConfig) {
-    $mc = Get-Content $machineConfig | ConvertFrom-Json
-    if ($mc.python_exe) { $pythonExe = $mc.python_exe }
-}
-if (Test-Path $userConfig) {
-    $uc = Get-Content $userConfig | ConvertFrom-Json
-    $userName = $uc.user_name
-}
-```
-
-Store `$pythonExe` for all Python calls this session. Never re-read configs mid-session.
-
-### Step 1 — Check savedata/ exists
-```powershell
-Test-Path $savedataRoot
-```
-Missing → print new-user banner and STOP (do not run Steps 2–5):
+**Step 1**: Check `$savedataRoot` exists. Missing → print banner and STOP:
 ```
 LearnKit — Welcome
 ──────────────────────────────────────────────────────
@@ -114,11 +87,7 @@ No study data found. Run /lksetup to get started.
 ──────────────────────────────────────────────────────
 ```
 
-### Step 2 — Verify Python environment
-```powershell
-& $pythonExe -c "import pdfplumber, pptx, docx; print('OK')"
-```
-Fails → warn, don't block:
+**Step 2**: Run `& $pythonExe -c "import pdfplumber, pptx, docx; print('OK')"`. Fails → warn, don't block:
 ```
 ⚠ Python packages not available — file ingestion will not work until resolved.
   Interpreter: {$pythonExe}
@@ -126,12 +95,9 @@ Fails → warn, don't block:
   Fix: pip install pdfplumber python-pptx python-docx  or  run /lksetup
 ```
 
-### Step 3 — Check raw\ for waiting files
-```powershell
-(Get-ChildItem (Join-Path $savedataRoot "raw") -File -ErrorAction SilentlyContinue).Count
-```
+**Step 3**: Count files in `$savedataRoot\raw\`.
 
-### Step 4 — Read courses_index.json and print status banner
+**Step 4**: Read `courses_index.json`, print banner. Sort by nearest deadline. `← URGENT` if ≤ 14 days.
 
 No active courses:
 ```
@@ -140,7 +106,7 @@ No courses loaded yet.
 Drop a syllabus into savedata\raw\ or paste its path, then run /lkingest to get started.
 ```
 
-Active courses exist:
+Active courses:
 ```
 LearnKit — Ready{if $userName: " · {$userName}"}
 Active courses: N  |  Files waiting in raw\: N
@@ -150,10 +116,6 @@ Active courses: N  |  Files waiting in raw\: N
 ──────────────────────────────────────────────────────────────
 Type /lkingest to process waiting files, /lkstudy or /lkquiz to study, /lkdeadlines for all deadlines.
 ```
-
-Sort by nearest deadline. raw\ has files → `"N file(s) waiting in raw\. Run /lkingest to process them."`
-
-All checks informational only. Never block startup.
 
 ---
 
