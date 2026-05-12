@@ -876,6 +876,35 @@ if (-not $result.success) {
 
 Output lands directly on stdout — no temp file, no cleanup needed. Same error-check pattern for all subcommands.
 
+### `data_writer.py` — complete subcommand reference
+
+Use these exact flags. Do not guess — wrong flags cause silent failure or ambiguous-option errors.
+
+| Subcommand | Required flags | Optional flags |
+|------------|---------------|----------------|
+| `progress quiz` | `--savedata --course --unit --score-pct --correct --total --incorrect` | `--skipped --partial --adaptive --weak-topics "a,b" --mcq "11/13" --sa "2/5"` |
+| `progress study` | `--savedata --course --unit` | — |
+| `progress ingest` | `--savedata --course --unit` | — |
+| `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
+| `deadline complete` | `--savedata --deadline-id` | — |
+| `index update` | `--savedata --course` | — |
+| `log entry` | `--savedata --entry` | `--course` (omit for global log only; include for both global + per-course) |
+| `manifest add` | `--savedata --course-id --course-code --filename --method --file-type --unit --confidence --filed-path --summary-path` | `--original-path --page-count --word-count` |
+
+**Flag notes:**
+- `--course` = course slug (e.g. `pther_350a`) — used by `progress`, `index update`, `log entry`
+- `--course-id` = course slug — used by `deadline add`, `manifest add`
+- `--course-code` = display code (e.g. `PTHER 350A`) — used by `deadline add`, `manifest add`
+- `deadline add` requires BOTH `--course-id` and `--course-code` (separate flags, not interchangeable)
+- `log entry --course slug` writes to BOTH global and per-course logs in one call
+- `log entry` without `--course` writes to global log only
+
+**Log entry format** — always prefix with type tag:
+```powershell
+--entry "[DEADLINE] PTHER 350A | Added: Term Quiz 1 on 2026-05-13"   # global
+--entry "[DEADLINE] Added: Term Quiz 1 on 2026-05-13" --course "pther_350a"  # both logs
+```
+
 ---
 
 ## SECTION 10 — BEHAVIORAL RULES
