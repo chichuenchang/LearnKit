@@ -42,8 +42,8 @@ PATH RESOLUTION (computed at startup Step 0 — never hardcoded):
   $pythonExe     = from savedata\machine.config.json → python_exe field, fallback "python"
 
 CONFIG FILES (under $savedataRoot — both gitignored from public repo):
-  user.config.json     — { user_name, savedata_remote }  ← committed to user's private savedata repo
-  machine.config.json  — { machine_id, python_exe }      ← NEVER committed anywhere
+  user.config.json     — { user_name }
+  machine.config.json  — { machine_id, python_exe }      ← never share or commit this
 
 GLOBAL DATA (under $savedataRoot\data\):
   courses_index.json        — master registry of all courses (active + archived)
@@ -54,7 +54,6 @@ GLOBAL DATA (under $savedataRoot\data\):
 PER-COURSE DATA (under $savedataRoot\courses\{course_slug}\):
   data\course_structure.json  — unit/exam map built from syllabus
   data\progress.json          — study progress and quiz history by unit
-  data\deadlines.json         — course-specific deadlines (subset of global)
   activity_log.md             — per-course log: events for that course only
   misc.md                     — free-form running log: deadline changes, instructor notes, anything important
   materials\{unit_slug}\      — study notes (.md files) + source files (source_*.*)
@@ -154,15 +153,6 @@ Type /ingest to process waiting files, /study or /quiz to study, /deadlines for 
 
 Sort by nearest deadline. raw\ has files → `"N file(s) waiting in raw\. Run /ingest to process them."`
 
-### Step 5 — Git sync check (savedata/)
-```powershell
-if (Test-Path (Join-Path $savedataRoot ".git")) {
-    $status = git -C $savedataRoot status --porcelain 2>$null
-    if ($status) {
-        Write-Host "⚠ Unsaved progress in savedata/ — run /sync to push to your private repo."
-    }
-}
-```
 All checks informational only. Never block startup.
 
 ---
@@ -334,9 +324,6 @@ Default empty: `{"course": null, "course_id": null, "built_from": null, "last_up
   "course": "BIOL 201",
   "course_id": "biol_201",
   "last_updated": "2026-05-11T00:00:00",
-  "overall_completion_pct": 33.0,
-  "study_streak_days": 3,
-  "last_study_date": "2026-05-10",
   "weak_areas_global": ["cell cycle phases", "membrane transport"],
   "units": {
     "unit_01_cell_structure": {
@@ -368,307 +355,24 @@ Default empty: `{"course": null, "course_id": null, "built_from": null, "last_up
 }
 ```
 Unit `status` progression: `not_started` → `in_progress` → `materials_complete` → `quiz_passed` → `mastered`
-Default empty: `{"course": null, "course_id": null, "last_updated": null, "overall_completion_pct": 0.0, "study_streak_days": 0, "last_study_date": null, "weak_areas_global": [], "units": {}}`
-
-### Per-course `data\deadlines.json`
-```json
-{
-  "course": "BIOL 201",
-  "course_id": "biol_201",
-  "last_updated": "2026-05-11T00:00:00",
-  "deadlines": [
-    {
-      "id": "dl_biol_201_001",
-      "type": "exam",
-      "title": "Midterm 1 — Cell Biology",
-      "date": "2026-05-21",
-      "time": "10:00",
-      "location": "GH 150",
-      "details": "Covers Units 1-2",
-      "source_date": "2026-05-11",
-      "completed": false
-    }
-  ]
-}
-```
-Default empty: `{"course": null, "course_id": null, "last_updated": null, "deadlines": []}`
+Default empty: `{"course": null, "course_id": null, "last_updated": null, "weak_areas_global": [], "units": {}}`
 
 ---
 
 ## SECTION 6 — COMMANDS AND WORKFLOWS
 
 ### `/ingest` — Process new course materials
-
-**Two input methods — same pipeline:**
-
-**Method A: `raw\` folder**
-Drop files in `savedata\raw\`, run `/ingest`. Move each file out after success.
-
-**Method B: Pasted paths (auto-detected)**
-Detect Windows absolute paths in any message → ask:
-```
-I see N file path(s) to ingest:
-  - C:\Users\{username}\Downloads\BIOL201_Week3_Slides.pptx
-  - C:\Users\{username}\Downloads\biol201_syllabus.pdf
-
-Ingest them now? [Y/n]
-```
-On confirm: **copy** into project. Never delete or move originals.
-
-**Shared pipeline for each file:**
-
-1. **Extract text**: Run `scripts\extract_text.py` (via $pythonExe and $scriptsRoot — see Section 9). Fails → report error and skip; don't continue with that file.
-
-2. **Identify course**: Section 4 logic.
-
-3. **Classify file type** from filename + first 2,000 chars:
-   - `syllabus` — "syllabus", "course outline", course code + "course"
-   - `lecture_slides` — "lecture", ".pptx", slide deck structure
-   - `lab_notes` — "lab", "laboratory"
-   - `practice_quiz` — "quiz", "practice questions", "sample questions"
-   - `exam_review` — "exam review", "study guide", "review sheet"
-   - `assignment` — "assignment", "submit", "due date"
-   - `announcement` — "announcement", "reminder", "please note", deadline language without study content
-   - `other` — anything else
-
-4. **If syllabus**: Check if `course_structure.json` has units populated. No → run Section 7. Yes → offer to update.
-
-5. **Identify unit** (non-syllabus): Compare text vs `keywords` in all units of `course_structure.json`. Assign highest overlap (minimum 2 matches). File spans multiple units → ask:
-   ```
-   "[filename]" appears to span multiple units.
-     Unit 1 — Cell Structure: 12 keyword matches
-     Unit 2 — Cell Cycle: 9 keyword matches
-     Unit 3 — Genetics: 7 keyword matches
-
-   Options:
-     [1] Assign to Unit 1 (highest overlap) — add cross-reference notes to Units 2 and 3
-     [2] File under multi_unit\ folder
-     [3] Assign to a specific unit (type unit ID):
-   ```
-   Option 1 → primary unit; add `_cross_ref_{slug}.md` in each other unit: `See also: [path to primary summary]`.
-   Option 2 → `courses\{slug}\materials\multi_unit\`. `/study` and `/quiz` for any relevant unit includes `multi_unit\` files.
-
-6. **Archive original**:
-   - `raw\` method: `Move-Item` from `$savedataRoot\raw\{filename}` → `$savedataRoot\courses\{slug}\materials\{unit_slug}\source_{slug}.{ext}`
-   - Path-paste: `Copy-Item` → same destination (original untouched)
-
-7. **Generate grade-focused study notes** → `courses\{slug}\materials\{unit_slug}\{type}_{slug}.md`
-   - First line: `**Source**: {filename} | **Unit**: {unit display name} | **Type**: {file_type} | **Ingested**: {date}`
-   - Apply Section 1 tagging per topic
-   - Group by learning objective if syllabus provides them
-   - Include "Key Terms" section with definitions tagged by exam probability
-   - Include "Likely Quiz/Exam Questions" section at end
-
-8. **Update data files**:
-   - Add entry to `data\materials_manifest.json`
-   - Update `units.{unit_slug}.materials_ingested` in `courses\{slug}\data\progress.json`
-   - Unit was `not_started` → advance to `in_progress`
-   - Recalculate `overall_completion_pct` in `progress.json`
-   - Recalculate `units_total` and `units_completed` in `courses_index.json`
-
-9. **Ingestion report**:
-   ```
-   Ingestion complete — 4 files processed
-   ──────────────────────────────────────────────────────
-   BIOL 201 — Introductory Cell Biology
-     ✓ biol201_syllabus.pdf         → syllabus (course structure loaded: 6 units)
-     ✓ Week3_CellCycle.pptx         → Unit 2 — lecture_slides (45 slides, 3,200 words)
-   COMP 361
-     ✓ lab_report_template.docx     → Unit 1 — assignment
-   Skipped
-     ✗ random_notes.txt             → could not identify course (user skipped)
-   ──────────────────────────────────────────────────────
-   ```
-
-10. **Write log entries** after report. One entry per course (grouped) to both `data\activity_log.md` and each affected course's `activity_log.md`. See Section 11.
-
-**Edge cases:**
-- **Path doesn't exist**: `Test-Path` before processing → `"File not found: {path}" — skipped`
-- **Unsupported type** (.xlsx, .zip, etc.): Report and skip.
-- **Python fails**: Report error, skip file, continue. First file fails with env error → stop and ask user to check Python path via `/setup`.
-- **No course structure**: Ingest but assign to `unclassified`. Note: `"No course structure for {course_code} — filed as unclassified. Ingest syllabus to enable unit assignment."`
+Full spec in `.claude/commands/ingest.md`. Handles `raw\` folder and pasted paths, text extraction, course/unit identification, note generation, data updates, and logging.
 
 ---
 
 ### `/study {course_code} {unit_id}` — Generate a study session
-
-Multiple active + no course → ask. Single active → assume.
-
-`{unit_id}`: `unit_01`, `unit_1`, `u1`, `"unit 1"`, or display name (fuzzy match).
-
-**Workflow:**
-
-1. Read `courses\{slug}\misc.md`. Has entries → show under `## Course Notes` before study content.
-2. Read all `.md` in `courses\{slug}\materials\{unit_slug}\` + relevant `multi_unit\` files.
-3. Check `progress.json` for unit's weak areas — address first.
-4. Check `deadlines.json` for next exam covering this unit — set urgency tone from date.
-
-**Output structure:**
-```
-# Study Session — [Course Code] Unit N: [Unit Name]
-[EXAM IN N DAYS — urgency if applicable]
-
-## Learning Objectives
-[From syllabus — each objective heads what follows]
-
-## [Topic from Learning Objective 1]
-[EXAM-CRITICAL] Fact stated exam-style...
-[LIKELY TESTED]  Fact...
-[LOW EXAM VALUE] One-line background only.
-
-## Key Terms
-| Term | Definition | Exam Probability |
-...
-
-## Weak Areas from Past Quizzes
-[If any — extra detail on these topics]
-
-## Likely Exam Questions on This Unit
-[5-10 probable questions — no answers, prompt recall only]
-```
-
-Write log entry to both `data\activity_log.md` and `courses\{slug}\activity_log.md`. See Section 11.
-
-**Web research**: Only if user explicitly asks.
-- Tier 1 (free): `.edu` and `.ac.uk` domains, PubMed/PMC, official textbook publisher sites (Elsevier, Springer, Wiley open-access), Wikipedia (definitions only — never for exam facts)
-- Tier 2 (with label): Any accredited academic source not in Tier 1 — label `[WEB — {domain}]`
-- Tier 3 (never): Reddit, Quizlet, Chegg, CourseHero, student blogs, Rate My Professor, any crowd-sourced content
-- Web differs from course materials → note: `"[Note: course materials say X; this source says Y — follow course materials for exams]"`
+Full spec in `.claude/commands/study.md`. Reads materials + misc.md, addresses weak areas, outputs tagged study content, logs session.
 
 ---
 
 ### `/quiz {course_code} {scope}` — Interactive adaptive quiz
-
-Multiple active + no course → ask. Quiz: **interactive — one question at a time**.
-
-**`{scope}` accepts:**
-- `unit_01` — single unit
-- `unit_01-unit_03` — contiguous range (inclusive)
-- `unit_01,unit_03,unit_05` — explicit list
-- `exam_1` — all units covered by exam (resolved from `course_structure.json` `exams[].units_covered`)
-
-**Resolving exam scope**: Look up by `exam_id` or fuzzy title. Use `units_covered` as unit list. Not found: `"No exam 'exam_1' in {course_code}. Available: [list]"`. Show resolved scope: `"Units 1–3 (Exam 1 scope)"`.
-
-No scope → ask.
-
----
-
-#### Step 0 — Pre-quiz setup (silent, before Q1)
-
-Read `courses\{slug}\misc.md`: scope changes or format notes → surface: `"Note from misc.md: [entry]"`.
-
-Read `courses\{slug}\activity_log.md`: find all past `### [QUIZ]` blocks for units in scope. Build unified topic weight table:
-- `miss_rate = total_misses / total_appearances` per topic
-- Recency: last session ×1.5 | two ago ×1.2 | older ×1.0
-- Weighted miss_rate > 0.5 → **HIGH**: 2–3× baseline questions
-- Weighted miss_rate = 0 last 2 sessions → **LOW**: 1 review question max
-- Never seen → **NEUTRAL**: baseline
-- No topic > 40% of total questions
-- Always ≥1 question per topic linked to next upcoming exam
-- `short_answer` accuracy < 60% → increase short-answer proportion
-
-**Question count:**
-- Single unit: 15–20
-- Multiple units: 8–12 per unit, cap 40. Exam ≤ 14 days → scale up.
-
-**Multi-unit material pooling**: Combine all `.md` from every unit in scope + `multi_unit\`. Distribute proportionally by volume, apply adaptive weights on top. Every unit gets ≥1 question.
-
-**Format**: Mirror ingested practice quiz if available. Default: ~70% MCQ, ~30% short answer.
-
----
-
-#### Step 1 — Quiz intro (print before Q1)
-
-Single unit:
-```
-Quiz — BIOL 201 | Unit 1: Cell Structure | 18 questions
-Adaptive: weighted toward cell cycle phases (missed 4/5 across 2 sessions), membrane transport (missed 3/4)
-Format: 13 MCQ + 5 short answer
-──────────────────────────────────────────────────────
-Commands during quiz: 'hint' (one clue, one per question) | 'skip' | 'end quiz' (save partial)
-```
-
-Multi-unit:
-```
-Quiz — BIOL 201 | Units 1–3 (Midterm 1 scope) | 25 questions
-Adaptive: weighted toward cell cycle phases ×1.8 (Unit 1), enzyme kinetics ×1.5 (Unit 2)
-Format: 17 MCQ + 8 short answer  |  Unit 1: 9q  Unit 2: 9q  Unit 3: 7q
-──────────────────────────────────────────────────────
-Commands during quiz: 'hint' (one clue, one per question) | 'skip' | 'end quiz' (save partial)
-```
-
-No prior history for any unit → `"Adaptive: baseline distribution (no prior quiz data)"`.
-
----
-
-#### Step 2 — Question loop (every question)
-
-```
-[Q3/18] What are the three stages of interphase?
-> _
-```
-MCQ → labelled options A–D. Short answer → blank prompt.
-
-Evaluate immediately after user replies:
-- **Correct**: `✓ Correct. [one-sentence exam reinforcement]  [EXAM-CRITICAL]`
-- **Incorrect**: `✗ Incorrect. Answer: [correct]. [explanation ≤2 sentences]  [tag]`
-- **Skipped**: `→ Skipped. Answer: [correct]. [explanation ≤1 sentence]`
-- **`hint`**: one-sentence clue, no answer. Mark `(H)`. One hint per question. Already used → `"Already gave a hint for this one."` Re-prompt same question after hint.
-- **Correct after hint**: counts ½ for topic weight (logged `✓(H)`)
-
-Any input (or blank) → next question.
-
----
-
-#### Step 3 — Results summary (after final Q or `end quiz`)
-
-Single unit:
-```
-────────────────────────────────────────────────────────
-Quiz Complete — BIOL 201 | Unit 1: Cell Structure
-Score: 14/18 (78%)  ✓ PASS  (threshold: 70%)
-
-Correct   (14): Q1, Q2, Q4, Q5, Q7, Q8, Q10–Q14, Q16, Q17
-Incorrect  (3): Q3 cell cycle phases | Q6 membrane transport | Q9 ATP synthesis
-Skipped    (1): Q18
-
-MCQ accuracy    : 12/13 (92%)
-Short answer    : 2/5 (40%)  ← needs work
-
-Persistent weak topics (missed in ≥2 sessions): cell cycle phases, membrane transport
-New weak topics (first miss today): ATP synthesis pathway
-────────────────────────────────────────────────────────
-Next quiz will weight: cell cycle phases ×1.8 | membrane transport ×1.5 | ATP synthesis ×1.3
-```
-
-Multi-unit — add per-unit breakdown before weak topics:
-```
-────────────────────────────────────────────────────────
-Quiz Complete — BIOL 201 | Units 1–3 (Midterm 1 scope)
-Score: 19/25 (76%)  ✓ PASS  (threshold: 70%)
-
-  Unit 1 — Cell Structure : 8/9  (89%)
-  Unit 2 — Cell Cycle     : 6/9  (67%)  ← weak
-  Unit 3 — Genetics       : 5/7  (71%)
-
-MCQ accuracy    : 14/17 (82%)
-Short answer    : 5/8  (63%)  ← needs work
-
-Persistent weak topics: cell cycle phases (Unit 1), enzyme kinetics (Unit 2)
-New weak topics: DNA replication steps (Unit 3)
-────────────────────────────────────────────────────────
-```
-
-Early `end quiz` → append `(partial — ended at Q{N})` to header line.
-
----
-
-#### Step 4 — Data updates (after results)
-
-- **`progress.json`**: Per unit in scope, write `quiz_history` with that unit's sub-score. Update `weak_areas`, `confidence_level`. Sub-score ≥ 70% → advance `status` to `quiz_passed`.
-- **`courses_index.json`**: recalculate `units_completed`
-- **`courses\{slug}\activity_log.md`**: full Q&A block (Section 11). Header: `### [QUIZ] 2026-05-18 — Units 1–3 (Midterm 1 scope)` or `### [QUIZ] 2026-05-18 — Unit 1: Cell Structure`
-- **`data\activity_log.md`**: one-line summary. Multi-unit: `- [QUIZ] BIOL 201 | Units 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics (Unit 2), DNA replication (Unit 3)`
+Full spec in `.claude/commands/quiz.md`. Adaptive weighting from quiz history, interactive question loop, results summary, data updates, logging.
 
 ---
 
@@ -693,7 +397,7 @@ Mark as completed: /deadlines complete {deadline_id}
 
 **`/deadlines add`**: User-initiated deadline parse from pasted announcement text.
 
-**`/deadlines complete {deadline_id}`**: Set `completed: true` in both `deadlines.json` and `global_deadlines.json`. Recalculate `next_deadline_date` in `courses_index.json`.
+**`/deadlines complete {deadline_id}`**: Set `completed: true` in `global_deadlines.json`. Recalculate `next_deadline_date` in `courses_index.json`.
 
 ---
 
@@ -716,7 +420,7 @@ Y → ingestion pipeline (Method B — copy). N → do nothing.
 ```
 This looks like a course announcement. Parse and save deadlines from it? [Y/n]
 ```
-Y → extract deadlines, show confirmation table, ask course if ambiguous, write to both `deadlines.json` and `global_deadlines.json`. Check duplicates first.
+Y → extract deadlines, show confirmation table, ask course if ambiguous, write to `global_deadlines.json`. Check duplicates first.
 
 **Pasted note-like content**: Message mentions course but no clean deadline structure → ask:
 ```
@@ -774,7 +478,7 @@ Ask: `"Semester (e.g., Fall 2026):"`
    courses\{slug}\materials\multi_unit\
    courses\{slug}\data\
    ```
-5. Create default empty JSON: `course_structure.json`, `progress.json`, `deadlines.json`
+5. Create default empty JSON: `course_structure.json`, `progress.json`
 6. Create `courses\{slug}\activity_log.md`:
    ```markdown
    # {course_code} — Activity Log
@@ -825,7 +529,7 @@ Ask: `"Semester (e.g., Fall 2026):"`
      ```
    - Move entry: `active_courses` → `archived_courses` in `courses_index.json`
    - Remove course deadlines from `global_deadlines.json`
-   - Write FINAL SNAPSHOT to course's `activity_log.md` (Section 11 format, labeled "FINAL SNAPSHOT — Course Archived")
+
    - Write `[COURSE]` to `data\activity_log.md`: `"{course_code} archived — {final_completion_pct}% complete after {N} study sessions, {N} quizzes"`
    - Print: `"{course_code} archived. Deadlines removed from tracker."`
 
@@ -840,8 +544,112 @@ Table of all active + archived courses with status, progress, semester.
 **`/log`** — Last 7 days, all courses (`data\activity_log.md`).
 **`/log {course_code}`** — Last 7 days, one course (`courses\{slug}\activity_log.md`).
 **`/log {N}d`** — Last N days, e.g. `/log 14d` or `/log 30d`.
-**`/log snapshot`** — Generate snapshot now, save to both logs. See Section 11.
 **`/log quiz {unit_id}`** — All past quiz blocks for unit from `courses\{slug}\activity_log.md`, newest first. Multiple active → ask course.
+
+---
+
+### `/save` — Reconcile pending data writes
+
+Recovery command for long sessions where agent may have drifted and missed writing data. Reviews actions taken this session from conversation context, checks that all expected file writes occurred, and writes any that are missing.
+
+**For each action type, verify and recover if missing:**
+
+| Action | Expected writes |
+|--------|----------------|
+| `/quiz` | `quiz_history` entry in `progress.json` · `[QUIZ]` block in `courses\{slug}\activity_log.md` · one-liner in `data\activity_log.md` · `weak_areas` + `status` updated |
+| `/study` | `[STUDY]` in both logs · `study_sessions` count in `progress.json` |
+| `/ingest` | Entry in `data\materials_manifest.json` · `materials_ingested` count in `progress.json` · `[INGEST]` in both logs |
+| `/deadlines add` | Entry in `data\global_deadlines.json` · `[DEADLINE]` in both logs · `next_deadline_date` in `courses_index.json` |
+
+**Steps:**
+1. List all commands run this session (from context)
+2. For each, read the relevant files and check for the expected entries
+3. Missing entry → write it now using the correct format from Section 11
+4. Already present → skip silently
+
+**Report:**
+```
+/save — Reconciliation complete
+──────────────────────────────────────────
+Recovered (3):
+  ✓ [QUIZ]  BIOL 201 | Unit 1 — score entry written to progress.json
+  ✓ [QUIZ]  BIOL 201 | Unit 1 — log entry written to activity_log.md
+  ✓ [STUDY] COMP 361 | Unit 2 — log entry written to activity_log.md
+Already committed (5): skipped
+──────────────────────────────────────────
+```
+
+Nothing to recover → `"All data writes confirmed — nothing missing."`
+
+---
+
+### `/export [path]` — Pack savedata into a zip file
+
+**What's included:**
+```
+savedata\data\
+savedata\courses\**\*.md       (study notes only — no source binaries)
+savedata\archive\
+savedata\user.config.json
+```
+
+**What's excluded:**
+```
+machine.config.json            (machine-specific — set fresh on each machine via /setup)
+raw\                           (drop zone — transient)
+**/source_*.*                  (original source files — re-ingestable from course portal)
+```
+
+Output filename: `learnkit_export_{user_name}_{YYYYMMDD}.zip`
+Default output location: `$projectRoot`. Override with optional `[path]` argument.
+
+```powershell
+$exportPath = Join-Path $outputDir "learnkit_export_{name}_{date}.zip"
+& $pythonExe (Join-Path $scriptsRoot "export_savedata.py") `
+    --savedata $savedataRoot `
+    --output $exportPath
+```
+
+Parse JSON result. Report:
+```
+Export complete — learnkit_export_slimj_20260511.zip
+Location : C:\Users\{user}\Projects\learnkit\
+Contents : N files (3 courses, 14 notes, 8 quiz logs, deadlines)
+Size     : 142 KB
+```
+
+Log: `- [EXPORT] savedata packed → {filename} ({size_kb} KB)`
+
+---
+
+### `/import <path>` — Restore savedata from zip
+
+Pre-check: path exists and ends in `.zip` → else: `"File not found or not a .zip: {path}"`
+
+If `savedata/` already has data → warn:
+```
+⚠ savedata/ already contains data.
+Import will merge — existing files will be overwritten by zip contents.
+machine.config.json will NOT be touched.
+Type YES to continue:
+```
+
+```powershell
+& $pythonExe (Join-Path $scriptsRoot "import_savedata.py") `
+    --zip $importPath `
+    --savedata $savedataRoot
+```
+
+After extract: re-run startup Steps 1–4 (reload JSONs, reprint banner).
+
+Report:
+```
+Import complete — learnkit_export_slimj_20260511.zip
+Restored : N files (3 courses, 14 notes, 8 quiz logs, all deadlines)
+Skipped  : machine.config.json (kept local config)
+```
+
+Log: `- [IMPORT] savedata restored from {filename}`
 
 ---
 
@@ -850,19 +658,7 @@ Table of all active + archived courses with status, progress, semester.
 Run when `savedata/` does not exist, or explicitly invoked at any time. Safe to re-run.
 
 **Step 1 — Detect project root (automatic)**
-```powershell
-$projectRoot  = (git rev-parse --show-toplevel 2>$null)
-if (-not $projectRoot) { $projectRoot = (Get-Location).Path }
-$savedataRoot = Join-Path $projectRoot "savedata"
-```
-Print:
-```
-LearnKit — Setup
-──────────────────────────────────────────────────────
-Project root : {$projectRoot}
-savedata/    : {$savedataRoot}
-──────────────────────────────────────────────────────
-```
+Path detection: same as startup Step 0. Print detected `$projectRoot` and `$savedataRoot` in a banner.
 
 **Step 2 — Locate Python interpreter**
 
@@ -914,96 +710,23 @@ Your name (for display in banners — e.g., "Alex", "slimj"):
 ```
 Blank → use `"Student"` as default.
 
-**Step 5 — Savedata remote (optional private repo for sync)**
-```
-Private repo for cross-machine sync (optional).
-This is YOUR personal private repo — separate from the public LearnKit framework repo.
+**Step 5 — Write config files**
+Write `user.config.json` and `machine.config.json` per Section 2 schemas.
 
-Enter your savedata remote URL, or press Enter to skip:
-  (e.g., https://github.com/yourname/my-study-data.git)
-> _
-```
-
-If URL provided → test: `git ls-remote {url} HEAD 2>$null`
-
-- **Remote empty (new repo)**:
-  ```powershell
-  git -C $savedataRoot init
-  git -C $savedataRoot remote add origin {url}
-  ```
-  Print: `"New savedata repo initialized. Data will be pushed after setup."`
-
-- **Remote has data (returning user, new machine)**:
-  ```powershell
-  git -C $savedataRoot init
-  git -C $savedataRoot remote add origin {url}
-  git -C $savedataRoot fetch origin
-  git -C $savedataRoot checkout -b main --track origin/main
-  ```
-  Remove any pulled `machine.config.json` (machine-specific, should not have been committed):
-  ```powershell
-  Remove-Item (Join-Path $savedataRoot "machine.config.json") -ErrorAction SilentlyContinue
-  ```
-  Print: `"Prior study data restored. Your courses and progress are now available."`
-
-If skipped → `git -C $savedataRoot init` (local history only). Print: `"savedata initialized locally. Add a remote later by re-running /setup."`
-
-Error cases: invalid URL → `"That doesn't look like a git remote URL. Try again or press Enter to skip."` | auth/network failure → show git error, offer skip.
-
-**Step 6 — Write config files**
-
-`savedata/user.config.json` (committed to savedata repo):
-```json
-{
-  "user_name": "{$userName}",
-  "savedata_remote": "{$savadataRemote or null}"
-}
-```
-
-`savedata/machine.config.json` (NEVER committed anywhere):
-```json
-{
-  "machine_id": "{$env:COMPUTERNAME}",
-  "python_exe": "{$pythonExe}"
-}
-```
-
-Write `savedata/.gitignore` (only if not already present from pulled remote data):
-```gitignore
-machine.config.json
-raw/
-**/source_*.*
-__pycache__/
-*.pyc
-.DS_Store
-Thumbs.db
-```
-
-**Step 7 — Initial commit**
-
-Stage and commit to savedata repo:
-```powershell
-git -C $savedataRoot add user.config.json .gitignore data/
-git -C $savedataRoot commit -m "Initial savedata setup — {$userName}"
-```
-If new remote (empty): also push with `git -C $savedataRoot push -u origin main`.
-If pulled existing data: no push needed (machine.config.json was not staged — it's gitignored).
-
-**Step 8 — Summary**
+**Step 6 — Summary**
 ```
 ──────────────────────────────────────────────────────
 Setup complete!
 
-User        : {$userName}
-Python      : {$pythonExe}  [OK / ⚠ packages missing]
-savedata/   : {$savedataRoot}
-Sync repo   : {$savadataRemote or "local only (no remote)"}
+User      : {$userName}
+Python    : {$pythonExe}  [OK / ⚠ packages missing]
+savedata/ : {$savedataRoot}
 ──────────────────────────────────────────────────────
 Next steps:
   1. Drop a syllabus into savedata\raw\ or paste its path.
   2. Run /ingest to load the syllabus and create your first course.
   3. Run /study or /quiz to start studying.
-  4. Run /sync after study sessions to back up your progress.
+  4. Run /export to back up your progress anytime.
 ──────────────────────────────────────────────────────
 ```
 
@@ -1011,99 +734,11 @@ Next steps:
 ```
 savedata/ already exists. What would you like to do?
   [1] Reconfigure Python path only
-  [2] Add or change savedata remote
-  [3] Full re-setup (safe — will not overwrite existing data)
-  [4] Cancel
-```
-
----
-
-### `/sync [message]` — Commit and push savedata to private repo
-
-**Pre-checks:**
-```powershell
-if (-not (Test-Path (Join-Path $savedataRoot ".git"))) {
-    Write-Host "savedata/ is not a git repo. Run /setup to initialize."
-    return
-}
-$uc = Get-Content (Join-Path $savedataRoot "user.config.json") | ConvertFrom-Json
-if (-not $uc.savedata_remote) {
-    Write-Host "No savedata remote configured. Use /sync local to commit locally, or /setup to add a remote."
-}
-```
-
-**Stage** (never `git add .`):
-```powershell
-git -C $savedataRoot add data/ courses/ archive/ user.config.json
-```
-`machine.config.json`, `raw/`, `**/source_*.*` are covered by `savedata/.gitignore` — never staged.
-
-**Nothing staged + nothing ahead** → `"Nothing to sync — savedata is up to date."`
-
-**Build commit message** (if none provided):
-- Read today's entries from `data\activity_log.md`
-- Format: `"sync: {date} — {up to 3 event summaries}"`
-- No entries today: `"sync: {date}"`
-
-**Commit and push:**
-```powershell
-git -C $savedataRoot commit -m "{message}"
-git -C $savedataRoot push origin HEAD
-```
-First push: use `-u origin main` to set upstream tracking.
-
-**Report:**
-```
-✓ Synced — N file(s) committed, pushed to {remote}
-Commit: "{message}"
-```
-
-**Error cases:**
-- Push rejected (remote ahead): `"Run /pull first, then /sync again."`
-- Network failure: `"Commit saved locally. Push failed: {error}. Run /sync when connected."`
-
-**`/sync local`** variant: commit without pushing (offline use or no-remote setup).
-
-**Log:** append `- [SYNC] Pushed — N file(s) | "{commit short}"` to `data\activity_log.md`.
-
----
-
-### `/pull` — Fetch savedata from private remote
-
-**Pre-checks:** Same as `/sync` (repo initialized + remote configured).
-
-**Uncommitted local changes** → ask:
-```
-⚠ Uncommitted changes. Options:
-  [1] /sync first, then pull
-  [2] Pull anyway (may conflict)
+  [2] Full re-setup (safe — will not overwrite existing data)
   [3] Cancel
 ```
 
-**Pull:**
-```powershell
-git -C $savedataRoot pull origin HEAD
-```
-
-**Success** → re-run startup Steps 1–4 (reload JSONs, reprint banner). Print: `"Data refreshed from remote. Re-reading course data..."`
-
-**Merge conflict** → list conflicted files; print:
-```
-⚠ Merge conflict in savedata/.
-Conflicted files: [list]
-Resolve conflicts manually, then:
-  git -C "{$savedataRoot}" add .
-  git -C "{$savedataRoot}" commit
-```
-Do not attempt auto-resolution.
-
-**Already up to date** → `"Already up to date — no new data from remote."`
-
-**Guard:** After pull, check if `machine.config.json` was accidentally tracked → if so:
-```powershell
-git -C $savedataRoot rm --cached machine.config.json
-git -C $savedataRoot commit -m "fix: untrack machine.config.json"
-```
+---
 
 ---
 
@@ -1126,7 +761,7 @@ Triggered: file classified as `syllabus` + course has no unit structure yet.
 
 3. **Initialize `progress.json`**: Per unit: `status: "not_started"`, `materials_ingested: 0`, `study_sessions: 0`, `quiz_history: []`, `weak_areas: []`, `confidence_level: 0`.
 
-4. **Write deadlines** to `courses\{slug}\data\deadlines.json` AND `data\global_deadlines.json`. Apply Section 6 duplicate detection.
+4. **Write deadlines** to `data\global_deadlines.json`. Apply Section 6 duplicate detection.
 
 5. **Update `courses_index.json`**: Set `syllabus_ingested: true`, `units_total`, `next_deadline_date`, `next_deadline_title`.
 
@@ -1211,7 +846,7 @@ Remove-Item $tmpOutput -ErrorAction SilentlyContinue
 
 1. **Never mix course content** — don't present/compare content from two courses in same session without explicit labels
 2. **Never silently pick a course** — command applies to multiple courses, none specified → always ask
-3. **Atomic file updates** — deadline added → update both `deadlines.json` and `global_deadlines.json` together; never leave inconsistent
+3. **Single deadline store** — all deadlines live in `global_deadlines.json` only; filter by `course_id` for per-course views. No per-course deadlines file.
 4. **Archive requires explicit confirmation** — never archive without user typing "YES" (exact, uppercase)
 5. **Quizzes are materials-only** — never use web content for quiz questions
 6. **Tie weak areas to exams** — reporting weak areas → always note which upcoming exam they affect
@@ -1223,10 +858,7 @@ Remove-Item $tmpOutput -ErrorAction SilentlyContinue
 12. **`misc.md` always fresh** — read at start of every `/study` and `/quiz`; surface entries from past 14 days under `## Course Notes` before main content
 13. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
 14. **Log every action** — study, quiz, ingest, deadline change, course event → log entry; never skip
-15. **Snapshot Sundays** — startup on Sunday + activity in past 7 days → offer: `"It's Sunday — want a weekly progress snapshot? [Y/n]"` Generate and save if yes.
 16. **Python path from config only** — always use `$pythonExe` (set at startup Step 0.5). Never hardcode interpreter path in any command. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/setup`.
-17. **Sync reminder** — after any `/quiz` or `/study` session that writes to `savedata/`: if savedata is a git repo with unsynced changes, append `"💾 Run /sync to save your progress."` to the closing response.
-18. **Warn on unsynced data once** — startup Step 5 shows unsynced warning at most once per session. Do not repeat on each command.
 
 ---
 
@@ -1286,65 +918,6 @@ All entries one line — except `[QUIZ]` in per-course log (rich block below).
 
 Result codes: `✓` correct | `✗` incorrect | `✓(H)` correct after hint (counts ½) | `✗(H)` incorrect after hint | `→` skipped
 
----
+### When to note quiz pass
 
-### Snapshot format
-
-Snapshot = richer summary block, sits between date groups (doesn't replace daily entries). Both logs get own version.
-
-**Global snapshot** (`data\activity_log.md`):
-
-```markdown
----
-### SNAPSHOT — 2026-05-11 (Week of May 5–11)
-
-**Study activity this week**: 4 sessions across 2 courses
-**Quizzes this week**: 3 | Average score: 78%
-**Files ingested this week**: 5
-**Study streak**: 3 days in a row (May 9–11)
-
-| Course     | Completion | Units Done | Last Studied | Next Deadline            |
-|------------|------------|------------|--------------|--------------------------|
-| BIOL 201   | 62%        | 4/6        | May 11       | Midterm 1 — May 21 (10d) |
-| COMP 361   | 20%        | 1/5        | May 9        | Lab Quiz 2 — Jun 5 (25d) |
-
-**Needs attention:**
-- BIOL 201 Unit 2 — weak areas: cell cycle phases, membrane transport (Midterm 1 in 10 days)
-- COMP 361 Units 2-5 — not started yet
-
----
-```
-
-**Per-course snapshot** (`courses\{slug}\activity_log.md`):
-
-```markdown
----
-### SNAPSHOT — 2026-05-11 (Week of May 5–11)
-
-**Overall completion**: 62% (4/6 units done)
-**This week**: 3 study sessions, 2 quizzes (avg 80%), 3 files ingested
-**Study streak**: 3 days (May 9–11)
-**Next deadline**: Midterm 1 on May 21 — 10 days away ⚠ URGENT
-
-| Unit | Status | Confidence | Weak Areas |
-|------|--------|------------|------------|
-| Unit 1: Cell Structure | quiz_passed (80%) | 6/10 | cell cycle phases |
-| Unit 2: Cell Cycle | in_progress | — | — |
-| Unit 3: Genetics | not_started | — | — |
-| Unit 4: Molecular Biology | not_started | — | — |
-| Unit 5: Evolution | not_started | — | — |
-| Unit 6: Ecology | not_started | — | — |
-
-**Focus for next week:** Unit 2 (exam coverage), then Unit 1 weak areas before Midterm 1.
-
----
-```
-
-### When to write snapshots
-
-| Trigger | Action |
-|---------|--------|
-| `/log snapshot` | Generate now, prepend to both logs |
-| Sunday startup (activity in past 7 days) | Offer `"It's Sunday — want a weekly progress snapshot? [Y/n]"` |
-| `/course complete {code}` | Write FINAL SNAPSHOT to course log before archiving |
-| First quiz pass on unit (score ≥ 70%) | No snapshot; append note: `  → Unit N marked quiz_passed` on quiz's `[QUIZ]` line |
+First quiz pass on unit (score ≥ 70%) → append note on quiz's `[QUIZ]` line: `  → Unit N marked quiz_passed`

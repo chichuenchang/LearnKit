@@ -57,15 +57,13 @@ learnkit/              ← public repo (clone this)
 └── .gitignore         ← ignores savedata/
 
 savedata/              ← your private data (gitignored)
-├── user.config.json   ← your name + private repo URL
-├── machine.config.json← Python path (never committed)
+├── user.config.json   ← your name
+├── machine.config.json← Python path (never exported)
 ├── data/              ← global index, deadlines, manifest
 ├── courses/           ← per-course notes, progress, quiz history
 ├── archive/           ← completed courses
 └── raw/               ← drop zone for new files
 ```
-
-Your `savedata/` is a separate git repo pointing to your own private remote. LearnKit never touches the public framework repo.
 
 ---
 
@@ -81,23 +79,32 @@ Your `savedata/` is a separate git repo pointing to your own private remote. Lea
 | `/progress` | Study dashboard across all courses |
 | `/course add` | Register a new course |
 | `/course complete` | Archive a finished course |
-| `/sync` | Commit and push savedata to your private repo |
-| `/pull` | Fetch savedata from your private repo |
+| `/save` | Reconcile any missed data writes from current session |
+| `/export [path]` | Pack savedata into a portable zip |
+| `/import <path>` | Restore savedata from a zip |
 | `/log` | View activity log |
 
 ---
 
-## Cross-Machine Sync
+## Moving to a New Machine
 
-Each machine stores Python configuration locally (`machine.config.json`) while your notes, progress, and quiz history live in your private savedata repo.
+Export your data on the old machine, copy the zip anywhere (USB, cloud drive, email), then import on the new machine.
 
-**New machine setup:**
+**Old machine:**
 ```
+/export
+```
+Produces `learnkit_export_{name}_{date}.zip` in the project folder.
+
+**New machine:**
+```bash
 git clone https://github.com/yourname/learnkit.git
 cd learnkit && claude
-/setup → enter your private savedata repo URL
+/setup
+/import C:\path\to\learnkit_export_name_date.zip
 ```
-All prior courses and progress restore automatically.
+
+All courses, notes, quiz history, and progress restore automatically. Machine-specific config (Python path) is set fresh by `/setup` — it is never included in the export.
 
 ---
 
