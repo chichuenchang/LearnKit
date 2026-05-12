@@ -62,11 +62,33 @@ On confirm: **copy** into project. Never delete or move originals.
    - Include "Key Terms" section with definitions tagged by exam probability
    - Include "Likely Quiz/Exam Questions" section at end
 
-8. **Update data files**:
-   - Add entry to `data\materials_manifest.json`
-   - Update `units.{unit_slug}.materials_ingested` in `courses\{slug}\data\progress.json`
-   - Unit was `not_started` → advance to `in_progress`
-   - Recalculate `units_total` and `units_completed` in `courses_index.json`
+8. **Update data files** via `data_writer.py` (run for each successfully ingested file):
+
+   ```powershell
+   # Register file in manifest
+   $result = (& $pythonExe $writerPath manifest add `
+       --savedata $savedataRoot --course-id {course_id} --course-code {course_code} `
+       --filename {original_filename} --method {raw_folder|path_paste} `
+       [--original-path {abs_path}] --file-type {file_type} --unit {unit_slug} `
+       --confidence {high|medium|low|user_assigned} `
+       --filed-path {relative_filed_path} --summary-path {relative_summary_path} `
+       [--page-count N] [--word-count N]) | ConvertFrom-Json
+
+   # Increment materials_ingested (advances not_started → in_progress)
+   $result = (& $pythonExe $writerPath progress ingest `
+       --savedata $savedataRoot --course {course_id} --unit {unit_slug}) | ConvertFrom-Json
+
+   # Recalculate units_completed + next_deadline in courses_index
+   $result = (& $pythonExe $writerPath index update `
+       --savedata $savedataRoot --course {course_id}) | ConvertFrom-Json
+   ```
+
+   After all files processed, write log (one call per course, grouped):
+   ```powershell
+   $result = (& $pythonExe $writerPath log entry `
+       --savedata $savedataRoot --course {course_id} `
+       --entry "- [INGEST] {course_code} | {N} file(s) → {unit(s)}: {filenames}") | ConvertFrom-Json
+   ```
 
 9. **Ingestion report**:
    ```

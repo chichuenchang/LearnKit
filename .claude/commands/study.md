@@ -37,7 +37,20 @@ Multiple active + no course → ask. Single active → assume.
 [5-10 probable questions — no answers, prompt recall only]
 ```
 
-Write log entry to both `data\activity_log.md` and `courses\{slug}\activity_log.md`. See Section 11 of CLAUDE.md.
+**After delivering study content**, write data using `data_writer.py`:
+
+```powershell
+# Increment study_sessions
+$result = (& $pythonExe $writerPath progress study `
+    --savedata $savedataRoot --course {course_id} --unit {unit_slug}) | ConvertFrom-Json
+
+# Log entry (writes to global log + per-course log)
+$result = (& $pythonExe $writerPath log entry `
+    --savedata $savedataRoot --course {course_id} `
+    --entry "- [STUDY] {course_code} | Unit N: {unit_name} — {topic summary, ≤8 words}") | ConvertFrom-Json
+```
+
+See Section 11 of CLAUDE.md for log entry format.
 
 **Web research**: Only if user explicitly asks.
 - Tier 1 (free): `.edu` and `.ac.uk` domains, PubMed/PMC, official textbook publisher sites (Elsevier, Springer, Wiley open-access), Wikipedia (definitions only — never for exam facts)

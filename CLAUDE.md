@@ -840,6 +840,23 @@ Clean up after reading:
 Remove-Item $tmpOutput -ErrorAction SilentlyContinue
 ```
 
+### `data_writer.py` — validated structured writes (no temp file)
+
+```powershell
+$writerPath = Join-Path $scriptsRoot "data_writer.py"
+$result = (& $pythonExe $writerPath progress quiz `
+    --savedata $savedataRoot `
+    --course "biol_201" `
+    --unit "unit_01_cell_structure" `
+    --score-pct 78.0 --correct 14 --total 18 --incorrect 3 --skipped 1 `
+    --weak-topics "cell cycle phases,membrane transport") | ConvertFrom-Json
+if (-not $result.success) {
+    Write-Host "Write failed: $($result.error)"
+}
+```
+
+Output lands directly on stdout — no temp file, no cleanup needed. Same error-check pattern for all subcommands.
+
 ---
 
 ## SECTION 10 — BEHAVIORAL RULES
@@ -858,6 +875,7 @@ Remove-Item $tmpOutput -ErrorAction SilentlyContinue
 12. **`misc.md` always fresh** — read at start of every `/study` and `/quiz`; surface entries from past 14 days under `## Course Notes` before main content
 13. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
 14. **Log every action** — study, quiz, ingest, deadline change, course event → log entry; never skip
+15. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error rather than silently writing corrupt data.
 16. **Python path from config only** — always use `$pythonExe` (set at startup Step 0.5). Never hardcode interpreter path in any command. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/setup`.
 
 ---

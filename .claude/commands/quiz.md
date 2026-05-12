@@ -128,7 +128,32 @@ Early `end quiz` → append `(partial — ended at Q{N})` to header line.
 
 ### Step 4 — Data updates (after results)
 
-- **`progress.json`**: Per unit in scope, write `quiz_history` with that unit's sub-score. Update `weak_areas`, `confidence_level`. Sub-score ≥ 70% → advance `status` to `quiz_passed`.
-- **`courses_index.json`**: recalculate `units_completed`
-- **`courses\{slug}\activity_log.md`**: full Q&A block (Section 11 of CLAUDE.md). Header: `### [QUIZ] 2026-05-18 — Units 1–3 (Midterm 1 scope)` or `### [QUIZ] 2026-05-18 — Unit 1: Cell Structure`
-- **`data\activity_log.md`**: one-line summary. Multi-unit: `- [QUIZ] BIOL 201 | Units 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics (Unit 2), DNA replication (Unit 3)`
+Use `data_writer.py` for all writes. Run in this order:
+
+**1. Per unit in scope — `progress quiz`** (one call per unit):
+```powershell
+$result = (& $pythonExe $writerPath progress quiz `
+    --savedata $savedataRoot --course {course_id} --unit {unit_slug} `
+    --score-pct {unit_pct} --correct {n} --total {n} --incorrect {n} --skipped {n} `
+    [--partial] [--adaptive] `
+    [--weak-topics "topic1,topic2"] `
+    [--mcq "correct/total"] [--sa "correct/total"]) | ConvertFrom-Json
+```
+Script advances `status` to `quiz_passed` if unit score ≥ 70%, updates `weak_areas` and `confidence_level`.
+
+**2. Recalculate index — `index update`**:
+```powershell
+$result = (& $pythonExe $writerPath index update `
+    --savedata $savedataRoot --course {course_id}) | ConvertFrom-Json
+```
+
+**3. Global one-liner — `log entry`**:
+```powershell
+$result = (& $pythonExe $writerPath log entry `
+    --savedata $savedataRoot --course {course_id} `
+    --entry "- [QUIZ] {course_code} | {scope} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}") | ConvertFrom-Json
+```
+Multi-unit entry format: `- [QUIZ] BIOL 201 | Units 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics (Unit 2), DNA replication (Unit 3)`
+
+**4. Rich per-course quiz block** — agent writes directly to `courses\{slug}\activity_log.md` (Section 11 of CLAUDE.md format). This is narrative markdown — not schema data, not routed through data_writer.py.
+Header: `### [QUIZ] {YYYY-MM-DD} — Units 1–3 (Midterm 1 scope)` or `### [QUIZ] {YYYY-MM-DD} — Unit 1: Cell Structure`
