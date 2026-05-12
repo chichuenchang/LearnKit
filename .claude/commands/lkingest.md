@@ -1,4 +1,4 @@
-﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging, Section 11 logging) loaded from CLAUDE.md.
+﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging) loaded from CLAUDE.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
 
 ## `/lkingest` — Process new course materials
 
@@ -20,7 +20,7 @@ On confirm: **copy** into project. Never delete or move originals.
 
 **Shared pipeline for each file:**
 
-1. **Extract text**: Run `scripts\extract_text.py` (via $pythonExe and $scriptsRoot — see Section 9 of CLAUDE.md). Fails → report error and skip; don't continue with that file.
+1. **Extract text**: Run `scripts\extract_text.py` (via $pythonExe and $scriptsRoot — see `lkscripts.md`). Fails → report error and skip; don't continue with that file.
    - `scanned: false` → use `data.text` as normal for all downstream steps
    - `scanned: true` → read each path in `data.image_paths` via Read tool; generate study notes from visual page content; clean up `tmp_pages/{basename}/` after notes written
    - `capped: true` → surface before proceeding: `"Note: {filename} has {page_count} pages — first 20 ingested. Re-ingest and confirm to process remaining pages."`
@@ -107,7 +107,7 @@ On confirm: **copy** into project. Never delete or move originals.
    ──────────────────────────────────────────────────────
    ```
 
-10. **Write log entries** after report. One entry per course (grouped) to both `data\activity_log.md` and each affected course's `activity_log.md`. See Section 11 of CLAUDE.md.
+10. **Write log entries** after report. Read `lklogging.md` for format spec before writing. One entry per course (grouped) to both `data\activity_log.md` and each affected course's `activity_log.md`.
 
 ---
 

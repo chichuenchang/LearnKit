@@ -1,4 +1,4 @@
-﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging, Section 11 logging) loaded from CLAUDE.md.
+﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging) loaded from CLAUDE.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
 
 ## `/lkstudy {course_code} {unit_id}` — Generate a study session
 
@@ -50,7 +50,7 @@ $result = (& $pythonExe $writerPath log entry `
     --entry "- [STUDY] {course_code} | Unit N: {unit_name} — {topic summary, ≤8 words}") | ConvertFrom-Json
 ```
 
-See Section 11 of CLAUDE.md for log entry format.
+Read `lklogging.md` for log entry format spec before writing entries.
 
 **Web research**: Only if user explicitly asks.
 - Tier 1 (free): `.edu` and `.ac.uk` domains, PubMed/PMC, official textbook publisher sites (Elsevier, Springer, Wiley open-access), Wikipedia (definitions only — never for exam facts)

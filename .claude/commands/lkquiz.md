@@ -1,4 +1,4 @@
-﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging, Section 11 logging) loaded from CLAUDE.md.
+﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging) loaded from CLAUDE.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
 
 ## `/lkquiz {course_code} {scope}` — Interactive adaptive quiz
 
@@ -155,5 +155,5 @@ $result = (& $pythonExe $writerPath log entry `
 ```
 Multi-unit entry format: `- [QUIZ] BIOL 201 | Units 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics (Unit 2), DNA replication (Unit 3)`
 
-**4. Rich per-course quiz block** — agent writes directly to `courses\{slug}\activity_log.md` (Section 11 of CLAUDE.md format). This is narrative markdown — not schema data, not routed through data_writer.py.
+**4. Rich per-course quiz block** — agent writes directly to `courses\{slug}\activity_log.md`. Read `lklogging.md` for format spec before writing. This is narrative markdown — not schema data, not routed through data_writer.py.
 Header: `### [QUIZ] {YYYY-MM-DD} — Units 1–3 (Midterm 1 scope)` or `### [QUIZ] {YYYY-MM-DD} — Unit 1: Cell Structure`
