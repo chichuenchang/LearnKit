@@ -402,14 +402,7 @@ raw\                           (drop zone — transient)
 Output filename: `learnkit_export_{user_name}_{YYYYMMDD}.zip`
 Default output location: `$projectRoot`. Override with optional `[path]` argument.
 
-```powershell
-$exportPath = Join-Path $outputDir "learnkit_export_{name}_{date}.zip"
-& $pythonExe (Join-Path $scriptsRoot "export_savedata.py") `
-    --savedata $savedataRoot `
-    --output $exportPath
-```
-
-Parse JSON result. Report:
+Run `export_savedata.py --savedata $savedataRoot --output $exportPath`. Parse JSON result. Report:
 ```
 Export complete — learnkit_export_slimj_20260511.zip
 Location : C:\Users\{user}\Projects\learnkit\
@@ -433,11 +426,7 @@ machine.config.json will NOT be touched.
 Type YES to continue:
 ```
 
-```powershell
-& $pythonExe (Join-Path $scriptsRoot "import_savedata.py") `
-    --zip $importPath `
-    --savedata $savedataRoot
-```
+Run `import_savedata.py --zip $importPath --savedata $savedataRoot`.
 
 After extract: re-run startup Steps 1–4 (reload JSONs, reprint banner).
 
@@ -461,22 +450,9 @@ Path detection: same as startup Step 0. Print detected `$projectRoot` and `$save
 
 **Step 2 — Locate Python interpreter**
 
-First test `python` in PATH:
-```powershell
-& python -c "import pdfplumber, pptx, docx; print('OK')" 2>$null
-```
-Passes → use `python`, print `"Python: found in PATH — packages OK"`.
+Test `python` in PATH with `import pdfplumber, pptx, docx`. Passes → use `python`, print `"Python: found in PATH — packages OK"`.
 
-Fails → probe common locations and show results:
-```powershell
-$hints = @(
-    "$env:USERPROFILE\miniconda3\python.exe",
-    "$env:USERPROFILE\anaconda3\python.exe",
-    "$env:USERPROFILE\AppData\Local\Programs\Python\Python311\python.exe",
-    "$env:USERPROFILE\AppData\Local\Programs\Python\Python312\python.exe"
-)
-```
-Show user:
+Fails → probe common locations (`%USERPROFILE%\miniconda3`, `\anaconda3`, `\AppData\Local\Programs\Python\Python311`, `\Python312`) and show results:
 ```
 Python not found in PATH or packages missing.
 
@@ -491,11 +467,8 @@ If packages missing but Python found → offer `pip install pdfplumber python-pp
 Allow skip with warning: `"Ingestion will not work until Python is configured. Run /lksetup again to fix."`
 
 **Step 3 — Create savedata/ directory structure**
-```powershell
-foreach ($dir in @("", "data", "courses", "archive", "raw")) {
-    New-Item -ItemType Directory -Path (Join-Path $savedataRoot $dir) -Force | Out-Null
-}
-```
+
+Create subdirs under `$savedataRoot`: `data\`, `courses\`, `archive\`, `raw\`
 Create default data JSON files only if not already present (re-run safe):
 - `data\courses_index.json` → default empty
 - `data\global_deadlines.json` → default empty
