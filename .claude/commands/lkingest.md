@@ -1,11 +1,11 @@
-Base context (path variables, schemas, behavioral rules, Section 1 tagging, Section 11 logging) loaded from CLAUDE.md.
+﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging, Section 11 logging) loaded from CLAUDE.md.
 
-## `/ingest` — Process new course materials
+## `/lkingest` — Process new course materials
 
 **Two input methods — same pipeline:**
 
 **Method A: `raw\` folder**
-Drop files in `savedata\raw\`, run `/ingest`. Move each file out after success.
+Drop files in `savedata\raw\`, run `/lkingest`. Move each file out after success.
 
 **Method B: Pasted paths (auto-detected)**
 Detect Windows absolute paths in any message → ask:
@@ -52,7 +52,7 @@ On confirm: **copy** into project. Never delete or move originals.
      [3] Assign to a specific unit (type unit ID):
    ```
    Option 1 → primary unit; add `_cross_ref_{slug}.md` in each other unit: `See also: [path to primary summary]`.
-   Option 2 → `courses\{slug}\materials\multi_unit\`. `/study` and `/quiz` for any relevant unit includes `multi_unit\` files.
+   Option 2 → `courses\{slug}\materials\multi_unit\`. `/lkstudy` and `/lkquiz` for any relevant unit includes `multi_unit\` files.
 
 6. **Archive original**:
    - `raw\` method: `Move-Item` from `$savedataRoot\raw\{filename}` → `$savedataRoot\courses\{slug}\materials\{unit_slug}\source_{slug}.{ext}`
@@ -112,6 +112,6 @@ On confirm: **copy** into project. Never delete or move originals.
 **Edge cases:**
 - **Path doesn't exist**: `Test-Path` before processing → `"File not found: {path}" — skipped`
 - **Unsupported type** (.xlsx, .zip, etc.): Report and skip.
-- **Python fails**: Report error, skip file, continue. First file fails with env error → stop and ask user to check Python path via `/setup`.
+- **Python fails**: Report error, skip file, continue. First file fails with env error → stop and ask user to check Python path via `/lksetup`.
 - **No course structure**: Ingest but assign to `unclassified`. Note: `"No course structure for {course_code} — filed as unclassified. Ingest syllabus to enable unit assignment."`
 - **Scanned PDF**: Detected when text yield < 50 words/page. Pages converted to images by `extract_text.py`, read by agent via Read tool. Notes generated from visual content. First line of notes: `**Source**: {filename} | **Unit**: {unit} | **Type**: {type} | **Ingested**: {date} | **Note**: Scanned PDF — content read from page images`

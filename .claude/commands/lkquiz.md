@@ -1,6 +1,6 @@
-Base context (path variables, schemas, behavioral rules, Section 1 tagging, Section 11 logging) loaded from CLAUDE.md.
+﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging, Section 11 logging) loaded from CLAUDE.md.
 
-## `/quiz {course_code} {scope}` — Interactive adaptive quiz
+## `/lkquiz {course_code} {scope}` — Interactive adaptive quiz
 
 Multiple active + no course → ask. Quiz: **interactive — one question at a time**.
 

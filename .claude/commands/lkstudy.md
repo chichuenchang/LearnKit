@@ -1,6 +1,6 @@
-Base context (path variables, schemas, behavioral rules, Section 1 tagging, Section 11 logging) loaded from CLAUDE.md.
+﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging, Section 11 logging) loaded from CLAUDE.md.
 
-## `/study {course_code} {unit_id}` — Generate a study session
+## `/lkstudy {course_code} {unit_id}` — Generate a study session
 
 Multiple active + no course → ask. Single active → assume.
 

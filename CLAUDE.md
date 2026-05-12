@@ -1,4 +1,4 @@
-# LearnKit
+﻿# LearnKit
 ## General-Purpose University Course Study Assistant
 
 ---
@@ -108,8 +108,8 @@ Missing → print new-user banner and STOP (do not run Steps 2–5):
 ```
 LearnKit — Welcome
 ──────────────────────────────────────────────────────
-No study data found. Run /setup to get started.
-  /setup will configure Python, create your savedata/ folder,
+No study data found. Run /lksetup to get started.
+  /lksetup will configure Python, create your savedata/ folder,
   and optionally link a private repo for cross-machine sync.
 ──────────────────────────────────────────────────────
 ```
@@ -123,7 +123,7 @@ Fails → warn, don't block:
 ⚠ Python packages not available — file ingestion will not work until resolved.
   Interpreter: {$pythonExe}
   Error: [error message]
-  Fix: pip install pdfplumber python-pptx python-docx  or  run /setup
+  Fix: pip install pdfplumber python-pptx python-docx  or  run /lksetup
 ```
 
 ### Step 3 — Check raw\ for waiting files
@@ -137,7 +137,7 @@ No active courses:
 ```
 LearnKit — Ready{if $userName: " · {$userName}"}
 No courses loaded yet.
-Drop a syllabus into savedata\raw\ or paste its path, then run /ingest to get started.
+Drop a syllabus into savedata\raw\ or paste its path, then run /lkingest to get started.
 ```
 
 Active courses exist:
@@ -148,10 +148,10 @@ Active courses: N  |  Files waiting in raw\: N
   [BIOL 201  ]  Units: 4/6  Progress: 62%  Next deadline: May 21 — Midterm 1 (10d) ← URGENT
   [COMP 361  ]  Units: 2/5  Progress: 20%  Next deadline: Jun 5  — Lab Quiz 2  (25d)
 ──────────────────────────────────────────────────────────────
-Type /ingest to process waiting files, /study or /quiz to study, /deadlines for all deadlines.
+Type /lkingest to process waiting files, /lkstudy or /lkquiz to study, /lkdeadlines for all deadlines.
 ```
 
-Sort by nearest deadline. raw\ has files → `"N file(s) waiting in raw\. Run /ingest to process them."`
+Sort by nearest deadline. raw\ has files → `"N file(s) waiting in raw\. Run /lkingest to process them."`
 
 All checks informational only. Never block startup.
 
@@ -186,7 +186,7 @@ User selects [3] → ask:
 
 Create entry in `courses_index.json` + `courses\{slug}\` directory. See Section 7.
 
-User selects [4] → leave file untouched. Log as `SKIPPED — awaiting course assignment`. Reappears on next `/ingest`.
+User selects [4] → leave file untouched. Log as `SKIPPED — awaiting course assignment`. Reappears on next `/lkingest`.
 
 ---
 
@@ -361,24 +361,24 @@ Default empty: `{"course": null, "course_id": null, "last_updated": null, "weak_
 
 ## SECTION 6 — COMMANDS AND WORKFLOWS
 
-### `/ingest` — Process new course materials
-Full spec in `.claude/commands/ingest.md`. Handles `raw\` folder and pasted paths, text extraction, course/unit identification, note generation, data updates, and logging.
+### `/lkingest` — Process new course materials
+Full spec in `.claude/commands/lkingest.md`. Handles `raw\` folder and pasted paths, text extraction, course/unit identification, note generation, data updates, and logging.
 
 ---
 
-### `/study {course_code} {unit_id}` — Generate a study session
-Full spec in `.claude/commands/study.md`. Reads materials + misc.md, addresses weak areas, outputs tagged study content, logs session.
+### `/lkstudy {course_code} {unit_id}` — Generate a study session
+Full spec in `.claude/commands/lkstudy.md`. Reads materials + misc.md, addresses weak areas, outputs tagged study content, logs session.
 
 ---
 
-### `/quiz {course_code} {scope}` — Interactive adaptive quiz
-Full spec in `.claude/commands/quiz.md`. Adaptive weighting from quiz history, interactive question loop, results summary, data updates, logging.
+### `/lkquiz {course_code} {scope}` — Interactive adaptive quiz
+Full spec in `.claude/commands/lkquiz.md`. Adaptive weighting from quiz history, interactive question loop, results summary, data updates, logging.
 
 ---
 
-### `/deadlines` — View upcoming deadlines
+### `/lkdeadlines` — View upcoming deadlines
 
-**`/deadlines`**: All incomplete deadlines, all active courses, sorted by date.
+**`/lkdeadlines`**: All incomplete deadlines, all active courses, sorted by date.
 ```
 Upcoming Deadlines — All Courses
 ─────────────────────────────────────────────────────────────────────────
@@ -389,15 +389,15 @@ Upcoming Deadlines — All Courses
   2026-05-28 BIOL 201    LAB PRAC      Lab Practical 2               17
   2026-06-05 COMP 361    QUIZ          Quiz 2 — Algorithms           25
 ─────────────────────────────────────────────────────────────────────────
-Mark as completed: /deadlines complete {deadline_id}
+Mark as completed: /lkdeadlines complete {deadline_id}
 ```
 ≤ 14 days → `← URGENT`.
 
-**`/deadlines {course_code}`**: Filtered to one course.
+**`/lkdeadlines {course_code}`**: Filtered to one course.
 
-**`/deadlines add`**: User-initiated deadline parse from pasted announcement text.
+**`/lkdeadlines add`**: User-initiated deadline parse from pasted announcement text.
 
-**`/deadlines complete {deadline_id}`**: Set `completed: true` in `global_deadlines.json`. Recalculate `next_deadline_date` in `courses_index.json`.
+**`/lkdeadlines complete {deadline_id}`**: Set `completed: true` in `global_deadlines.json`. Recalculate `next_deadline_date` in `courses_index.json`.
 
 ---
 
@@ -444,9 +444,9 @@ After confirmed deadlines saved, write log to both `data\activity_log.md` and co
 
 ---
 
-### `/progress` — Study dashboard
+### `/lkprogress` — Study dashboard
 
-**`/progress`**: Overview, all active courses.
+**`/lkprogress`**: Overview, all active courses.
 ```
 Study Progress — All Active Courses
 ──────────────────────────────────────────────────────────────────────
@@ -460,11 +460,11 @@ Global weak areas needing attention:
   COMP 361: graph algorithms, dynamic programming
 ```
 
-**`/progress {course_code}`**: Detailed per-unit breakdown.
+**`/lkprogress {course_code}`**: Detailed per-unit breakdown.
 
 ---
 
-### `/course add {code} {name}` — Register new course
+### `/lkcourse add {code} {name}` — Register new course
 
 Ask: `"Semester (e.g., Fall 2026):"`
 
@@ -506,7 +506,7 @@ Ask: `"Semester (e.g., Fall 2026):"`
    Next step: Drop the syllabus into savedata\raw\ or paste its path to load the course structure.
    ```
 
-### `/course complete {code}` — Archive completed course
+### `/lkcourse complete {code}` — Archive completed course
 
 1. Show confirmation:
    ```
@@ -533,22 +533,22 @@ Ask: `"Semester (e.g., Fall 2026):"`
    - Write `[COURSE]` to `data\activity_log.md`: `"{course_code} archived — {final_completion_pct}% complete after {N} study sessions, {N} quizzes"`
    - Print: `"{course_code} archived. Deadlines removed from tracker."`
 
-### `/course list` — List all courses
+### `/lkcourse list` — List all courses
 
 Table of all active + archived courses with status, progress, semester.
 
 ---
 
-### `/log` — View activity log
+### `/lklog` — View activity log
 
-**`/log`** — Last 7 days, all courses (`data\activity_log.md`).
-**`/log {course_code}`** — Last 7 days, one course (`courses\{slug}\activity_log.md`).
-**`/log {N}d`** — Last N days, e.g. `/log 14d` or `/log 30d`.
-**`/log quiz {unit_id}`** — All past quiz blocks for unit from `courses\{slug}\activity_log.md`, newest first. Multiple active → ask course.
+**`/lklog`** — Last 7 days, all courses (`data\activity_log.md`).
+**`/lklog {course_code}`** — Last 7 days, one course (`courses\{slug}\activity_log.md`).
+**`/lklog {N}d`** — Last N days, e.g. `/lklog 14d` or `/lklog 30d`.
+**`/lklog quiz {unit_id}`** — All past quiz blocks for unit from `courses\{slug}\activity_log.md`, newest first. Multiple active → ask course.
 
 ---
 
-### `/save` — Reconcile pending data writes
+### `/lksave` — Reconcile pending data writes
 
 Recovery command for long sessions where agent may have drifted and missed writing data. Reviews actions taken this session from conversation context, checks that all expected file writes occurred, and writes any that are missing.
 
@@ -556,10 +556,10 @@ Recovery command for long sessions where agent may have drifted and missed writi
 
 | Action | Expected writes |
 |--------|----------------|
-| `/quiz` | `quiz_history` entry in `progress.json` · `[QUIZ]` block in `courses\{slug}\activity_log.md` · one-liner in `data\activity_log.md` · `weak_areas` + `status` updated |
-| `/study` | `[STUDY]` in both logs · `study_sessions` count in `progress.json` |
-| `/ingest` | Entry in `data\materials_manifest.json` · `materials_ingested` count in `progress.json` · `[INGEST]` in both logs |
-| `/deadlines add` | Entry in `data\global_deadlines.json` · `[DEADLINE]` in both logs · `next_deadline_date` in `courses_index.json` |
+| `/lkquiz` | `quiz_history` entry in `progress.json` · `[QUIZ]` block in `courses\{slug}\activity_log.md` · one-liner in `data\activity_log.md` · `weak_areas` + `status` updated |
+| `/lkstudy` | `[STUDY]` in both logs · `study_sessions` count in `progress.json` |
+| `/lkingest` | Entry in `data\materials_manifest.json` · `materials_ingested` count in `progress.json` · `[INGEST]` in both logs |
+| `/lkdeadlines add` | Entry in `data\global_deadlines.json` · `[DEADLINE]` in both logs · `next_deadline_date` in `courses_index.json` |
 
 **Steps:**
 1. List all commands run this session (from context)
@@ -569,7 +569,7 @@ Recovery command for long sessions where agent may have drifted and missed writi
 
 **Report:**
 ```
-/save — Reconciliation complete
+/lksave — Reconciliation complete
 ──────────────────────────────────────────
 Recovered (3):
   ✓ [QUIZ]  BIOL 201 | Unit 1 — score entry written to progress.json
@@ -583,7 +583,7 @@ Nothing to recover → `"All data writes confirmed — nothing missing."`
 
 ---
 
-### `/export [path]` — Pack savedata into a zip file
+### `/lkexport [path]` — Pack savedata into a zip file
 
 **What's included:**
 ```
@@ -595,7 +595,7 @@ savedata\user.config.json
 
 **What's excluded:**
 ```
-machine.config.json            (machine-specific — set fresh on each machine via /setup)
+machine.config.json            (machine-specific — set fresh on each machine via /lksetup)
 raw\                           (drop zone — transient)
 **/source_*.*                  (original source files — re-ingestable from course portal)
 ```
@@ -622,7 +622,7 @@ Log: `- [EXPORT] savedata packed → {filename} ({size_kb} KB)`
 
 ---
 
-### `/import <path>` — Restore savedata from zip
+### `/lkimport <path>` — Restore savedata from zip
 
 Pre-check: path exists and ends in `.zip` → else: `"File not found or not a .zip: {path}"`
 
@@ -653,7 +653,7 @@ Log: `- [IMPORT] savedata restored from {filename}`
 
 ---
 
-### `/setup` — New-user onboarding and machine configuration
+### `/lksetup` — New-user onboarding and machine configuration
 
 Run when `savedata/` does not exist, or explicitly invoked at any time. Safe to re-run.
 
@@ -689,7 +689,7 @@ Suggested interpreters (tested):
 Select [1-3]:
 ```
 If packages missing but Python found → offer `pip install pdfplumber python-pptx python-docx [Y/n]`.
-Allow skip with warning: `"Ingestion will not work until Python is configured. Run /setup again to fix."`
+Allow skip with warning: `"Ingestion will not work until Python is configured. Run /lksetup again to fix."`
 
 **Step 3 — Create savedata/ directory structure**
 ```powershell
@@ -724,9 +724,9 @@ savedata/ : {$savedataRoot}
 ──────────────────────────────────────────────────────
 Next steps:
   1. Drop a syllabus into savedata\raw\ or paste its path.
-  2. Run /ingest to load the syllabus and create your first course.
-  3. Run /study or /quiz to start studying.
-  4. Run /export to back up your progress anytime.
+  2. Run /lkingest to load the syllabus and create your first course.
+  3. Run /lkstudy or /lkquiz to start studying.
+  4. Run /lkexport to back up your progress anytime.
 ──────────────────────────────────────────────────────
 ```
 
@@ -754,7 +754,7 @@ Triggered: file classified as `syllabus` + course has no unit structure yet.
    - Instructor name
    - Grading breakdown (components + weights)
    - Unit/topic structure (week schedule → logical units)
-   - Exam/quiz schedule (titles, dates, times, locations, coverage)
+   - Exam/lkquiz schedule (titles, dates, times, locations, coverage)
    - Assignment and lab deadlines
 
 2. **Build `course_structure.json`**: Map weeks → units. Extract 8-15 subject-specific keywords per unit (terminology, procedure names, key concepts). Drive course ID and unit assignment.
@@ -789,7 +789,7 @@ Triggered: file classified as `syllabus` + course has no unit structure yet.
    [Attendance, late policy, exam format, anything that affects grades]
    ```
 
-7. **Ensure `misc.md` and `activity_log.md` exist**: Course created inline (not via `/course add`) → create both using Section 6 `/course add` templates (steps 6–7).
+7. **Ensure `misc.md` and `activity_log.md` exist**: Course created inline (not via `/lkcourse add`) → create both using Section 6 `/lkcourse add` templates (steps 6–7).
 
 8. **Confirm**:
    ```
@@ -887,15 +887,15 @@ Output lands directly on stdout — no temp file, no cleanup needed. Same error-
 5. **Quizzes are materials-only** — never use web content for quiz questions
 6. **Tie weak areas to exams** — reporting weak areas → always note which upcoming exam they affect
 7. **Urgency threshold** — active course has exam ≤ 7 days → prepend Section 1 urgency notice to every relevant response
-8. **Respect skip decisions** — user skips file during ingestion → leave untouched; don't retry until user runs `/ingest` again
+8. **Respect skip decisions** — user skips file during ingestion → leave untouched; don't retry until user runs `/lkingest` again
 9. **No hallucinated subject-matter knowledge** — all content facts from ingested materials only. No pre-loaded domain knowledge for any subject. Topic not in materials → `"No materials covering '{topic}' ingested for {course_code} yet."` If partially covered, state exactly which units cover it and which do not.
-10. **Immediate progress updates** — update JSON after each quiz/study session; startup banner reflects latest state
-11. **Web supplement reminder** — end of every `/study`: `"To supplement with web research (Tier 1 sources only), ask me to search for [topic]."`
-12. **`misc.md` always fresh** — read at start of every `/study` and `/quiz`; surface entries from past 14 days under `## Course Notes` before main content
+10. **Immediate progress updates** — update JSON after each quiz/lkstudy session; startup banner reflects latest state
+11. **Web supplement reminder** — end of every `/lkstudy`: `"To supplement with web research (Tier 1 sources only), ask me to search for [topic]."`
+12. **`misc.md` always fresh** — read at start of every `/lkstudy` and `/lkquiz`; surface entries from past 14 days under `## Course Notes` before main content
 13. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
 14. **Log every action** — study, quiz, ingest, deadline change, course event → log entry; never skip
 15. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error rather than silently writing corrupt data.
-16. **Python path from config only** — always use `$pythonExe` (set at startup Step 0.5). Never hardcode interpreter path in any command. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/setup`.
+16. **Python path from config only** — always use `$pythonExe` (set at startup Step 0.5). Never hardcode interpreter path in any command. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/lksetup`.
 
 ---
 
