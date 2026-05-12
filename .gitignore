@@ -9,6 +9,7 @@ __pycache__/
 
 # Temp extraction output
 scripts/tmp_extract.json
+scripts/tmp_pages/
 
 # OS
 .DS_Store

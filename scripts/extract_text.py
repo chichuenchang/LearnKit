@@ -1,24 +1,56 @@
 """
 Text extraction helper for PT Study Agent.
 Usage: python extract_text.py --file <path> --output <path>
-Outputs JSON: { success, filename, file_type, page_count, word_count, text, error }
+Outputs JSON: { success, filename, file_type, page_count, word_count, text,
+                scanned, image_paths, capped, error }
 """
 import argparse
 import json
 import os
+import pathlib
 import sys
+
+SCRIPTS_DIR = pathlib.Path(__file__).parent
+SCANNED_WORDS_PER_PAGE_THRESHOLD = 50
+MAX_SCANNED_PAGES = 20
 
 
 def extract_pdf(path):
     import pdfplumber
     pages = []
     with pdfplumber.open(path) as pdf:
+        total_pages = len(pdf.pages)
         for page in pdf.pages:
             text = page.extract_text()
             if text:
                 pages.append(text)
     full_text = "\n\n".join(pages)
-    return full_text, len(pages)
+    word_count = len(full_text.split())
+    is_scanned = total_pages > 0 and word_count < SCANNED_WORDS_PER_PAGE_THRESHOLD * total_pages
+    return full_text, total_pages, is_scanned
+
+
+def render_pdf_pages(path):
+    import fitz
+    basename = pathlib.Path(path).stem
+    out_dir = SCRIPTS_DIR / "tmp_pages" / basename
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    doc = fitz.open(path)
+    total_pages = len(doc)
+    capped = total_pages > MAX_SCANNED_PAGES
+    render_count = min(total_pages, MAX_SCANNED_PAGES)
+
+    image_paths = []
+    mat = fitz.Matrix(2, 2)
+    for i in range(render_count):
+        pix = doc[i].get_pixmap(matrix=mat)
+        img_path = out_dir / f"page_{i + 1:03d}.png"
+        pix.save(str(img_path))
+        image_paths.append(str(img_path))
+
+    doc.close()
+    return image_paths, total_pages, capped
 
 
 def extract_pptx(path):
@@ -61,6 +93,9 @@ def main():
         "page_count": 0,
         "word_count": 0,
         "text": "",
+        "scanned": False,
+        "image_paths": [],
+        "capped": False,
         "error": None,
     }
 
@@ -72,7 +107,16 @@ def main():
 
         if ext == ".pdf":
             result["file_type"] = "pdf"
-            result["text"], result["page_count"] = extract_pdf(args.file)
+            text, page_count, is_scanned = extract_pdf(args.file)
+            result["page_count"] = page_count
+            if is_scanned:
+                result["scanned"] = True
+                image_paths, _, capped = render_pdf_pages(args.file)
+                result["image_paths"] = image_paths
+                result["capped"] = capped
+            else:
+                result["text"] = text
+                result["word_count"] = len(text.split())
         elif ext == ".pptx":
             result["file_type"] = "pptx"
             result["text"], result["page_count"] = extract_pptx(args.file)
@@ -85,7 +129,8 @@ def main():
         else:
             raise ValueError(f"Unsupported file type: {ext}")
 
-        result["word_count"] = len(result["text"].split())
+        if not result["scanned"]:
+            result["word_count"] = len(result["text"].split())
         result["success"] = True
 
     except Exception as e:

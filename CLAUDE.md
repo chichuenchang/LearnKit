@@ -840,6 +840,25 @@ Clean up after reading:
 Remove-Item $tmpOutput -ErrorAction SilentlyContinue
 ```
 
+**Scanned PDF branch** — when `$data.scanned -eq $true`:
+```powershell
+if ($data.scanned) {
+    if ($data.capped) {
+        # Surface to user before proceeding
+        Write-Host "Note: PDF has $($data.page_count) pages — first 20 ingested."
+    }
+    # Read each page image via Read tool — Claude handles natively (multimodal)
+    # $data.image_paths contains absolute PNG paths, read in order
+    # Generate study notes from visual page content; same tagging rules apply (Section 1)
+    # First line of notes: "**Source**: {filename} | ... | **Note**: Scanned PDF — content read from page images"
+
+    # Clean up after notes generated:
+    $basename = [System.IO.Path]::GetFileNameWithoutExtension($data.filename)
+    $pagesDir = Join-Path $scriptsRoot "tmp_pages" $basename
+    Remove-Item $pagesDir -Recurse -ErrorAction SilentlyContinue
+}
+```
+
 ### `data_writer.py` — validated structured writes (no temp file)
 
 ```powershell

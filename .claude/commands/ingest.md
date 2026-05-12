@@ -21,6 +21,9 @@ On confirm: **copy** into project. Never delete or move originals.
 **Shared pipeline for each file:**
 
 1. **Extract text**: Run `scripts\extract_text.py` (via $pythonExe and $scriptsRoot — see Section 9 of CLAUDE.md). Fails → report error and skip; don't continue with that file.
+   - `scanned: false` → use `data.text` as normal for all downstream steps
+   - `scanned: true` → read each path in `data.image_paths` via Read tool; generate study notes from visual page content; clean up `tmp_pages/{basename}/` after notes written
+   - `capped: true` → surface before proceeding: `"Note: {filename} has {page_count} pages — first 20 ingested. Re-ingest and confirm to process remaining pages."`
 
 2. **Identify course**: Section 4 logic (CLAUDE.md).
 
@@ -111,3 +114,4 @@ On confirm: **copy** into project. Never delete or move originals.
 - **Unsupported type** (.xlsx, .zip, etc.): Report and skip.
 - **Python fails**: Report error, skip file, continue. First file fails with env error → stop and ask user to check Python path via `/setup`.
 - **No course structure**: Ingest but assign to `unclassified`. Note: `"No course structure for {course_code} — filed as unclassified. Ingest syllabus to enable unit assignment."`
+- **Scanned PDF**: Detected when text yield < 50 words/page. Pages converted to images by `extract_text.py`, read by agent via Read tool. Notes generated from visual content. First line of notes: `**Source**: {filename} | **Unit**: {unit} | **Type**: {type} | **Ingested**: {date} | **Note**: Scanned PDF — content read from page images`

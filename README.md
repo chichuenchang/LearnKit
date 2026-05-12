@@ -15,7 +15,7 @@ Works with any university course. Each student keeps their own private data.
 ### Python packages
 
 ```bash
-pip install pdfplumber python-pptx python-docx
+pip install pdfplumber python-pptx python-docx pymupdf
 ```
 
 | Package | Purpose |
@@ -23,6 +23,7 @@ pip install pdfplumber python-pptx python-docx
 | `pdfplumber` | Extract text from PDF lecture notes and syllabuses |
 | `python-pptx` | Extract text from PowerPoint slides |
 | `python-docx` | Extract text from Word documents |
+| `pymupdf` | Render scanned PDF pages as images for visual extraction |
 
 > `/setup` will detect your Python interpreter and offer to install missing packages automatically.
 
