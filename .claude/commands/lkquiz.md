@@ -1,4 +1,4 @@
-﻿Base context (path variables, schemas, behavioral rules, Section 1 tagging) loaded from CLAUDE.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
+﻿Base context (path variables, behavioral rules, Section 1 tagging) loaded from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
 
 ## `/lkquiz {course_code} {scope}` — Interactive adaptive quiz
 
