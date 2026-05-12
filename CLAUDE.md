@@ -175,28 +175,8 @@ Full spec in `.claude/commands/lkquiz.md`. Adaptive weighting from quiz history,
 
 ---
 
-### `/lkdeadlines` — View upcoming deadlines
-
-**`/lkdeadlines`**: All incomplete deadlines, all active courses, sorted by date.
-```
-Upcoming Deadlines — All Courses
-─────────────────────────────────────────────────────────────────────────
-  Date       Course      Type          Title                        Days
-  ────────── ─────────── ───────────── ──────────────────────────── ────
-  2026-05-21 BIOL 201    EXAM          Midterm 1 — Cell Biology      10  ← URGENT
-  2026-05-24 COMP 361    ASSIGNMENT    Lab Report 2                  13
-  2026-05-28 BIOL 201    LAB PRAC      Lab Practical 2               17
-  2026-06-05 COMP 361    QUIZ          Quiz 2 — Algorithms           25
-─────────────────────────────────────────────────────────────────────────
-Mark as completed: /lkdeadlines complete {deadline_id}
-```
-≤ 14 days → `← URGENT`.
-
-**`/lkdeadlines {course_code}`**: Filtered to one course.
-
-**`/lkdeadlines add`**: User-initiated deadline parse from pasted announcement text.
-
-**`/lkdeadlines complete {deadline_id}`**: Set `completed: true` in `global_deadlines.json`. Recalculate `next_deadline_date` in `courses_index.json`.
+### `/lkdeadlines` — View and manage deadlines
+Full spec in `.claude/commands/lkdeadlines.md`. Variants: `/lkdeadlines`, `/lkdeadlines {course}`, `/lkdeadlines add`, `/lkdeadlines complete {id}`.
 
 ---
 
@@ -244,271 +224,37 @@ After confirmed deadlines saved, write log to both `data\activity_log.md` and co
 ---
 
 ### `/lkprogress` — Study dashboard
-
-**`/lkprogress`**: Overview, all active courses.
-```
-Study Progress — All Active Courses
-──────────────────────────────────────────────────────────────────────
-Course       Units Done  Overall %  Study Streak  Nearest Exam
-──────────── ─────────── ────────── ───────────── ────────────────────
-BIOL 201     4/6         62%        3 days        May 21 — Midterm 1 (10d)
-COMP 361     2/5         20%        1 day         Jun 5  — Lab Quiz 2 (25d)
-──────────────────────────────────────────────────────────────────────
-Global weak areas needing attention:
-  BIOL 201: cell cycle phases, membrane transport
-  COMP 361: graph algorithms, dynamic programming
-```
-
-**`/lkprogress {course_code}`**: Detailed per-unit breakdown.
+Full spec in `.claude/commands/lkprogress.md`. Variants: `/lkprogress`, `/lkprogress {course_code}`.
 
 ---
 
-### `/lkcourse add {code} {name}` — Register new course
-
-Ask: `"Semester (e.g., Fall 2026):"`
-
-1. Generate slug: `BIOL 201` → `biol_201`
-2. Check for slug collision → warn and confirm if similar exists
-3. Add entry to `courses_index.json` (`active_courses`)
-4. Create directory skeleton under `$savedataRoot\courses\{slug}\`:
-   ```
-   courses\{slug}\
-   courses\{slug}\materials\
-   courses\{slug}\materials\multi_unit\
-   courses\{slug}\data\
-   ```
-5. Create default empty JSON: `course_structure.json`, `progress.json`
-6. Create `courses\{slug}\activity_log.md`:
-   ```markdown
-   # {course_code} — Activity Log
-   **Course**: {course_code} — {course_name} | **Semester**: {semester}
-   <!-- Entries are prepended below this line. Newest entries appear first. -->
-
-   ---
-   ```
-7. Create `courses\{slug}\misc.md`:
-   ```markdown
-   # {course_code} — Notes & Miscellaneous
-   **Course**: {course_code} — {course_name} | **Semester**: {semester} | **Created**: {date}
-
-   > Use this file for anything important that doesn't fit elsewhere: deadline changes,
-   > instructor announcements, reminders, exam format updates, etc.
-   > Agent reads this at the start of every study and quiz session.
-
-   ---
-
-   ```
-8. Print:
-   ```
-   Course added: {course_code} — {course_name}
-   Folder: savedata\courses\{slug}\
-   Next step: Drop the syllabus into savedata\raw\ or paste its path to load the course structure.
-   ```
-
-### `/lkcourse complete {code}` — Archive completed course
-
-1. Show confirmation:
-   ```
-   Archive {course_code} — {course_name}?
-   This will move savedata\courses\{slug}\ → savedata\archive\{slug}\ and stop tracking its deadlines.
-   Contents: 14 material files, 8 quizzes, 3 data files.
-   Type YES to confirm:
-   ```
-2. On "YES":
-   - `Move-Item "$savedataRoot\courses\{slug}" "$savedataRoot\archive\{slug}"`
-   - Write `archive\{slug}\archive_summary.md`:
-     ```
-     # {course_code} — Archive Summary
-     Archived: {date}
-     Semester: {semester}
-     Materials ingested: N files
-     Quizzes completed: N
-     Final completion: N%
-     Global weak areas at archive time: [list]
-     ```
-   - Move entry: `active_courses` → `archived_courses` in `courses_index.json`
-   - Remove course deadlines from `global_deadlines.json`
-
-   - Write `[COURSE]` to `data\activity_log.md`: `"{course_code} archived — {final_completion_pct}% complete after {N} study sessions, {N} quizzes"`
-   - Print: `"{course_code} archived. Deadlines removed from tracker."`
-
-### `/lkcourse list` — List all courses
-
-Table of all active + archived courses with status, progress, semester.
+### `/lkcourse` — Course management
+Full spec in `.claude/commands/lkcourse.md`. Variants: `/lkcourse add {code} {name}`, `/lkcourse complete {code}`, `/lkcourse list`.
 
 ---
 
 ### `/lklog` — View activity log
-
-**`/lklog`** — Last 7 days, all courses (`data\activity_log.md`).
-**`/lklog {course_code}`** — Last 7 days, one course (`courses\{slug}\activity_log.md`).
-**`/lklog {N}d`** — Last N days, e.g. `/lklog 14d` or `/lklog 30d`.
-**`/lklog quiz {unit_id}`** — All past quiz blocks for unit from `courses\{slug}\activity_log.md`, newest first. Multiple active → ask course.
+Full spec in `.claude/commands/lklog.md`. Variants: `/lklog`, `/lklog {course}`, `/lklog {N}d`, `/lklog quiz {unit_id}`.
 
 ---
 
 ### `/lksave` — Reconcile pending data writes
-
-Recovery command for long sessions where agent may have drifted and missed writing data. Reviews actions taken this session from conversation context, checks that all expected file writes occurred, and writes any that are missing.
-
-**For each action type, verify and recover if missing:**
-
-| Action | Expected writes |
-|--------|----------------|
-| `/lkquiz` | `quiz_history` entry in `progress.json` · `[QUIZ]` block in `courses\{slug}\activity_log.md` · one-liner in `data\activity_log.md` · `weak_areas` + `status` updated |
-| `/lkstudy` | `[STUDY]` in both logs · `study_sessions` count in `progress.json` |
-| `/lkingest` | Entry in `data\materials_manifest.json` · `materials_ingested` count in `progress.json` · `[INGEST]` in both logs |
-| `/lkdeadlines add` | Entry in `data\global_deadlines.json` · `[DEADLINE]` in both logs · `next_deadline_date` in `courses_index.json` |
-
-**Steps:**
-1. List all commands run this session (from context)
-2. For each, read the relevant files and check for the expected entries
-3. Missing entry → write it now using the correct format from Section 11
-4. Already present → skip silently
-
-**Report:**
-```
-/lksave — Reconciliation complete
-──────────────────────────────────────────
-Recovered (3):
-  ✓ [QUIZ]  BIOL 201 | Unit 1 — score entry written to progress.json
-  ✓ [QUIZ]  BIOL 201 | Unit 1 — log entry written to activity_log.md
-  ✓ [STUDY] COMP 361 | Unit 2 — log entry written to activity_log.md
-Already committed (5): skipped
-──────────────────────────────────────────
-```
-
-Nothing to recover → `"All data writes confirmed — nothing missing."`
+Full spec in `.claude/commands/lksave.md`. Recovery command for missed writes in long sessions.
 
 ---
 
 ### `/lkexport [path]` — Pack savedata into a zip file
-
-**What's included:**
-```
-savedata\data\
-savedata\courses\**\*.md       (study notes only — no source binaries)
-savedata\archive\
-savedata\user.config.json
-```
-
-**What's excluded:**
-```
-machine.config.json            (machine-specific — set fresh on each machine via /lksetup)
-raw\                           (drop zone — transient)
-**/source_*.*                  (original source files — re-ingestable from course portal)
-```
-
-Output filename: `learnkit_export_{user_name}_{YYYYMMDD}.zip`
-Default output location: `$projectRoot`. Override with optional `[path]` argument.
-
-Run `export_savedata.py --savedata $savedataRoot --output $exportPath`. Parse JSON result. Report:
-```
-Export complete — learnkit_export_slimj_20260511.zip
-Location : C:\Users\{user}\Projects\learnkit\
-Contents : N files (3 courses, 14 notes, 8 quiz logs, deadlines)
-Size     : 142 KB
-```
-
-Log: `- [EXPORT] savedata packed → {filename} ({size_kb} KB)`
+Full spec in `.claude/commands/lkexport.md`. Includes notes + data, excludes machine.config and source binaries.
 
 ---
 
 ### `/lkimport <path>` — Restore savedata from zip
-
-Pre-check: path exists and ends in `.zip` → else: `"File not found or not a .zip: {path}"`
-
-If `savedata/` already has data → warn:
-```
-⚠ savedata/ already contains data.
-Import will merge — existing files will be overwritten by zip contents.
-machine.config.json will NOT be touched.
-Type YES to continue:
-```
-
-Run `import_savedata.py --zip $importPath --savedata $savedataRoot`.
-
-After extract: re-run startup Steps 1–4 (reload JSONs, reprint banner).
-
-Report:
-```
-Import complete — learnkit_export_slimj_20260511.zip
-Restored : N files (3 courses, 14 notes, 8 quiz logs, all deadlines)
-Skipped  : machine.config.json (kept local config)
-```
-
-Log: `- [IMPORT] savedata restored from {filename}`
+Full spec in `.claude/commands/lkimport.md`. Merges zip into savedata, skips machine.config.
 
 ---
 
 ### `/lksetup` — New-user onboarding and machine configuration
-
-Run when `savedata/` does not exist, or explicitly invoked at any time. Safe to re-run.
-
-**Step 1 — Detect project root (automatic)**
-Path detection: same as startup Step 0. Print detected `$projectRoot` and `$savedataRoot` in a banner.
-
-**Step 2 — Locate Python interpreter**
-
-Test `python` in PATH with `import pdfplumber, pptx, docx`. Passes → use `python`, print `"Python: found in PATH — packages OK"`.
-
-Fails → probe common locations (`%USERPROFILE%\miniconda3`, `\anaconda3`, `\AppData\Local\Programs\Python\Python311`, `\Python312`) and show results:
-```
-Python not found in PATH or packages missing.
-
-Suggested interpreters (tested):
-  [1] C:\Users\{user}\miniconda3\python.exe  ← packages OK
-  [2] C:\Users\{user}\AppData\...\Python311\python.exe  ← packages MISSING
-  [3] Enter path manually
-
-Select [1-3]:
-```
-If packages missing but Python found → offer `pip install pdfplumber python-pptx python-docx [Y/n]`.
-Allow skip with warning: `"Ingestion will not work until Python is configured. Run /lksetup again to fix."`
-
-**Step 3 — Create savedata/ directory structure**
-
-Create subdirs under `$savedataRoot`: `data\`, `courses\`, `archive\`, `raw\`
-Create default data JSON files only if not already present (re-run safe):
-- `data\courses_index.json` → default empty
-- `data\global_deadlines.json` → default empty
-- `data\materials_manifest.json` → default empty
-- `data\activity_log.md` → header only if missing
-
-**Step 4 — User name**
-```
-Your name (for display in banners — e.g., "Alex", "slimj"):
-> _
-```
-Blank → use `"Student"` as default.
-
-**Step 5 — Write config files**
-Write `user.config.json` and `machine.config.json` per Section 2 schemas.
-
-**Step 6 — Summary**
-```
-──────────────────────────────────────────────────────
-Setup complete!
-
-User      : {$userName}
-Python    : {$pythonExe}  [OK / ⚠ packages missing]
-savedata/ : {$savedataRoot}
-──────────────────────────────────────────────────────
-Next steps:
-  1. Drop a syllabus into savedata\raw\ or paste its path.
-  2. Run /lkingest to load the syllabus and create your first course.
-  3. Run /lkstudy or /lkquiz to start studying.
-  4. Run /lkexport to back up your progress anytime.
-──────────────────────────────────────────────────────
-```
-
-**Re-running on existing savedata** → show menu:
-```
-savedata/ already exists. What would you like to do?
-  [1] Reconfigure Python path only
-  [2] Full re-setup (safe — will not overwrite existing data)
-  [3] Cancel
-```
+Full spec in `.claude/commands/lksetup.md`. Configures Python, creates savedata/ structure, writes config files. Safe to re-run.
 
 ---
 
