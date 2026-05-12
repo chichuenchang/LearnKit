@@ -43,7 +43,7 @@ def fail(msg: str):
 def load_json(path: pathlib.Path, default: dict) -> dict:
     if path.exists():
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            return json.loads(path.read_text(encoding="utf-8-sig"))
         except Exception as e:
             raise ValueError(f"Failed to parse {path.name}: {e}")
     return default
@@ -319,7 +319,7 @@ def _append_log(log_path: pathlib.Path, entry: str):
     heading = f"## {today.strftime('%Y-%m-%d')} ({today.strftime('%A')})"
 
     if log_path.exists():
-        content = log_path.read_text(encoding="utf-8")
+        content = log_path.read_text(encoding="utf-8-sig")
     else:
         content = ""
 
