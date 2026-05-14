@@ -14,7 +14,7 @@ Print detected paths in a banner.
 
 **Step 2 — Locate Python interpreter**
 
-Test `python` in PATH with `import pdfplumber, pptx, docx`. Passes → use `python`, print `"Python: found in PATH — packages OK"`.
+Test `python` in PATH with `import pdfplumber, pptx, docx`. Passes → use `python`, print `"Python: found in PATH — packages OK"`. Sets `packages_ok: true` in machine.config.json (Step 5).
 
 Fails → probe common locations (`%USERPROFILE%\miniconda3`, `\anaconda3`, `\AppData\Local\Programs\Python\Python311`, `\Python312`) and show results:
 ```
@@ -27,8 +27,7 @@ Suggested interpreters (tested):
 
 Select [1-3]:
 ```
-If packages missing but Python found → offer `pip install pdfplumber python-pptx python-docx [Y/n]`.
-Allow skip with warning: `"Ingestion will not work until Python is configured. Run /lksetup again to fix."`
+If packages missing but Python found → offer `pip install pdfplumber python-pptx python-docx [Y/n]`. On success → `packages_ok: true`. On skip/fail → `packages_ok: false`, warn: `"Ingestion will not work until Python is configured. Run /lksetup again to fix."`
 
 **Step 3 — Create savedata/ directory structure**
 
@@ -48,7 +47,7 @@ Blank → use `"Student"` as default.
 
 **Step 5 — Write config files**
 Write `user.config.json` and `machine.config.json` per Section 2 schemas.
-`machine.config.json` must include: `machine_id`, `python_exe`, `project_root`, `savedata_root`, `scripts_root` (absolute paths from Step 1).
+`machine.config.json` must include: `machine_id`, `python_exe`, `project_root`, `savedata_root`, `scripts_root` (absolute paths from Step 1), `packages_ok` (bool — true only if Step 2 passed).
 
 **Step 6 — Summary**
 ```

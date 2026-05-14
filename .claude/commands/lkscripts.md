@@ -2,7 +2,7 @@ Shared protocol file — not a user-invocable command. Referenced by all skill f
 
 ## Python Script Protocol
 
-Use `$pythonExe` (resolved at startup Step 0.5). Use `$scriptsRoot` for script path. Temp output goes to `$scriptsRoot\tmp_extract.json` (gitignored at project root level).
+Use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Use `$scriptsRoot` for script path. Temp output goes to `$scriptsRoot\tmp_extract.json` (gitignored at project root level).
 
 ```powershell
 $tmpOutput  = Join-Path $scriptsRoot "tmp_extract.json"

@@ -14,7 +14,7 @@ Type YES to continue:
 
 Run `import_savedata.py --zip $importPath --savedata $savedataRoot`.
 
-After extract: re-run startup Steps 1–4 (reload JSONs, reprint banner).
+After extract: re-run startup Steps 1–3 (reload JSONs, reprint banner).
 
 Report:
 ```
