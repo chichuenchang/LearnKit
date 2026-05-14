@@ -122,43 +122,18 @@ Any input (or blank) → next question.
 
 ### Step 3 — Results summary (after final Q or `end quiz`)
 
-Single unit:
+Print one line, then proceed to Step 4:
+
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Quiz Complete  ·  BIOL 201  ·  Unit 1: Cell Structure
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  Score    14 / 18   78%   ✓ PASS   (threshold: 70%)
-
-  Correct   (14)  Q1  Q2  Q4  Q5  Q7  Q8  Q10–Q14  Q16  Q17
-  Incorrect  (3)  Q3 cell cycle phases  ·  Q6 membrane transport  ·  Q9 ATP synthesis
-  Skipped    (1)  Q18
-
-  MCQ       12/13   92%
-  Short ans   2/5   40%  ← needs work
+Done — 14/18  78%  ✓ PASS
 ```
 
-Multi-unit — add per-unit breakdown after the score line:
+FAIL:
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Quiz Complete  ·  BIOL 201  ·  Units 1–3 (Midterm 1 scope)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  Score    19 / 25   76%   ✓ PASS   (threshold: 70%)
-
-  Unit 1 — Cell Structure    8/9   89%
-  Unit 2 — Cell Cycle        6/9   67%  ← weak
-  Unit 3 — Genetics          5/7   71%
-
-  Correct   (19)  Q1  Q2  Q3 ...
-  Incorrect  (5)  Q4 cell cycle phases  ·  Q8 enzyme kinetics ...
-  Skipped    (1)  Q25
-
-  MCQ       14/17   82%
-  Short ans   5/8   63%  ← needs work
+Done — 9/18  50%  ✗ FAIL
 ```
 
-Early `end quiz` → append `(partial — ended at Q{N})` after the title line.
+If 0 questions answered → print nothing.
 
 ---
 
