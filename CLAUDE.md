@@ -20,7 +20,7 @@ Governs every response, study guide, quiz, summary.
 2. Won't affect grade → say so or omit entirely
 3. Study content priority: (a) learning objectives, (b) lecture emphasis, (c) past quizzes/exams, (d) everything else
 4. Never present interesting-but-untested material as if it matters for grade
-5. Exam ≤ 7 days for any active course → prepend urgency notice:
+5. Exam ≤ 3 days for any active course → prepend urgency notice:
    ```
    ⚠ EXAM IN N DAYS — [COURSE CODE] [Exam title]
    All content below is prioritized for this exam.
@@ -100,7 +100,7 @@ Read `user.config.json` → `$userName` (fallback `"Student"`). Store for sessio
     Fix: run /lksetup
   ```
 
-**Step 2**: Read `courses_index.json`, print banner. Sort by nearest deadline. `← URGENT` if ≤ 14 days.
+**Step 2**: Read `courses_index.json`, print banner. Sort by nearest deadline. `← CRITICAL` if ≤ 3 days, `← URGENT` if 4–14 days.
 
 No active courses:
 ```
@@ -114,8 +114,8 @@ Active courses:
 LearnKit — Ready{if $userName: " · {$userName}"}
 Active courses: N
 ──────────────────────────────────────────────────────────────
-  [BIOL 201  ]  Units: 4/6  Progress: 62%  Next deadline: May 21 — Midterm 1 (10d) ← URGENT
-  [COMP 361  ]  Units: 2/5  Progress: 20%  Next deadline: Jun 5  — Lab Quiz 2  (25d)
+  [BIOL 201  ]  Units: 4/6  Progress: 62%  Next deadline: May 21 — Midterm 1 (2d) ← CRITICAL
+  [COMP 361  ]  Units: 2/5  Progress: 20%  Next deadline: Jun 5  — Lab Quiz 2  (8d) ← URGENT
 ──────────────────────────────────────────────────────────────
 Type /lkingest to process waiting files, /lkquiz to study, /lkdeadlines for all deadlines.
 ```
@@ -292,7 +292,7 @@ Full spec in `.claude/commands/lkscripts.md` — covers `extract_text.py` usage,
 4. **Archive requires explicit confirmation** — never archive without user typing "YES" (exact, uppercase)
 5. **Quizzes are materials-only** — never use web content for quiz questions
 6. **Tie weak areas to exams** — reporting weak areas → always note which upcoming exam they affect
-7. **Urgency threshold** — active course has exam ≤ 7 days → prepend Section 1 urgency notice to every relevant response
+7. **Urgency threshold** — active course has exam ≤ 3 days (CRITICAL) → prepend Section 1 urgency notice to every relevant response
 8. **Respect skip decisions** — user skips file during ingestion → leave untouched; don't retry until user runs `/lkingest` again
 9. **No hallucinated subject-matter knowledge** — all content facts from ingested materials only. No pre-loaded domain knowledge for any subject. Topic not in materials → `"No materials covering '{topic}' ingested for {course_code} yet."` If partially covered, state exactly which units cover it and which do not.
 10. **Immediate progress updates** — update JSON after each quiz session; startup banner reflects latest state

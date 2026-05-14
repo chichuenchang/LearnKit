@@ -8,14 +8,15 @@ Upcoming Deadlines — All Courses
 ─────────────────────────────────────────────────────────────────────────
   Date       Course      Type          Title                        Days
   ────────── ─────────── ───────────── ──────────────────────────── ────
-  2026-05-21 BIOL 201    EXAM          Midterm 1 — Cell Biology      10  ← URGENT
+  2026-05-15 BIOL 201    EXAM          Midterm 1 — Cell Biology       2  ← CRITICAL
+  2026-05-21 COMP 361    EXAM          Midterm 1 — Algorithms        10  ← URGENT
   2026-05-24 COMP 361    ASSIGNMENT    Lab Report 2                  13
   2026-05-28 BIOL 201    LAB PRAC      Lab Practical 2               17
   2026-06-05 COMP 361    QUIZ          Quiz 2 — Algorithms           25
 ─────────────────────────────────────────────────────────────────────────
 Mark as completed: /lkdeadlines complete {deadline_id}
 ```
-≤ 14 days → `← URGENT`.
+≤ 3 days → `← CRITICAL`. 4–14 days → `← URGENT`.
 
 **`/lkdeadlines {course_code}`**: Filtered to one course.
 
