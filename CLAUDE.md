@@ -35,15 +35,18 @@ Agent name  : LearnKit
 Shell       : PowerShell
 Python pkgs : pdfplumber, python-pptx, python-docx
 
-PATH RESOLUTION (computed at startup Step 0 — never hardcoded):
-  $projectRoot   = git rev-parse --show-toplevel  (fallback: (Get-Location).Path)
-  $savedataRoot  = Join-Path $projectRoot "savedata"
-  $scriptsRoot   = Join-Path $projectRoot "scripts"
-  $pythonExe     = from savedata\machine.config.json → python_exe field, fallback "python"
+PATH RESOLUTION (cached in machine.config.json — written by /lksetup, read on startup):
+  $projectRoot   = machine.config.json → project_root field
+  $savedataRoot  = machine.config.json → savedata_root field
+  $scriptsRoot   = machine.config.json → scripts_root field
+  $pythonExe     = machine.config.json → python_exe field, fallback "python"
+
+  Re-resolution triggers: /lksetup, user request, or mid-session path failure.
+  Never call git rev-parse at startup — paths come from cache only.
 
 CONFIG FILES (under $savedataRoot — both gitignored from public repo):
   user.config.json     — { user_name }
-  machine.config.json  — { machine_id, python_exe }      ← never share or commit this
+  machine.config.json  — { machine_id, python_exe, project_root, savedata_root, scripts_root }      ← never share or commit this
 
 GLOBAL DATA (under $savedataRoot\data\):
   courses_index.json        — master registry of all courses (active + archived)
@@ -73,9 +76,20 @@ All relative paths like `data\`, `courses\`, `archive\`, `raw\` throughout this 
 
 Run at start of every session. All checks informational only — never block startup.
 
-**Step 0**: Resolve `$projectRoot` (git rev-parse, fallback cwd) → derive `$savedataRoot`, `$scriptsRoot` (see Section 2).
+**Step 0**: Read `savedata\machine.config.json` (relative to cwd = project root).
+- All path fields present (`project_root`, `savedata_root`, `scripts_root`, `python_exe`) → store as session vars. Never re-read mid-session.
+- File missing OR any path field absent → ask:
+  ```
+  Paths not configured. Run /lksetup now? [Y/n]
+  ```
+  Y → run `/lksetup`. N → derive fallback (`savedata_root = cwd\savedata`, `scripts_root = cwd\scripts`, `python_exe = "python"`) and continue with warning.
+- All fields present but `savedata_root` does not exist on disk → warn:
+  ```
+  ⚠ Cached path invalid — savedata\ not found at {savedata_root}. Re-run /lksetup? [Y/n]
+  ```
+  Y → run `/lksetup`. N → proceed with warning.
 
-**Step 0.5**: Read `machine.config.json` → `$pythonExe` (fallback `"python"`). Read `user.config.json` → `$userName`. Store for session — never re-read mid-session.
+Read `user.config.json` → `$userName` (fallback `"Student"`). Store for session.
 
 **Step 1**: Check `$savedataRoot` exists. Missing → print banner and STOP:
 ```

@@ -5,7 +5,12 @@ Base context (path variables, behavioral rules) loaded from CLAUDE.md. Python sc
 Run when `savedata/` does not exist, or explicitly invoked at any time. Safe to re-run.
 
 **Step 1 — Detect project root (automatic)**
-Path detection: same as startup Step 0. Print detected `$projectRoot` and `$savedataRoot` in a banner.
+Run `git rev-parse --show-toplevel` (fallback: cwd). Derive:
+- `$projectRoot` = git output or cwd
+- `$savedataRoot` = `Join-Path $projectRoot "savedata"`
+- `$scriptsRoot`  = `Join-Path $projectRoot "scripts"`
+
+Print detected paths in a banner.
 
 **Step 2 — Locate Python interpreter**
 
@@ -43,6 +48,7 @@ Blank → use `"Student"` as default.
 
 **Step 5 — Write config files**
 Write `user.config.json` and `machine.config.json` per Section 2 schemas.
+`machine.config.json` must include: `machine_id`, `python_exe`, `project_root`, `savedata_root`, `scripts_root` (absolute paths from Step 1).
 
 **Step 6 — Summary**
 ```
