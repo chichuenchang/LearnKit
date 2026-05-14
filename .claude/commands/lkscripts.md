@@ -73,12 +73,11 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |
 | `log entry` | `--savedata --course --entry` | — |
-| `manifest add` | `--savedata --course-id --course-code --filename --method --file-type --unit --confidence --filed-path --summary-path` | `--original-path --page-count --word-count` |
 
 **Flag notes:**
 - `--course` = course slug (e.g. `pther_350a`) — used by `progress`, `log entry`
-- `--course-id` = course slug — used by `deadline add`, `manifest add`
-- `--course-code` = display code (e.g. `PTHER 350A`) — used by `deadline add`, `manifest add`
+- `--course-id` = course slug — used by `deadline add`
+- `--course-code` = display code (e.g. `PTHER 350A`) — used by `deadline add`
 - `deadline add` requires BOTH `--course-id` and `--course-code` (separate flags, not interchangeable)
 - `log entry --course slug` writes to that course's `activity_log.md`
 

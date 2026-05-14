@@ -10,10 +10,6 @@ Default empty: `{"last_updated": null, "active_courses": [], "archived_courses":
 Valid `type`: `exam`, `quiz`, `assignment`, `lab`, `lab_practical`, `presentation`, `other`
 Default empty: `{"last_updated": null, "deadlines": []}`
 
-## `data\materials_manifest.json` (global)
-**files[]**: `manifest_id`, `course_id`, `course_code`, `original_filename`, `ingestion_method` (`"raw_folder"` or `"path_paste"`), `original_path` (null if raw_folder), `ingestion_date`, `file_type`, `unit_assigned` (slug, `"unclassified"`, `"multi_unit"`, or `"syllabus"`), `confidence` (`"high"`, `"medium"`, `"low"`, `"user_assigned"`), `filed_path`, `summary_path`, `page_count`, `word_count`, `summary_generated` (bool)
-Default empty: `{"last_updated": null, "total_files": 0, "files": []}`
-
 ## Per-course `data\course_structure.json`
 **units[]**: `unit_id`, `display_name`, `slug`, `weeks` (array), `topics` (array), `associated_exams` (array), `keywords` (8–15 subject-specific terms — drives unit assignment and adaptive quiz weighting)
 **exams[]**: `exam_id`, `title`, `units_covered` (array), `date`, `time`, `location`

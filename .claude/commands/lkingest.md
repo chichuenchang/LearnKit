@@ -79,24 +79,15 @@ On confirm: **copy** into project. Never delete or move originals.
    ──────────────────────────────────────────────────────
    ```
 
-9. **Fire all data writes in one background PowerShell call** (`run_in_background: true`). Group all writes — all `manifest add` first, then all `progress ingest`, then `log entry` per course. Sequential within the call, no race conditions:
+9. **Print `"Saving..."` then fire all data writes synchronously** (silent — no output, no task notification). Sequential, no race conditions:
    ```powershell
-   # run_in_background: true on this tool call
-   # --- manifest add (one per successfully ingested file) ---
-   & $pythonExe $writerPath manifest add `
-       --savedata $savedataRoot --course-id {course_id} --course-code {course_code} `
-       --filename {original_filename} --method {raw_folder|path_paste} `
-       [--original-path {abs_path}] --file-type {file_type} --unit {unit_slug} `
-       --confidence {high|medium|low|user_assigned} `
-       --filed-path {relative_filed_path} --summary-path {relative_summary_path} `
-       [--page-count N] [--word-count N] ;
    # --- progress ingest (one per file) ---
    & $pythonExe $writerPath progress ingest `
-       --savedata $savedataRoot --course {course_id} --unit {unit_slug} ;
+       --savedata $savedataRoot --course {course_id} --unit {unit_slug} | Out-Null ;
    # --- log entry (one per affected course) ---
    & $pythonExe $writerPath log entry `
        --savedata $savedataRoot --course {course_id} `
-       --entry "- [INGEST] {N} file(s) -> {unit(s)}: {filenames, comma-separated}"
+       --entry "- [INGEST] {N} file(s) -> {unit(s)}: {filenames, comma-separated}" | Out-Null
    ```
 
 ---

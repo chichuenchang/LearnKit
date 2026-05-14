@@ -51,7 +51,6 @@ CONFIG FILES (under $savedataRoot — both gitignored from public repo):
 GLOBAL DATA (under $savedataRoot\data\):
   courses_index.json        — master registry of all courses (active + archived)
   global_deadlines.json     — merged deadlines from all active courses
-  materials_manifest.json   — log of every ingested file, all courses
 
 PER-COURSE DATA (under $savedataRoot\courses\{course_slug}\):
   data\course_structure.json  — unit/exam map built from syllabus

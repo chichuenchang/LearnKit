@@ -10,7 +10,6 @@ Subcommands:
   progress ingest   Increment materials_ingested in progress.json
   deadline add      Append entry to global_deadlines.json
   deadline complete Mark deadline completed in global_deadlines.json
-  manifest add      Append entry to materials_manifest.json
   log entry         Append one-liner to activity_log.md(s)
 """
 import argparse
@@ -20,9 +19,6 @@ import sys
 from datetime import datetime, date
 
 VALID_DEADLINE_TYPES = {"exam", "quiz", "assignment", "lab", "lab_practical", "presentation", "other"}
-VALID_CONFIDENCE = {"high", "medium", "low", "user_assigned"}
-VALID_INGEST_METHODS = {"raw_folder", "path_paste"}
-VALID_UNIT_SPECIAL = {"unclassified", "multi_unit", "syllabus"}
 STATUS_PROGRESSION = ["not_started", "in_progress", "materials_complete", "quiz_passed", "mastered"]
 PASSING_SCORE = 70.0
 
@@ -206,54 +202,6 @@ def cmd_deadline_complete(args):
     fail(f"deadline id not found: {args.deadline_id!r}")
 
 
-# ── manifest add ──────────────────────────────────────────────────────────────
-
-def cmd_manifest_add(args):
-    if args.confidence not in VALID_CONFIDENCE:
-        fail(f"invalid confidence: {args.confidence!r}. Valid: {sorted(VALID_CONFIDENCE)}")
-    if args.method not in VALID_INGEST_METHODS:
-        fail(f"invalid method: {args.method!r}. Valid: {sorted(VALID_INGEST_METHODS)}")
-
-    savedata = pathlib.Path(args.savedata)
-    path = savedata / "data" / "materials_manifest.json"
-    data = load_json(path, {"last_updated": None, "total_files": 0, "files": []})
-
-    prefix = f"mat_{args.course_id}_"
-    existing = [f["manifest_id"] for f in data["files"] if f["manifest_id"].startswith(prefix)]
-    nums = []
-    for eid in existing:
-        try:
-            nums.append(int(eid.replace(prefix, "")))
-        except ValueError:
-            pass
-    next_num = (max(nums) + 1) if nums else 1
-    new_id = f"{prefix}{next_num:03d}"
-
-    entry = {
-        "manifest_id": new_id,
-        "course_id": args.course_id,
-        "course_code": args.course_code,
-        "original_filename": args.filename,
-        "ingestion_method": args.method,
-        "original_path": args.original_path or None,
-        "ingestion_date": now_iso(),
-        "file_type": args.file_type,
-        "unit_assigned": args.unit,
-        "confidence": args.confidence,
-        "filed_path": args.filed_path,
-        "summary_path": args.summary_path,
-        "page_count": int(args.page_count),
-        "word_count": int(args.word_count),
-        "summary_generated": True,
-    }
-    data["files"].append(entry)
-    data["total_files"] = len(data["files"])
-    data["last_updated"] = now_iso()
-
-    save_json(path, data)
-    out({"success": True, "manifest_id": new_id})
-
-
 # ── log entry ─────────────────────────────────────────────────────────────────
 
 def _append_log(log_path: pathlib.Path, entry: str):
@@ -351,25 +299,6 @@ def main():
     dc.add_argument("--savedata", required=True)
     dc.add_argument("--deadline-id", required=True)
 
-    # manifest
-    mg = sub.add_parser("manifest")
-    mg_sub = mg.add_subparsers(dest="action")
-
-    ma = mg_sub.add_parser("add")
-    ma.add_argument("--savedata", required=True)
-    ma.add_argument("--course-id", required=True)
-    ma.add_argument("--course-code", required=True)
-    ma.add_argument("--filename", required=True)
-    ma.add_argument("--method", required=True)
-    ma.add_argument("--original-path", default="")
-    ma.add_argument("--file-type", required=True)
-    ma.add_argument("--unit", required=True)
-    ma.add_argument("--confidence", required=True)
-    ma.add_argument("--filed-path", required=True)
-    ma.add_argument("--summary-path", required=True)
-    ma.add_argument("--page-count", default=0, type=int)
-    ma.add_argument("--word-count", default=0, type=int)
-
     # log
     lg = sub.add_parser("log")
     lg_sub = lg.add_subparsers(dest="action")
@@ -392,9 +321,6 @@ def main():
                 cmd_deadline_add(args)
             elif args.action == "complete":
                 cmd_deadline_complete(args)
-        elif args.group == "manifest":
-            if args.action == "add":
-                cmd_manifest_add(args)
         elif args.group == "log":
             if args.action == "entry":
                 cmd_log_entry(args)

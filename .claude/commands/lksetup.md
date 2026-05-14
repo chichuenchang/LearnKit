@@ -35,7 +35,6 @@ Create subdirs under `$savedataRoot`: `data\`, `courses\`, `archive\`, `raw\`
 Create default data JSON files only if not already present (re-run safe):
 - `data\courses_index.json` → default empty
 - `data\global_deadlines.json` → default empty
-- `data\materials_manifest.json` → default empty
 
 **Step 4 — User name**
 ```

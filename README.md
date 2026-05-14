@@ -60,7 +60,7 @@ learnkit/              ← public repo (clone this)
 savedata/              ← your private data (gitignored)
 ├── user.config.json   ← your name
 ├── machine.config.json← Python path (never exported)
-├── data/              ← global index, deadlines, manifest
+├── data/              ← global index, deadlines
 ├── courses/           ← per-course notes, progress, quiz history
 ├── archive/           ← completed courses
 └── raw/               ← drop zone for new files

@@ -11,7 +11,7 @@ Read lkschemas.md and lklogging.md before starting reconciliation.
 | Action | Expected writes |
 |--------|----------------|
 | `/lkquiz` | `quiz_history` entry in `progress.json` · `[QUIZ]` one-liner in `courses\{slug}\activity_log.md` · `weak_areas` + `status` updated |
-| `/lkingest` | Entry in `data\materials_manifest.json` · `materials_ingested` count in `progress.json` · `[INGEST]` in `courses\{slug}\activity_log.md` |
+| `/lkingest` | `materials_ingested` count in `progress.json` · `[INGEST]` in `courses\{slug}\activity_log.md` |
 | `/lkdeadlines add` | Entry in `data\global_deadlines.json` · `[DEADLINE]` in `courses\{slug}\activity_log.md` |
 
 **Steps:**
