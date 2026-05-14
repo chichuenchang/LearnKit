@@ -10,7 +10,7 @@ Multiple active + no course → ask. Quiz: **interactive — one question at a t
 - `unit_01,unit_03,unit_05` — explicit list
 - `exam_1` — all units covered by exam (resolved from `course_structure.json` `exams[].units_covered`)
 
-**Resolving exam scope**: Look up by `exam_id` or fuzzy title. Use `units_covered` as unit list. Not found: `"No exam 'exam_1' in {course_code}. Available: [list]"`. Show resolved scope: `"Units 1–3 (Exam 1 scope)"`.
+**Resolving exam scope**: Look up by `exam_id` or fuzzy title. Use `units_covered` as unit list. Not found: `"No exam 'exam_1' in {course_code}. Available: [list]"`. Show resolved scope using `unit_label` from `course_structure.json` pluralized: `"Units 1–3 (Exam 1 scope)"`, `"Weeks 1–3 (Exam 1 scope)"`, `"Chapters 1–3 (Exam 1 scope)"`, etc.
 
 No scope → ask.
 
@@ -42,17 +42,17 @@ Read `courses\{slug}\data\progress.json`: find all past `quiz_history` entries f
 
 ### Step 1 — Quiz intro (print before Q1)
 
-Single unit:
+Single unit — use `display_name` from `course_structure.json`:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Quiz  ·  BIOL 201  ·  Unit 1: Cell Structure
+  Quiz  ·  BIOL 201  ·  {display_name}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Multi-unit:
+Multi-unit — pluralize `unit_label` from `course_structure.json → unit_label` (e.g. "Unit" → "Units", "Week" → "Weeks", "Chapter" → "Chapters"):
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Quiz  ·  BIOL 201  ·  Units 1–3 (Midterm 1 scope)
+  Quiz  ·  BIOL 201  ·  {unit_label}s 1–3 (Midterm 1 scope)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -150,6 +150,6 @@ Use `data_writer.py`. Fire silently — single synchronous PowerShell call, no n
     [--mcq "correct/total"] [--sa "correct/total"] | Out-Null ;
 & $pythonExe $writerPath log entry `
     --savedata $savedataRoot --course {course_id} `
-    --entry "- [QUIZ] Unit N: {name} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}" | Out-Null
+    --entry "- [QUIZ] {display_name} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}" | Out-Null
 ```
-Multi-unit entry format: `- [QUIZ] Units 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics (Unit 2), DNA replication (Unit 3)`
+Multi-unit entry format: `- [QUIZ] {Units/Weeks} 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics ({display_name_2}), DNA replication ({display_name_3})`

@@ -25,8 +25,8 @@ Read lkschemas.md and lklogging.md before starting reconciliation.
 /lksave — Reconciliation complete
 ──────────────────────────────────────────
 Recovered (3):
-  ✓ [QUIZ]  BIOL 201 | Unit 1 — score entry written to progress.json
-  ✓ [QUIZ]  BIOL 201 | Unit 1 — log entry written to activity_log.md
+  ✓ [QUIZ]  BIOL 201 | {display_name} — score entry written to progress.json
+  ✓ [QUIZ]  BIOL 201 | {display_name} — log entry written to activity_log.md
 Already committed (5): skipped
 ──────────────────────────────────────────
 ```

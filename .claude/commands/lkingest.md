@@ -42,12 +42,12 @@ On confirm: **copy** into project. Never delete or move originals.
 5. **Identify unit** (non-syllabus): Compare text vs `keywords` in all units of `course_structure.json`. Assign highest overlap (minimum 2 matches). File spans multiple units → ask:
    ```
    "[filename]" appears to span multiple units.
-     Unit 1 — Cell Structure: 12 keyword matches
-     Unit 2 — Cell Cycle: 9 keyword matches
-     Unit 3 — Genetics: 7 keyword matches
+     {display_name} — Cell Structure: 12 keyword matches
+     {display_name} — Cell Cycle: 9 keyword matches
+     {display_name} — Genetics: 7 keyword matches
 
    Options:
-     [1] Assign to Unit 1 (highest overlap) — add cross-reference notes to Units 2 and 3
+     [1] Assign to {display_name} (highest overlap) — add cross-reference notes to others
      [2] File under multi_unit\ folder
      [3] Assign to a specific unit (type unit ID):
    ```
@@ -96,6 +96,19 @@ Entered from step 4 above when: file type = `syllabus` AND `course_structure.jso
    - Assignment and lab deadlines
 
 2. **Build `course_structure.json`**: Map weeks → units. Extract 8-15 subject-specific keywords per unit (terminology, procedure names, key concepts). Drive course ID and unit assignment.
+   - **Determine `unit_label` field**: Count occurrences of each label pattern in syllabus text: "Week N", "Unit N", "Chapter N", "Module N", "Topic N", "Lecture N", "Book N". Highest-frequency label wins if it accounts for >60% of matches → set automatically (note: `"Auto-detected: {label}-based organization"`). Otherwise ask:
+       ```
+       How is this course organized?
+         [1] Units (Unit 1, Unit 2, ...)       ← default
+         [2] Weeks (Week 1, Week 2, ...)
+         [3] Chapters (Chapter 1, Chapter 2, ...)
+         [4] Modules (Module 1, Module 2, ...)
+         [5] Topics (Topic 1, Topic 2, ...)
+         [6] Lectures (Lecture 1, Lecture 2, ...)
+         [7] Books (Book 1, Book 2, ...)
+       ```
+   - **Generate `display_name`**: Use `"{unit_label} N: {title}"` — e.g. `"Week 1: Vertebral Column"`, `"Chapter 3: Enzymes"`.
+   - **Generate `unit_id`**: Derive prefix from `unit_label` using the mapping in lkschemas.md (e.g. `"Week"` → `week_NN`, `"Chapter"` → `chap_NN`). Zero-padded two digits.
 
 3. **Initialize `progress.json`**: Per unit: `status: "not_started"`, `materials_ingested: 0`, `quiz_history: []`, `weak_areas: []`, `confidence_level: 0`.
 
@@ -114,9 +127,9 @@ Entered from step 4 above when: file type = `syllabus` AND `course_structure.jso
    | {component} | {pct}% | |
 
    ## Unit Structure
-   | Unit | Weeks | Topics | Exam |
-   |------|-------|--------|------|
-   | Unit 1: {name} | Week 1-3 | {topics} | Exam 1 |
+   | {Unit/Week} | Weeks | Topics | Exam |
+   |-------------|-------|--------|------|
+   | {display_name} | Week 1-3 | {topics} | Exam 1 |
 
    ## Exam & Quiz Schedule
    | Assessment | Covers | Date | Time | Location |

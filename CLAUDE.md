@@ -266,10 +266,10 @@ Full spec in `.claude/commands/lkingest.md` — see "Syllabus Processing Branch"
 ## SECTION 8 — FILE NAMING CONVENTIONS
 
 - **Course slug**: lowercase, spaces → `_`, strip non-alphanumeric (except `_`). Examples: `"BIOL 201"` → `biol_201`, `"COMP 361"` → `comp_361`, `"CS 101"` → `cs_101`
-- **Unit slug**: `unit_NN_{topic_kebab}` — e.g. `unit_01_cell_structure`, `unit_03_genetics`
+- **Unit slug**: `{unit_id}_{topic_kebab}` where `unit_id` prefix derives from `unit_label` (see lkschemas.md mapping) — e.g. `unit_01_cell_structure`, `week_01_vertebral_column`, `chap_01_enzymes`, `mod_01_intro`
 - **Source files**: `source_{original_basename_truncated_30}.{ext}` — lowercase, spaces → `_`
 - **Study notes**: `{file_type}_{original_basename_truncated_30}.md`
-- **Quiz files**: `quiz_{unit_short}_{N}_{YYYYMMDD}.json` — e.g. `quiz_u01_1_20260501.json`
+- **Quiz files**: `quiz_{unit_short}_{N}_{YYYYMMDD}.json` — `unit_short` derived from `unit_label` (see lkschemas.md mapping: `u01`, `w01`, `ch01`, `m01`, `t01`, `l01`, `b01`) — e.g. `quiz_u01_1_20260501.json`, `quiz_w01_1_20260501.json`, `quiz_ch01_1_20260501.json`
 - **Attempt files**: `attempt_{unit_short}_{N}_{YYYYMMDD}.json`
 - **Deadline ID**: `dl_{course_id}_{NNN}` — e.g. `dl_biol_201_001` (increment from current max)
 

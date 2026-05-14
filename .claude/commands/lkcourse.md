@@ -5,6 +5,18 @@ Base context (path variables, behavioral rules) loaded from CLAUDE.md. Data sche
 ### `/lkcourse add {code} {name}`
 
 Ask: `"Semester (e.g., Fall 2026):"`
+Ask:
+```
+How is this course organized?
+  [1] Units (Unit 1, Unit 2, ...)       ← default
+  [2] Weeks (Week 1, Week 2, ...)
+  [3] Chapters (Chapter 1, Chapter 2, ...)
+  [4] Modules (Module 1, Module 2, ...)
+  [5] Topics (Topic 1, Topic 2, ...)
+  [6] Lectures (Lecture 1, Lecture 2, ...)
+  [7] Books (Book 1, Book 2, ...)
+```
+Store as `unit_label: "{chosen label}"` in course_structure.json (see lkschemas.md for prefix/short-code mapping).
 
 1. Generate slug: `BIOL 201` → `biol_201`
 2. Check for slug collision → warn and confirm if similar exists
