@@ -11,7 +11,6 @@ Read lkschemas.md and lklogging.md before starting reconciliation.
 | Action | Expected writes |
 |--------|----------------|
 | `/lkquiz` | `quiz_history` entry in `progress.json` · `[QUIZ]` block in `courses\{slug}\activity_log.md` · one-liner in `data\activity_log.md` · `weak_areas` + `status` updated |
-| `/lkstudy` | `[STUDY]` in both logs · `study_sessions` count in `progress.json` |
 | `/lkingest` | Entry in `data\materials_manifest.json` · `materials_ingested` count in `progress.json` · `[INGEST]` in both logs |
 | `/lkdeadlines add` | Entry in `data\global_deadlines.json` · `[DEADLINE]` in both logs · `next_deadline_date` in `courses_index.json` |
 
@@ -28,7 +27,6 @@ Read lkschemas.md and lklogging.md before starting reconciliation.
 Recovered (3):
   ✓ [QUIZ]  BIOL 201 | Unit 1 — score entry written to progress.json
   ✓ [QUIZ]  BIOL 201 | Unit 1 — log entry written to activity_log.md
-  ✓ [STUDY] COMP 361 | Unit 2 — log entry written to activity_log.md
 Already committed (5): skipped
 ──────────────────────────────────────────
 ```

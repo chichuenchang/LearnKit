@@ -7,7 +7,6 @@ Output: JSON to stdout — {"success": true/false, ...}
 
 Subcommands:
   progress quiz     Write quiz result to progress.json
-  progress study    Increment study_sessions in progress.json
   progress ingest   Increment materials_ingested in progress.json
   deadline add      Append entry to global_deadlines.json
   deadline complete Mark deadline completed in global_deadlines.json
@@ -72,7 +71,7 @@ def progress_default(course: str) -> dict:
 
 
 def unit_default() -> dict:
-    return {"status": "not_started", "materials_ingested": 0, "study_sessions": 0,
+    return {"status": "not_started", "materials_ingested": 0,
             "quiz_history": [], "weak_areas": [], "confidence_level": 0}
 
 
@@ -130,24 +129,6 @@ def cmd_progress_quiz(args):
 
     save_json(path, data)
     out({"success": True, "quiz_id": quiz_id, "status": unit["status"]})
-
-
-# ── progress study ────────────────────────────────────────────────────────────
-
-def cmd_progress_study(args):
-    savedata = pathlib.Path(args.savedata)
-    path = progress_path(savedata, args.course)
-    data = load_json(path, progress_default(args.course))
-    data.setdefault("units", {})
-
-    unit = data["units"].setdefault(args.unit, unit_default())
-    unit["study_sessions"] = unit.get("study_sessions", 0) + 1
-    if unit["status"] == "not_started":
-        unit["status"] = "in_progress"
-    data["last_updated"] = now_iso()
-
-    save_json(path, data)
-    out({"success": True, "study_sessions": unit["study_sessions"]})
 
 
 # ── progress ingest ───────────────────────────────────────────────────────────
@@ -386,11 +367,6 @@ def main():
     pq.add_argument("--mcq", default="")
     pq.add_argument("--sa", default="")
 
-    ps = pg_sub.add_parser("study")
-    ps.add_argument("--savedata", required=True)
-    ps.add_argument("--course", required=True)
-    ps.add_argument("--unit", required=True)
-
     pi = pg_sub.add_parser("ingest")
     pi.add_argument("--savedata", required=True)
     pi.add_argument("--course", required=True)
@@ -457,8 +433,6 @@ def main():
         if args.group == "progress":
             if args.action == "quiz":
                 cmd_progress_quiz(args)
-            elif args.action == "study":
-                cmd_progress_study(args)
             elif args.action == "ingest":
                 cmd_progress_ingest(args)
         elif args.group == "deadline":

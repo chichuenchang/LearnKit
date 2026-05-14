@@ -56,7 +56,7 @@ savedata/ : {$savedataRoot}
 Next steps:
   1. Drop a syllabus into savedata\raw\ or paste its path.
   2. Run /lkingest to load the syllabus and create your first course.
-  3. Run /lkstudy or /lkquiz to start studying.
+  3. Run /lkquiz to start studying.
   4. Run /lkexport to back up your progress anytime.
 ──────────────────────────────────────────────────────
 ```

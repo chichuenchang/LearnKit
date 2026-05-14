@@ -74,7 +74,6 @@ savedata/              ← your private data (gitignored)
 |---------|-------------|
 | `/lksetup` | First-time onboarding, Python config, savedata init |
 | `/lkingest` | Process files from `savedata/raw/` or pasted paths |
-| `/lkstudy [course] [unit]` | Generate a grade-focused study session |
 | `/lkquiz [course] [scope]` | Adaptive interactive quiz |
 | `/lkdeadlines` | View all upcoming deadlines |
 | `/lkprogress` | Study dashboard across all courses |

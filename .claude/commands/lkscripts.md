@@ -69,7 +69,6 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 | Subcommand | Required flags | Optional flags |
 |------------|---------------|----------------|
 | `progress quiz` | `--savedata --course --unit --score-pct --correct --total --incorrect` | `--skipped --partial --adaptive --weak-topics "a,b" --mcq "11/13" --sa "2/5"` |
-| `progress study` | `--savedata --course --unit` | — |
 | `progress ingest` | `--savedata --course --unit` | — |
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |

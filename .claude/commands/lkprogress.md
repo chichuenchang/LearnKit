@@ -16,4 +16,4 @@ Global weak areas needing attention:
   COMP 361: graph algorithms, dynamic programming
 ```
 
-**`/lkprogress {course_code}`**: Detailed per-unit breakdown showing each unit's status, materials ingested, study sessions, quiz scores, and weak areas.
+**`/lkprogress {course_code}`**: Detailed per-unit breakdown showing each unit's status, materials ingested, quiz scores, and weak areas.

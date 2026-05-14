@@ -114,7 +114,7 @@ Active courses: N  |  Files waiting in raw\: N
   [BIOL 201  ]  Units: 4/6  Progress: 62%  Next deadline: May 21 — Midterm 1 (10d) ← URGENT
   [COMP 361  ]  Units: 2/5  Progress: 20%  Next deadline: Jun 5  — Lab Quiz 2  (25d)
 ──────────────────────────────────────────────────────────────
-Type /lkingest to process waiting files, /lkstudy or /lkquiz to study, /lkdeadlines for all deadlines.
+Type /lkingest to process waiting files, /lkquiz to study, /lkdeadlines for all deadlines.
 ```
 
 ---
@@ -162,11 +162,6 @@ Full schema reference in `.claude/commands/lkschemas.md`. Skills read that file 
 
 ### `/lkingest` — Process new course materials
 Full spec in `.claude/commands/lkingest.md`. Handles `raw\` folder and pasted paths, text extraction, course/unit identification, note generation, data updates, and logging.
-
----
-
-### `/lkstudy {course_code} {unit_id}` — Generate a study session
-Full spec in `.claude/commands/lkstudy.md`. Reads materials + misc.md, addresses weak areas, outputs tagged study content, logs session.
 
 ---
 
@@ -297,11 +292,10 @@ Full spec in `.claude/commands/lkscripts.md` — covers `extract_text.py` usage,
 7. **Urgency threshold** — active course has exam ≤ 7 days → prepend Section 1 urgency notice to every relevant response
 8. **Respect skip decisions** — user skips file during ingestion → leave untouched; don't retry until user runs `/lkingest` again
 9. **No hallucinated subject-matter knowledge** — all content facts from ingested materials only. No pre-loaded domain knowledge for any subject. Topic not in materials → `"No materials covering '{topic}' ingested for {course_code} yet."` If partially covered, state exactly which units cover it and which do not.
-10. **Immediate progress updates** — update JSON after each quiz/lkstudy session; startup banner reflects latest state
-11. **Web supplement reminder** — end of every `/lkstudy`: `"To supplement with web research (Tier 1 sources only), ask me to search for [topic]."`
-12. **`misc.md` always fresh** — read at start of every `/lkstudy` and `/lkquiz`; surface entries from past 14 days under `## Course Notes` before main content
+10. **Immediate progress updates** — update JSON after each quiz session; startup banner reflects latest state
+11. **`misc.md` always fresh** — read at start of every `/lkquiz`; surface entries from past 14 days under `## Course Notes` before main content
 13. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
-14. **Log every action** — study, quiz, ingest, deadline change, course event → log entry; never skip
+14. **Log every action** — quiz, ingest, deadline change, course event → log entry; never skip
 15. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error rather than silently writing corrupt data.
 16. **Python path from config only** — always use `$pythonExe` (set at startup Step 0.5). Never hardcode interpreter path in any command. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/lksetup`.
 

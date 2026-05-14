@@ -13,7 +13,6 @@ Prepend after file header (newest first). Group under `## YYYY-MM-DD (Weekday)`.
 
 ```markdown
 ## 2026-05-11 (Monday)
-- [STUDY]    BIOL 201 | Unit 2: Cell Cycle — mitosis, meiosis, checkpoints
 - [QUIZ]     BIOL 201 | Unit 1: Cell Structure — 16/20 (80%) | Weak: cell cycle phases, membrane transport
 - [INGEST]   COMP 361 | 2 files → Unit 1: Sorting Algorithms (lecture_slides, lab_notes)
 - [DEADLINE] BIOL 201 | Added: Midterm 1 on 2026-05-21 (Covers Units 1-2)
@@ -22,7 +21,6 @@ Prepend after file header (newest first). Group under `## YYYY-MM-DD (Weekday)`.
 
 | Type | Global format | Per-course format |
 |------|--------------|-------------------|
-| `[STUDY]` | `{course_code} \| Unit N: {name} — {topic summary, ≤8 words}` | `Unit N: {name} — {topic summary}` |
 | `[QUIZ]` | `{course_code} \| Unit N: {name} — {score}/{total} ({pct}%) \| Weak: {topics or "none"}` | **rich block** — see below |
 | `[INGEST]` | `{course_code} \| {N} file(s) → {unit(s)}: {filenames, comma-separated}` | `{N} file(s) → {unit(s)}: {filenames}` |
 | `[DEADLINE]` | `{course_code} \| {Added/Updated/Completed}: {title} on {date}` | `{Added/Updated/Completed}: {title} on {date}` |

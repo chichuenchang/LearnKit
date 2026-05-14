@@ -32,7 +32,6 @@ Default empty: `{"course": null, "course_id": null, "built_from": null, "last_up
     "{unit_slug}": {
       "status": "not_started",
       "materials_ingested": 0,
-      "study_sessions": 0,
       "confidence_level": 0,
       "weak_areas": [],
       "quiz_history": [

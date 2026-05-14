@@ -52,7 +52,7 @@ On confirm: **copy** into project. Never delete or move originals.
      [3] Assign to a specific unit (type unit ID):
    ```
    Option 1 → primary unit; add `_cross_ref_{slug}.md` in each other unit: `See also: [path to primary summary]`.
-   Option 2 → `courses\{slug}\materials\multi_unit\`. `/lkstudy` and `/lkquiz` for any relevant unit includes `multi_unit\` files.
+   Option 2 → `courses\{slug}\materials\multi_unit\`. `/lkquiz` for any relevant unit includes `multi_unit\` files.
 
 6. **Archive original**:
    - `raw\` method: `Move-Item` from `$savedataRoot\raw\{filename}` → `$savedataRoot\courses\{slug}\materials\{unit_slug}\source_{slug}.{ext}`
@@ -126,7 +126,7 @@ Entered from step 4 above when: file type = `syllabus` AND `course_structure.jso
 
 2. **Build `course_structure.json`**: Map weeks → units. Extract 8-15 subject-specific keywords per unit (terminology, procedure names, key concepts). Drive course ID and unit assignment.
 
-3. **Initialize `progress.json`**: Per unit: `status: "not_started"`, `materials_ingested: 0`, `study_sessions: 0`, `quiz_history: []`, `weak_areas: []`, `confidence_level: 0`.
+3. **Initialize `progress.json`**: Per unit: `status: "not_started"`, `materials_ingested: 0`, `quiz_history: []`, `weak_areas: []`, `confidence_level: 0`.
 
 4. **Write deadlines** to `data\global_deadlines.json`. Apply duplicate detection (Section 6 of CLAUDE.md).
 
