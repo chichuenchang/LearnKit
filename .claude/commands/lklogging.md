@@ -51,7 +51,7 @@ All entries one line — except `[QUIZ]` in per-course log (rich block below).
 **Next quiz**: +2 cell cycle | +2 membrane transport | +1 ATP synthesis | +short answer practice
 ```
 
-Result codes: `✓` correct | `✗` incorrect | `✓(H)` correct after hint (counts ½) | `✗(H)` incorrect after hint | `→` skipped
+Result codes: `✓` correct | `✗` incorrect | `→` skipped
 
 ## Quiz Pass Note
 

@@ -48,7 +48,7 @@ Quiz — BIOL 201 | Unit 1: Cell Structure | 18 questions
 Adaptive: weighted toward cell cycle phases (missed 4/5 across 2 sessions), membrane transport (missed 3/4)
 Format: 13 MCQ + 5 short answer
 ──────────────────────────────────────────────────────
-Commands during quiz: 'hint' (one clue, one per question) | 'skip' | 'end quiz' (save partial)
+Commands during quiz: 'skip' | 'end quiz' (save partial)
 ```
 
 Multi-unit:
@@ -57,7 +57,7 @@ Quiz — BIOL 201 | Units 1–3 (Midterm 1 scope) | 25 questions
 Adaptive: weighted toward cell cycle phases ×1.8 (Unit 1), enzyme kinetics ×1.5 (Unit 2)
 Format: 17 MCQ + 8 short answer  |  Unit 1: 9q  Unit 2: 9q  Unit 3: 7q
 ──────────────────────────────────────────────────────
-Commands during quiz: 'hint' (one clue, one per question) | 'skip' | 'end quiz' (save partial)
+Commands during quiz: 'skip' | 'end quiz' (save partial)
 ```
 
 No prior history for any unit → `"Adaptive: baseline distribution (no prior quiz data)"`.
@@ -83,10 +83,8 @@ MCQ → labelled options A–D. Short answer → blank prompt.
 
 Evaluate immediately after user replies:
 - **Correct**: `✓ Correct. [one-sentence exam reinforcement]  [EXAM-CRITICAL]`
-- **Incorrect**: `✗ Incorrect. Answer: [correct]. [explanation ≤2 sentences]  [tag]`
-- **Skipped**: `→ Skipped. Answer: [correct]. [explanation ≤1 sentence]`
-- **`hint`**: one-sentence clue, no answer. Mark `(H)`. One hint per question. Already used → `"Already gave a hint for this one."` Re-prompt same question after hint.
-- **Correct after hint**: counts ½ for topic weight (logged `✓(H)`)
+- **Incorrect**: `✗ Incorrect. [explanation ≤2 sentences]  [tag]` then on new line: `─────` then on new line: `Answer: [correct]`
+- **Skipped**: `→ Skipped. [explanation ≤1 sentence]` then on new line: `─────` then on new line: `Answer: [correct]`
 
 Any input (or blank) → next question.
 
