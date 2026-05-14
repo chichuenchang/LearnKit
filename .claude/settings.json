@@ -1,6 +1,10 @@
 {
   "permissions": {
     "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "PowerShell(& *python*)",
       "Bash(python*)",
       "Bash(*python.exe*)",
       "Bash(git*)",
