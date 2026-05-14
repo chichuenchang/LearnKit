@@ -11,5 +11,17 @@
       "Write(savedata/**)",
       "Edit(savedata/**)"
     ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File \".claude/hooks/lk_effort.ps1\""
+          }
+        ]
+      }
+    ]
   }
 }
