@@ -20,7 +20,7 @@ No scope → ask.
 
 Read `courses\{slug}\misc.md`: scope changes or format notes → surface: `"Note from misc.md: [entry]"`.
 
-Read `courses\{slug}\activity_log.md`: find all past `### [QUIZ]` blocks for units in scope. Build unified topic weight table:
+Read `courses\{slug}\data\progress.json`: find all past `quiz_history` entries for units in scope. Build unified topic weight table from `weak_topics` and `score_pct` per session:
 - `miss_rate = total_misses / total_appearances` per topic
 - Recency: last session ×1.5 | two ago ×1.2 | older ×1.0
 - Weighted miss_rate > 0.5 → **HIGH**: 2–3× baseline questions
@@ -156,11 +156,11 @@ $result = (& $pythonExe $writerPath index update `
 
 **3. Global one-liner — `log entry`** (fire-and-forget):
 ```powershell
-Start-Job -ScriptBlock { param($e,$w,$s,$course,$entry)
-    & $e $w log entry --savedata $s --course $course --entry $entry
-} -ArgumentList $pythonExe,$writerPath,$savedataRoot,{course_id},"- [QUIZ] {course_code} | {scope} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}" | Out-Null
+& $pythonExe $writerPath log entry --savedata $savedataRoot --course {course_id} --entry "- [QUIZ] {course_code} | {scope} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}"
 ```
 Multi-unit entry format: `- [QUIZ] BIOL 201 | Units 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics (Unit 2), DNA replication (Unit 3)`
 
-**4. Rich per-course quiz block** — agent writes directly to `courses\{slug}\activity_log.md`. Read `lklogging.md` for format spec before writing. This is narrative markdown — not schema data, not routed through data_writer.py.
-Header: `### [QUIZ] {YYYY-MM-DD} — Units 1–3 (Midterm 1 scope)` or `### [QUIZ] {YYYY-MM-DD} — Unit 1: Cell Structure`
+**4. Per-course one-liner — `log entry`**:
+```powershell
+& $pythonExe $writerPath log entry --savedata $savedataRoot --course {course_id} --entry "- [QUIZ] Unit N: {name} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}"
+```

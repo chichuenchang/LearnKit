@@ -17,7 +17,7 @@ Read lkschemas.md and lklogging.md before starting reconciliation.
 **Steps:**
 1. List all commands run this session (from context)
 2. For each, read the relevant files and check for the expected entries
-3. Missing entry → write it now using lklogging.md format via data_writer.py
+3. Missing entry → write it now using lklogging.md format via data_writer.py — use `run_in_background: true` on the tool call for log entry writes so they don't block
 4. Already present → skip silently
 
 **Report:**
