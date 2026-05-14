@@ -154,13 +154,8 @@ $result = (& $pythonExe $writerPath index update `
     --savedata $savedataRoot --course {course_id}) | ConvertFrom-Json
 ```
 
-**3. Global one-liner — `log entry`** (fire-and-forget):
-```powershell
-& $pythonExe $writerPath log entry --savedata $savedataRoot --course {course_id} --entry "- [QUIZ] {course_code} | {scope} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}"
-```
-Multi-unit entry format: `- [QUIZ] BIOL 201 | Units 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics (Unit 2), DNA replication (Unit 3)`
-
-**4. Per-course one-liner — `log entry`**:
+**3. Per-course one-liner — `log entry`**:
 ```powershell
 & $pythonExe $writerPath log entry --savedata $savedataRoot --course {course_id} --entry "- [QUIZ] Unit N: {name} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}"
 ```
+Multi-unit entry format: `- [QUIZ] Units 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics (Unit 2), DNA replication (Unit 3)`

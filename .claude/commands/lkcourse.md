@@ -37,7 +37,7 @@ Ask: `"Semester (e.g., Fall 2026):"`
    ---
 
    ```
-8. Read lklogging.md. Write `[COURSE]` log entry. Print:
+8. Read lklogging.md. Write `[COURSE]` log entry to `courses\{slug}\activity_log.md`. Print:
    ```
    Course added: {course_code} — {course_name}
    Folder: savedata\courses\{slug}\
@@ -69,7 +69,7 @@ Ask: `"Semester (e.g., Fall 2026):"`
      ```
    - Move entry: `active_courses` → `archived_courses` in `courses_index.json`
    - Remove course deadlines from `global_deadlines.json`
-   - Read lklogging.md. Write `[COURSE]` to both logs: `"{course_code} archived — {final_completion_pct}% complete after {N} quizzes"`
+   - Read lklogging.md. Write `[COURSE]` to `courses\{slug}\activity_log.md` BEFORE moving: `"Course archived — {final_completion_pct}% complete after {N} quizzes"`
    - Print: `"{course_code} archived. Deadlines removed from tracker."`
 
 ---

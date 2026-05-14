@@ -36,7 +36,6 @@ Create default data JSON files only if not already present (re-run safe):
 - `data\courses_index.json` → default empty
 - `data\global_deadlines.json` → default empty
 - `data\materials_manifest.json` → default empty
-- `data\activity_log.md` → header only if missing
 
 **Step 4 — User name**
 ```

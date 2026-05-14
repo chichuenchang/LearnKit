@@ -73,7 +73,7 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |
 | `index update` | `--savedata --course` | — |
-| `log entry` | `--savedata --entry` | `--course` (omit for global log only; include for both global + per-course) |
+| `log entry` | `--savedata --course --entry` | — |
 | `manifest add` | `--savedata --course-id --course-code --filename --method --file-type --unit --confidence --filed-path --summary-path` | `--original-path --page-count --word-count` |
 
 **Flag notes:**
@@ -81,16 +81,12 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 - `--course-id` = course slug — used by `deadline add`, `manifest add`
 - `--course-code` = display code (e.g. `PTHER 350A`) — used by `deadline add`, `manifest add`
 - `deadline add` requires BOTH `--course-id` and `--course-code` (separate flags, not interchangeable)
-- `log entry --course slug` writes to BOTH global and per-course logs in one call
-- `log entry` without `--course` writes to global log only
+- `log entry --course slug` writes to that course's `activity_log.md`
 
 **Log entry format** — always prefix with type tag:
 ```powershell
---entry "[DEADLINE] PTHER 350A | Added: Term Quiz 1 on 2026-05-13"   # global
---entry "[DEADLINE] Added: Term Quiz 1 on 2026-05-13" --course "pther_350a"  # both logs
+--entry "[DEADLINE] Added: Term Quiz 1 on 2026-05-13" --course "pther_350a"
 ```
-
-**Log writes are fire-and-forget** — use `Start-Job` so logging never blocks the response. No error check needed.
 ```powershell
 # Global log only
 Start-Job -ScriptBlock { param($e,$w,$s,$entry)

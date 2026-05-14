@@ -22,7 +22,7 @@ Mark as completed: /lkdeadlines complete {deadline_id}
 
 **`/lkdeadlines add`**: User-initiated deadline parse from pasted announcement text.
 
-**`/lkdeadlines complete {deadline_id}`**: Set `completed: true` in `global_deadlines.json` via `deadline complete --deadline-id`. Recalculate `next_deadline_date` in `courses_index.json` via `index update`. Read lklogging.md, write `[DEADLINE]` log entry to both logs.
+**`/lkdeadlines complete {deadline_id}`**: Set `completed: true` in `global_deadlines.json` via `deadline complete --deadline-id`. Recalculate `next_deadline_date` in `courses_index.json` via `index update`. Read lklogging.md, write `[DEADLINE]` log entry to the course's `activity_log.md`.
 
 **Duplicate detection before saving any deadline:**
 1. Exact match (same `type + title + date`, same course) → skip silently: `"'{title} on {date}' already recorded — skipping duplicate"`

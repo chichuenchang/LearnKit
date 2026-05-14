@@ -1,11 +1,8 @@
 Standalone log format reference. Read this file before writing any log entries.
 
-## Log Locations
+## Log Location
 
-- **Global**: `$savedataRoot\data\activity_log.md` — all events, all courses
-- **Per-course**: `$savedataRoot\courses\{slug}\activity_log.md` — one course only
-
-Same format, both files. Global includes course code prefix; per-course omits.
+**Per-course only**: `$savedataRoot\courses\{slug}\activity_log.md`
 
 ## Entry Format
 
@@ -13,20 +10,19 @@ Prepend after file header (newest first). Group under `## YYYY-MM-DD (Weekday)`.
 
 ```markdown
 ## 2026-05-11 (Monday)
-- [QUIZ]     BIOL 201 | Unit 1: Cell Structure — 16/20 (80%) | Weak: cell cycle phases, membrane transport
-- [INGEST]   COMP 361 | 2 files → Unit 1: Sorting Algorithms (lecture_slides, lab_notes)
-- [DEADLINE] BIOL 201 | Added: Midterm 1 on 2026-05-21 (Covers Units 1-2)
-- [COURSE]   CHEM 110 | Course added — Fall 2026
+- [QUIZ]     Unit 1: Cell Structure — 16/20 (80%) | Weak: cell cycle phases, membrane transport
+- [INGEST]   2 files → Unit 1: Sorting Algorithms (lecture_slides, lab_notes)
+- [DEADLINE] Added: Midterm 1 on 2026-05-21 (Covers Units 1-2)
+- [COURSE]   Course added — Fall 2026
 ```
 
-| Type | Global format | Per-course format |
-|------|--------------|-------------------|
-| `[QUIZ]` | `{course_code} \| Unit N: {name} — {score}/{total} ({pct}%) \| Weak: {topics or "none"}` | same as global (omit course code prefix) |
-| `[INGEST]` | `{course_code} \| {N} file(s) → {unit(s)}: {filenames, comma-separated}` | `{N} file(s) → {unit(s)}: {filenames}` |
-| `[DEADLINE]` | `{course_code} \| {Added/Updated/Completed}: {title} on {date}` | `{Added/Updated/Completed}: {title} on {date}` |
-| `[NOTE]` | `{course_code} \| Misc note added` | `Misc note added` |
-| `[COURSE]` | `{code} \| {action: added/archived} — {brief detail}` | `Course {action} — {brief detail}` |
-| `[SYNC]` | `Pushed to remote — {N} file(s) \| "{commit short}"` | *(global log only)* |
+| Type | Format |
+|------|--------|
+| `[QUIZ]` | `Unit N: {name} — {score}/{total} ({pct}%) \| Weak: {topics or "none"}` |
+| `[INGEST]` | `{N} file(s) → {unit(s)}: {filenames, comma-separated}` |
+| `[DEADLINE]` | `{Added/Updated/Completed}: {title} on {date}` |
+| `[NOTE]` | `Misc note added` |
+| `[COURSE]` | `Course {action: added/archived} — {brief detail}` |
 
 All entries one line.
 

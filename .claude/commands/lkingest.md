@@ -107,7 +107,7 @@ On confirm: **copy** into project. Never delete or move originals.
    ──────────────────────────────────────────────────────
    ```
 
-10. **Write log entries** after report. Read `lklogging.md` for format spec before writing. One entry per course (grouped) to both `data\activity_log.md` and each affected course's `activity_log.md`.
+10. **Write log entries** after report. Read `lklogging.md` for format spec before writing. One entry per affected course to that course's `activity_log.md`.
 
 ---
 

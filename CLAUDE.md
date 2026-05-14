@@ -52,7 +52,6 @@ GLOBAL DATA (under $savedataRoot\data\):
   courses_index.json        — master registry of all courses (active + archived)
   global_deadlines.json     — merged deadlines from all active courses
   materials_manifest.json   — log of every ingested file, all courses
-  activity_log.md           — global event log: all events across all courses
 
 PER-COURSE DATA (under $savedataRoot\courses\{course_slug}\):
   data\course_structure.json  — unit/exam map built from syllabus
@@ -212,7 +211,7 @@ Y → append to `courses\{slug}\misc.md`:
 
 **Direct note command**: User says "note this for {course}", "add to course notes", "remember that...", "log this" → append to course `misc.md` immediately. Confirm: `"Added to {course_code} misc notes."`
 
-After confirmed deadlines saved, write log to both `data\activity_log.md` and course's `activity_log.md`. See Section 11.
+After confirmed deadlines saved, write log to course's `activity_log.md`. See Section 11.
 
 **Duplicate detection before saving any deadline:**
 1. Exact match (same `type + title + date`, same course) → skip silently: `"'{title} on {date}' already recorded — skipping duplicate"`
@@ -299,7 +298,7 @@ Full spec in `.claude/commands/lkscripts.md` — covers `extract_text.py` usage,
 11. **`misc.md` always fresh** — read at start of every `/lkquiz`; surface entries from past 14 days under `## Course Notes` before main content
 13. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
 14. **Log every action** — quiz, ingest, deadline change, course event → log entry; never skip
-15. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error — except `log entry`, which is fire-and-forget (`Start-Job`) and never blocks.
+15. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error.
 16. **Python path from config only** — always use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Never hardcode interpreter path in any command. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/lksetup`.
 
 ---
