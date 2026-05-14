@@ -16,7 +16,9 @@
       "PowerShell(ConvertTo-Json*)",
       "PowerShell(Out-File*)",
       "PowerShell(Rename-Item*)",
-      "PowerShell(Start-Job*)"
+      "PowerShell(Start-Job*)",
+      "Write(savedata/**)",
+      "Edit(savedata/**)"
     ]
   }
 }
