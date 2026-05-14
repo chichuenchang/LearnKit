@@ -272,7 +272,6 @@ Full spec in `.claude/commands/lkingest.md` — see "Syllabus Processing Branch"
 - **Quiz files**: `quiz_{unit_short}_{N}_{YYYYMMDD}.json` — e.g. `quiz_u01_1_20260501.json`
 - **Attempt files**: `attempt_{unit_short}_{N}_{YYYYMMDD}.json`
 - **Deadline ID**: `dl_{course_id}_{NNN}` — e.g. `dl_biol_201_001` (increment from current max)
-- **Manifest ID**: `mat_{course_id}_{NNN}` — e.g. `mat_biol_201_001` (increment from current max)
 
 ---
 

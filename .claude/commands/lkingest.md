@@ -65,21 +65,7 @@ On confirm: **copy** into project. Never delete or move originals.
    - Include "Key Terms" section with definitions tagged by exam probability
    - Include "Likely Quiz/Exam Questions" section at end
 
-8. **Show ingestion report** immediately after all notes are written — before data writes fire:
-   ```
-   Ingestion complete — 4 files processed
-   ──────────────────────────────────────────────────────
-   BIOL 201 — Introductory Cell Biology
-     ✓ biol201_syllabus.pdf         → syllabus (course structure loaded: 6 units)
-     ✓ Week3_CellCycle.pptx         → Unit 2 — lecture_slides (45 slides, 3,200 words)
-   COMP 361
-     ✓ lab_report_template.docx     → Unit 1 — assignment
-   Skipped
-     ✗ random_notes.txt             → could not identify course (user skipped)
-   ──────────────────────────────────────────────────────
-   ```
-
-9. **Print `"Saving..."` then fire all data writes synchronously** (silent — no output, no task notification). Sequential, no race conditions:
+8. **Fire all data writes synchronously** (silent — no output, no task notification), then print `"Done — {N} file(s) ingested."`. Sequential, no race conditions:
    ```powershell
    # --- progress ingest (one per file) ---
    & $pythonExe $writerPath progress ingest `
