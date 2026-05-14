@@ -89,3 +89,17 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 --entry "[DEADLINE] PTHER 350A | Added: Term Quiz 1 on 2026-05-13"   # global
 --entry "[DEADLINE] Added: Term Quiz 1 on 2026-05-13" --course "pther_350a"  # both logs
 ```
+
+**Log writes are fire-and-forget** — use `Start-Job` so logging never blocks the response. No error check needed.
+```powershell
+# Global log only
+Start-Job -ScriptBlock { param($e,$w,$s,$entry)
+    & $e $w log entry --savedata $s --entry $entry
+} -ArgumentList $pythonExe,$writerPath,$savedataRoot,$logEntry | Out-Null
+
+# Both global + per-course
+Start-Job -ScriptBlock { param($e,$w,$s,$entry,$c)
+    & $e $w log entry --savedata $s --entry $entry --course $c
+} -ArgumentList $pythonExe,$writerPath,$savedataRoot,$logEntry,$courseSlug | Out-Null
+```
+All other `data_writer.py` subcommands remain synchronous — their success/failure matters.

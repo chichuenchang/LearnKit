@@ -299,7 +299,7 @@ Full spec in `.claude/commands/lkscripts.md` — covers `extract_text.py` usage,
 11. **`misc.md` always fresh** — read at start of every `/lkquiz`; surface entries from past 14 days under `## Course Notes` before main content
 13. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
 14. **Log every action** — quiz, ingest, deadline change, course event → log entry; never skip
-15. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error rather than silently writing corrupt data.
+15. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error — except `log entry`, which is fire-and-forget (`Start-Job`) and never blocks.
 16. **Python path from config only** — always use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Never hardcode interpreter path in any command. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/lksetup`.
 
 ---

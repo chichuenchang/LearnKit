@@ -86,11 +86,11 @@ On confirm: **copy** into project. Never delete or move originals.
        --savedata $savedataRoot --course {course_id}) | ConvertFrom-Json
    ```
 
-   After all files processed, write log (one call per course, grouped):
+   After all files processed, write log (one call per course, grouped — fire-and-forget):
    ```powershell
-   $result = (& $pythonExe $writerPath log entry `
-       --savedata $savedataRoot --course {course_id} `
-       --entry "- [INGEST] {course_code} | {N} file(s) → {unit(s)}: {filenames}") | ConvertFrom-Json
+   Start-Job -ScriptBlock { param($e,$w,$s,$course,$entry)
+       & $e $w log entry --savedata $s --course $course --entry $entry
+   } -ArgumentList $pythonExe,$writerPath,$savedataRoot,{course_id},"- [INGEST] {course_code} | {N} file(s) → {unit(s)}: {filenames}" | Out-Null
    ```
 
 9. **Ingestion report**:
