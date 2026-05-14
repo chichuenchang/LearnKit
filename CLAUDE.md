@@ -100,9 +100,7 @@ Read `user.config.json` → `$userName` (fallback `"Student"`). Store for sessio
     Fix: run /lksetup
   ```
 
-**Step 2**: Count files in `$savedataRoot\raw\`.
-
-**Step 3**: Read `courses_index.json`, print banner. Sort by nearest deadline. `← URGENT` if ≤ 14 days.
+**Step 2**: Read `courses_index.json`, print banner. Sort by nearest deadline. `← URGENT` if ≤ 14 days.
 
 No active courses:
 ```
@@ -114,7 +112,7 @@ Drop a syllabus into savedata\raw\ or paste its path, then run /lkingest to get 
 Active courses:
 ```
 LearnKit — Ready{if $userName: " · {$userName}"}
-Active courses: N  |  Files waiting in raw\: N
+Active courses: N
 ──────────────────────────────────────────────────────────────
   [BIOL 201  ]  Units: 4/6  Progress: 62%  Next deadline: May 21 — Midterm 1 (10d) ← URGENT
   [COMP 361  ]  Units: 2/5  Progress: 20%  Next deadline: Jun 5  — Lab Quiz 2  (25d)
