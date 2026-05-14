@@ -44,33 +44,47 @@ Read `courses\{slug}\data\progress.json`: find all past `quiz_history` entries f
 
 Single unit:
 ```
-Quiz — BIOL 201 | Unit 1: Cell Structure | 18 questions
-Adaptive: weighted toward cell cycle phases (missed 4/5 across 2 sessions), membrane transport (missed 3/4)
-Format: 13 MCQ + 5 short answer
-──────────────────────────────────────────────────────
-Commands during quiz: 'skip' | 'end quiz' (save partial)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Quiz  ·  BIOL 201  ·  Unit 1: Cell Structure
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 Multi-unit:
 ```
-Quiz — BIOL 201 | Units 1–3 (Midterm 1 scope) | 25 questions
-Adaptive: weighted toward cell cycle phases ×1.8 (Unit 1), enzyme kinetics ×1.5 (Unit 2)
-Format: 17 MCQ + 8 short answer  |  Unit 1: 9q  Unit 2: 9q  Unit 3: 7q
-──────────────────────────────────────────────────────
-Commands during quiz: 'skip' | 'end quiz' (save partial)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Quiz  ·  BIOL 201  ·  Units 1–3 (Midterm 1 scope)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
-
-No prior history for any unit → `"Adaptive: baseline distribution (no prior quiz data)"`.
 
 ---
 
 ### Step 2 — Question loop (every question)
 
-Each question renders a one-line header above the question text:
+Print `──────────────────────────────────────────────────────────` before every question (visual reset after feedback or intro). Then the header line, blank line, bold question text, blank line, options, prompt:
+
+MCQ:
 ```
-[Q3/18 — Cell Cycle Phases]  ▓▓░░░░░░░░ 17%  Score: 2/2
-What are the three stages of interphase?
-> _
+──────────────────────────────────────────────────────────
+Q 3 / 18   Cell Cycle Phases              ▓▓░░░░░░░░  17%   Score: 2/2
+
+**What are the three stages of interphase?**
+
+  `A)`  Prophase, Metaphase, Anaphase
+  `B)`  G1, S phase, G2
+  `C)`  Division, Rest, Synthesis
+  `D)`  Interphase has only two stages
+
+>
+```
+
+Short answer:
+```
+──────────────────────────────────────────────────────────
+Q 5 / 18   Membrane Transport             ▓▓▓▓░░░░░░  33%   Score: 4/4
+
+**Describe the difference between active and passive transport.**
+
+>
 ```
 
 **Header fields:**
@@ -79,12 +93,28 @@ What are the three stages of interphase?
 - **Percentage**: `floor(answered / total × 100)%`
 - **Score**: `correct / answered`. At Q1 (0 answered) → show `Score: —`
 
-MCQ → labelled options A–D. Short answer → blank prompt.
-
 Evaluate immediately after user replies:
-- **Correct**: `✓ Correct. [one-sentence exam reinforcement]  [EXAM-CRITICAL]`
-- **Incorrect**: `✗ Incorrect. [explanation ≤2 sentences]  [tag]` then on new line: `─────` then on new line: `Answer: [correct]`
-- **Skipped**: `→ Skipped. [explanation ≤1 sentence]` then on new line: `─────` then on new line: `Answer: [correct]`
+
+**Correct:**
+```
+✓  Correct.
+   [one-sentence exam reinforcement]  [EXAM-CRITICAL]
+```
+
+**Incorrect:**
+```
+✗  Incorrect.
+   [explanation ≤2 sentences]  [tag]
+   ╌╌╌╌╌╌╌╌╌╌╌╌
+   Correct: [correct answer]
+```
+
+**Skipped:**
+```
+→  Skipped.  [explanation ≤1 sentence]
+   ╌╌╌╌╌╌╌╌╌╌╌╌
+   Answer: [correct answer]
+```
 
 Any input (or blank) → next question.
 
@@ -94,42 +124,41 @@ Any input (or blank) → next question.
 
 Single unit:
 ```
-────────────────────────────────────────────────────────
-Quiz Complete — BIOL 201 | Unit 1: Cell Structure
-Score: 14/18 (78%)  ✓ PASS  (threshold: 70%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Quiz Complete  ·  BIOL 201  ·  Unit 1: Cell Structure
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Correct   (14): Q1, Q2, Q4, Q5, Q7, Q8, Q10–Q14, Q16, Q17
-Incorrect  (3): Q3 cell cycle phases | Q6 membrane transport | Q9 ATP synthesis
-Skipped    (1): Q18
+  Score    14 / 18   78%   ✓ PASS   (threshold: 70%)
 
-MCQ accuracy    : 12/13 (92%)
-Short answer    : 2/5 (40%)  ← needs work
+  Correct   (14)  Q1  Q2  Q4  Q5  Q7  Q8  Q10–Q14  Q16  Q17
+  Incorrect  (3)  Q3 cell cycle phases  ·  Q6 membrane transport  ·  Q9 ATP synthesis
+  Skipped    (1)  Q18
 
-Persistent weak topics (missed in ≥2 sessions): cell cycle phases, membrane transport
-New weak topics (first miss today): ATP synthesis pathway
-────────────────────────────────────────────────────────
-Next quiz will weight: cell cycle phases ×1.8 | membrane transport ×1.5 | ATP synthesis ×1.3
+  MCQ       12/13   92%
+  Short ans   2/5   40%  ← needs work
 ```
 
-Multi-unit — add per-unit breakdown before weak topics:
+Multi-unit — add per-unit breakdown after the score line:
 ```
-────────────────────────────────────────────────────────
-Quiz Complete — BIOL 201 | Units 1–3 (Midterm 1 scope)
-Score: 19/25 (76%)  ✓ PASS  (threshold: 70%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Quiz Complete  ·  BIOL 201  ·  Units 1–3 (Midterm 1 scope)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Unit 1 — Cell Structure : 8/9  (89%)
-  Unit 2 — Cell Cycle     : 6/9  (67%)  ← weak
-  Unit 3 — Genetics       : 5/7  (71%)
+  Score    19 / 25   76%   ✓ PASS   (threshold: 70%)
 
-MCQ accuracy    : 14/17 (82%)
-Short answer    : 5/8  (63%)  ← needs work
+  Unit 1 — Cell Structure    8/9   89%
+  Unit 2 — Cell Cycle        6/9   67%  ← weak
+  Unit 3 — Genetics          5/7   71%
 
-Persistent weak topics: cell cycle phases (Unit 1), enzyme kinetics (Unit 2)
-New weak topics: DNA replication steps (Unit 3)
-────────────────────────────────────────────────────────
+  Correct   (19)  Q1  Q2  Q3 ...
+  Incorrect  (5)  Q4 cell cycle phases  ·  Q8 enzyme kinetics ...
+  Skipped    (1)  Q25
+
+  MCQ       14/17   82%
+  Short ans   5/8   63%  ← needs work
 ```
 
-Early `end quiz` → append `(partial — ended at Q{N})` to header line.
+Early `end quiz` → append `(partial — ended at Q{N})` after the title line.
 
 ---
 
