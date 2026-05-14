@@ -6,10 +6,10 @@ Base context (path variables, behavioral rules) loaded from CLAUDE.md. Data sche
 ```
 Study Progress — All Active Courses
 ──────────────────────────────────────────────────────────────────────
-Course       Units Done  Overall %  Study Streak  Nearest Exam
-──────────── ─────────── ────────── ───────────── ────────────────────
-BIOL 201     4/6         62%        3 days        May 21 — Midterm 1 (10d)
-COMP 361     2/5         20%        1 day         Jun 5  — Lab Quiz 2 (25d)
+Course       Study Streak  Nearest Exam
+──────────── ───────────── ────────────────────
+BIOL 201     3 days        May 21 — Midterm 1 (10d)
+COMP 361     1 day         Jun 5  — Lab Quiz 2 (25d)
 ──────────────────────────────────────────────────────────────────────
 Global weak areas needing attention:
   BIOL 201: cell cycle phases, membrane transport

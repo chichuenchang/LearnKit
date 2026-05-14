@@ -11,7 +11,6 @@ Subcommands:
   deadline add      Append entry to global_deadlines.json
   deadline complete Mark deadline completed in global_deadlines.json
   manifest add      Append entry to materials_manifest.json
-  index update      Recalculate units_completed + next_deadline in courses_index.json
   log entry         Append one-liner to activity_log.md(s)
 """
 import argparse
@@ -255,43 +254,6 @@ def cmd_manifest_add(args):
     out({"success": True, "manifest_id": new_id})
 
 
-# ── index update ──────────────────────────────────────────────────────────────
-
-def cmd_index_update(args):
-    savedata = pathlib.Path(args.savedata)
-    index_path = savedata / "data" / "courses_index.json"
-    data = load_json(index_path, {"last_updated": None, "active_courses": [], "archived_courses": []})
-
-    course_entry = next((c for c in data["active_courses"] if c["course_id"] == args.course), None)
-    if not course_entry:
-        fail(f"course not found in active_courses: {args.course!r}")
-
-    # count completed units from progress.json
-    prog_path = progress_path(savedata, args.course)
-    prog = load_json(prog_path, progress_default(args.course))
-    completed_statuses = {"quiz_passed", "mastered"}
-    units_completed = sum(1 for u in prog.get("units", {}).values()
-                          if u.get("status") in completed_statuses)
-    course_entry["units_completed"] = units_completed
-
-    # find next deadline
-    dl_path = savedata / "data" / "global_deadlines.json"
-    dl_data = load_json(dl_path, {"last_updated": None, "deadlines": []})
-    future = [d for d in dl_data["deadlines"]
-              if d["course_id"] == args.course and not d.get("completed")]
-    future.sort(key=lambda d: d["date"])
-    if future:
-        course_entry["next_deadline_date"] = future[0]["date"]
-        course_entry["next_deadline_title"] = future[0]["title"]
-    else:
-        course_entry["next_deadline_date"] = None
-        course_entry["next_deadline_title"] = None
-
-    data["last_updated"] = now_iso()
-    save_json(index_path, data)
-    out({"success": True, "units_completed": units_completed})
-
-
 # ── log entry ─────────────────────────────────────────────────────────────────
 
 def _append_log(log_path: pathlib.Path, entry: str):
@@ -332,8 +294,6 @@ def _append_log(log_path: pathlib.Path, entry: str):
 
 def cmd_log_entry(args):
     savedata = pathlib.Path(args.savedata)
-    global_log = savedata / "data" / "activity_log.md"
-    _append_log(global_log, args.entry)
 
     if args.course:
         course_log = savedata / "courses" / args.course / "activity_log.md"
@@ -410,14 +370,6 @@ def main():
     ma.add_argument("--page-count", default=0, type=int)
     ma.add_argument("--word-count", default=0, type=int)
 
-    # index
-    ig = sub.add_parser("index")
-    ig_sub = ig.add_subparsers(dest="action")
-
-    iu = ig_sub.add_parser("update")
-    iu.add_argument("--savedata", required=True)
-    iu.add_argument("--course", required=True)
-
     # log
     lg = sub.add_parser("log")
     lg_sub = lg.add_subparsers(dest="action")
@@ -443,9 +395,6 @@ def main():
         elif args.group == "manifest":
             if args.action == "add":
                 cmd_manifest_add(args)
-        elif args.group == "index":
-            if args.action == "update":
-                cmd_index_update(args)
         elif args.group == "log":
             if args.action == "entry":
                 cmd_log_entry(args)

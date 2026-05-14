@@ -99,7 +99,7 @@ Read `user.config.json` → `$userName` (fallback `"Student"`). Store for sessio
     Fix: run /lksetup
   ```
 
-**Step 2**: Read `courses_index.json`, print banner. Sort by nearest deadline. `← CRITICAL` if ≤ 3 days, `← URGENT` if 4–14 days.
+**Step 2**: Read `courses_index.json` for course list. Read `global_deadlines.json` to find nearest incomplete deadline per course. Sort banner by nearest deadline. `← CRITICAL` if ≤ 3 days, `← URGENT` if 4–14 days.
 
 No active courses:
 ```
@@ -113,8 +113,8 @@ Active courses:
 LearnKit — Ready{if $userName: " · {$userName}"}
 Active courses: N
 ──────────────────────────────────────────────────────────────
-  [BIOL 201  ]  Units: 4/6  Progress: 62%  Next deadline: May 21 — Midterm 1 (2d) ← CRITICAL
-  [COMP 361  ]  Units: 2/5  Progress: 20%  Next deadline: Jun 5  — Lab Quiz 2  (8d) ← URGENT
+  [BIOL 201  ]  Next deadline: May 21 — Midterm 1 (2d) ← CRITICAL
+  [COMP 361  ]  Next deadline: Jun 5  — Lab Quiz 2  (8d) ← URGENT
 ──────────────────────────────────────────────────────────────
 Type /lkingest to process waiting files, /lkquiz to study, /lkdeadlines for all deadlines.
 ```

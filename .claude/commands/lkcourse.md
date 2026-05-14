@@ -64,12 +64,11 @@ Ask: `"Semester (e.g., Fall 2026):"`
      Semester: {semester}
      Materials ingested: N files
      Quizzes completed: N
-     Final completion: N%
      Global weak areas at archive time: [list]
      ```
    - Move entry: `active_courses` → `archived_courses` in `courses_index.json`
    - Remove course deadlines from `global_deadlines.json`
-   - Read lklogging.md. Write `[COURSE]` to `courses\{slug}\activity_log.md` BEFORE moving: `"Course archived — {final_completion_pct}% complete after {N} quizzes"`
+   - Read lklogging.md. Write `[COURSE]` to `courses\{slug}\activity_log.md` BEFORE moving: `"Course archived — {N} quizzes completed"`
    - Print: `"{course_code} archived. Deadlines removed from tracker."`
 
 ---

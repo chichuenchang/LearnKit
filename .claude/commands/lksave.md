@@ -12,7 +12,7 @@ Read lkschemas.md and lklogging.md before starting reconciliation.
 |--------|----------------|
 | `/lkquiz` | `quiz_history` entry in `progress.json` · `[QUIZ]` one-liner in `courses\{slug}\activity_log.md` · `weak_areas` + `status` updated |
 | `/lkingest` | Entry in `data\materials_manifest.json` · `materials_ingested` count in `progress.json` · `[INGEST]` in `courses\{slug}\activity_log.md` |
-| `/lkdeadlines add` | Entry in `data\global_deadlines.json` · `[DEADLINE]` in `courses\{slug}\activity_log.md` · `next_deadline_date` in `courses_index.json` |
+| `/lkdeadlines add` | Entry in `data\global_deadlines.json` · `[DEADLINE]` in `courses\{slug}\activity_log.md` |
 
 **Steps:**
 1. List all commands run this session (from context)

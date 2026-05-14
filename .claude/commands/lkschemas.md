@@ -1,8 +1,8 @@
 Standalone data schema reference. Read this file when querying or interpreting JSON data files.
 
 ## `data\courses_index.json` (global)
-**active_courses[]**: `course_id`, `course_code`, `course_name`, `semester`, `folder` (relative), `status: "active"`, `created_date`, `syllabus_ingested` (bool), `units_total`, `units_completed`, `next_deadline_date`, `next_deadline_title`
-**archived_courses[]**: `course_id`, `course_code`, `course_name`, `semester`, `folder`, `status: "archived"`, `archived_date`, `final_completion_pct`
+**active_courses[]**: `course_id`, `course_code`, `course_name`, `semester`, `folder` (relative), `status: "active"`, `created_date`, `syllabus_ingested` (bool)
+**archived_courses[]**: `course_id`, `course_code`, `course_name`, `semester`, `folder`, `status: "archived"`, `archived_date`
 Default empty: `{"last_updated": null, "active_courses": [], "archived_courses": []}`
 
 ## `data\global_deadlines.json` (global)

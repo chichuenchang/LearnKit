@@ -65,35 +65,7 @@ On confirm: **copy** into project. Never delete or move originals.
    - Include "Key Terms" section with definitions tagged by exam probability
    - Include "Likely Quiz/Exam Questions" section at end
 
-8. **Update data files** via `data_writer.py` (run for each successfully ingested file):
-
-   ```powershell
-   # Register file in manifest
-   $result = (& $pythonExe $writerPath manifest add `
-       --savedata $savedataRoot --course-id {course_id} --course-code {course_code} `
-       --filename {original_filename} --method {raw_folder|path_paste} `
-       [--original-path {abs_path}] --file-type {file_type} --unit {unit_slug} `
-       --confidence {high|medium|low|user_assigned} `
-       --filed-path {relative_filed_path} --summary-path {relative_summary_path} `
-       [--page-count N] [--word-count N]) | ConvertFrom-Json
-
-   # Increment materials_ingested (advances not_started → in_progress)
-   $result = (& $pythonExe $writerPath progress ingest `
-       --savedata $savedataRoot --course {course_id} --unit {unit_slug}) | ConvertFrom-Json
-
-   # Recalculate units_completed + next_deadline in courses_index
-   $result = (& $pythonExe $writerPath index update `
-       --savedata $savedataRoot --course {course_id}) | ConvertFrom-Json
-   ```
-
-   After all files processed, write log (one call per course, grouped — fire-and-forget):
-   ```powershell
-   Start-Job -ScriptBlock { param($e,$w,$s,$course,$entry)
-       & $e $w log entry --savedata $s --course $course --entry $entry
-   } -ArgumentList $pythonExe,$writerPath,$savedataRoot,{course_id},"- [INGEST] {course_code} | {N} file(s) → {unit(s)}: {filenames}" | Out-Null
-   ```
-
-9. **Ingestion report**:
+8. **Show ingestion report** immediately after all notes are written — before data writes fire:
    ```
    Ingestion complete — 4 files processed
    ──────────────────────────────────────────────────────
@@ -107,7 +79,25 @@ On confirm: **copy** into project. Never delete or move originals.
    ──────────────────────────────────────────────────────
    ```
 
-10. **Write log entries** after report. Read `lklogging.md` for format spec before writing. One entry per affected course to that course's `activity_log.md`.
+9. **Fire all data writes in one background PowerShell call** (`run_in_background: true`). Group all writes — all `manifest add` first, then all `progress ingest`, then `log entry` per course. Sequential within the call, no race conditions:
+   ```powershell
+   # run_in_background: true on this tool call
+   # --- manifest add (one per successfully ingested file) ---
+   & $pythonExe $writerPath manifest add `
+       --savedata $savedataRoot --course-id {course_id} --course-code {course_code} `
+       --filename {original_filename} --method {raw_folder|path_paste} `
+       [--original-path {abs_path}] --file-type {file_type} --unit {unit_slug} `
+       --confidence {high|medium|low|user_assigned} `
+       --filed-path {relative_filed_path} --summary-path {relative_summary_path} `
+       [--page-count N] [--word-count N] ;
+   # --- progress ingest (one per file) ---
+   & $pythonExe $writerPath progress ingest `
+       --savedata $savedataRoot --course {course_id} --unit {unit_slug} ;
+   # --- log entry (one per affected course) ---
+   & $pythonExe $writerPath log entry `
+       --savedata $savedataRoot --course {course_id} `
+       --entry "- [INGEST] {N} file(s) -> {unit(s)}: {filenames, comma-separated}"
+   ```
 
 ---
 
@@ -130,7 +120,7 @@ Entered from step 4 above when: file type = `syllabus` AND `course_structure.jso
 
 4. **Write deadlines** to `data\global_deadlines.json`. Apply duplicate detection (Section 6 of CLAUDE.md).
 
-5. **Update `courses_index.json`** via `index update`: Set `syllabus_ingested: true`, `units_total`, `next_deadline_date`, `next_deadline_title`.
+5. **Update `courses_index.json`**: Set `syllabus_ingested: true` directly on the course entry.
 
 6. **Write `courses\{slug}\materials\syllabus\course_overview.md`**:
    ```markdown

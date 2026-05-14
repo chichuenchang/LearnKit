@@ -135,27 +135,17 @@ Early `end quiz` → append `(partial — ended at Q{N})` to header line.
 
 ### Step 4 — Data updates (after results)
 
-Use `data_writer.py` for all writes. Run in this order:
+Use `data_writer.py`. Fire silently — single synchronous PowerShell call, no narration, no announcement:
 
-**1. Per unit in scope — `progress quiz`** (one call per unit):
 ```powershell
-$result = (& $pythonExe $writerPath progress quiz `
+& $pythonExe $writerPath progress quiz `
     --savedata $savedataRoot --course {course_id} --unit {unit_slug} `
     --score-pct {unit_pct} --correct {n} --total {n} --incorrect {n} --skipped {n} `
     [--partial] [--adaptive] `
     [--weak-topics "topic1,topic2"] `
-    [--mcq "correct/total"] [--sa "correct/total"]) | ConvertFrom-Json
-```
-Script advances `status` to `quiz_passed` if unit score ≥ 70%, updates `weak_areas` and `confidence_level`.
-
-**2. Recalculate index — `index update`**:
-```powershell
-$result = (& $pythonExe $writerPath index update `
-    --savedata $savedataRoot --course {course_id}) | ConvertFrom-Json
-```
-
-**3. Per-course one-liner — `log entry`**:
-```powershell
-& $pythonExe $writerPath log entry --savedata $savedataRoot --course {course_id} --entry "- [QUIZ] Unit N: {name} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}"
+    [--mcq "correct/total"] [--sa "correct/total"] | Out-Null ;
+& $pythonExe $writerPath log entry `
+    --savedata $savedataRoot --course {course_id} `
+    --entry "- [QUIZ] Unit N: {name} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}" | Out-Null
 ```
 Multi-unit entry format: `- [QUIZ] Units 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics (Unit 2), DNA replication (Unit 3)`
