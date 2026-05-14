@@ -66,10 +66,19 @@ No prior history for any unit → `"Adaptive: baseline distribution (no prior qu
 
 ### Step 2 — Question loop (every question)
 
+Each question renders a one-line header above the question text:
 ```
-[Q3/18] What are the three stages of interphase?
+[Q3/18 — Cell Cycle Phases]  ▓▓░░░░░░░░ 17%  Score: 2/2
+What are the three stages of interphase?
 > _
 ```
+
+**Header fields:**
+- **Topic label**: topic this question tests — assigned at question generation time from the adaptive weight table (Step 0)
+- **Progress bar**: 10-char `▓░` bar. `▓` count = `floor((answered / total) × 10)` where `answered` = questions already evaluated (Q1 → 0 answered, Q2 → 1, etc.)
+- **Percentage**: `floor(answered / total × 100)%`
+- **Score**: `correct / answered`. At Q1 (0 answered) → show `Score: —`
+
 MCQ → labelled options A–D. Short answer → blank prompt.
 
 Evaluate immediately after user replies:
