@@ -72,6 +72,7 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 | `progress ingest` | `--savedata --course --unit` | — |
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |
+| `notes write` | `--dest` | — (reads content from stdin) |
 | `log entry` | `--savedata --course --entry` | — |
 
 **Flag notes:**

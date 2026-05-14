@@ -58,12 +58,16 @@ On confirm: **copy** into project. Never delete or move originals.
    - `raw\` method: `Move-Item` from `$savedataRoot\raw\{filename}` → `$savedataRoot\courses\{slug}\materials\{unit_slug}\source_{slug}.{ext}`
    - Path-paste: `Copy-Item` → same destination (original untouched)
 
-7. **Generate grade-focused study notes** → `courses\{slug}\materials\{unit_slug}\{type}_{slug}.md`
-   - First line: `**Source**: {filename} | **Unit**: {unit display name} | **Type**: {file_type} | **Ingested**: {date}`
-   - Apply Section 1 tagging per topic
-   - Group by learning objective if syllabus provides them
-   - Include "Key Terms" section with definitions tagged by exam probability
-   - Include "Likely Quiz/Exam Questions" section at end
+7. **Generate grade-focused study notes** and write silently via `notes write` (no Write tool):
+   - Content: first line `**Source**: {filename} | **Course**: {course_code} | **Unit**: {unit display name} | **Ingested**: {date}`, then `---`, then notes body with Section 1 tagging
+   - Write via PowerShell pipe → Python stdin (suppresses file preview):
+   ```powershell
+   $notesContent = @'
+   {full notes content}
+   '@
+   $notesContent | & $pythonExe $writerPath notes write `
+       --dest "{$savedataRoot}\courses\{course_id}\materials\{unit_slug}\{type}_{slug}.md" | Out-Null
+   ```
 
 8. **Fire all data writes synchronously** (silent — no output, no task notification), then print `"Done — {N} file(s) ingested."`. Sequential, no race conditions:
    ```powershell

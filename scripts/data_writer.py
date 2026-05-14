@@ -10,6 +10,7 @@ Subcommands:
   progress ingest   Increment materials_ingested in progress.json
   deadline add      Append entry to global_deadlines.json
   deadline complete Mark deadline completed in global_deadlines.json
+  notes write       Write study notes file from stdin
   log entry         Append one-liner to activity_log.md(s)
 """
 import argparse
@@ -202,6 +203,16 @@ def cmd_deadline_complete(args):
     fail(f"deadline id not found: {args.deadline_id!r}")
 
 
+# ── notes write ──────────────────────────────────────────────────────────────
+
+def cmd_notes_write(args):
+    content = sys.stdin.buffer.read().decode("utf-8-sig")
+    dest = pathlib.Path(args.dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(content, encoding="utf-8")
+    out({"success": True})
+
+
 # ── log entry ─────────────────────────────────────────────────────────────────
 
 def _append_log(log_path: pathlib.Path, entry: str):
@@ -299,6 +310,13 @@ def main():
     dc.add_argument("--savedata", required=True)
     dc.add_argument("--deadline-id", required=True)
 
+    # notes
+    ng = sub.add_parser("notes")
+    ng_sub = ng.add_subparsers(dest="action")
+
+    nw = ng_sub.add_parser("write")
+    nw.add_argument("--dest", required=True)
+
     # log
     lg = sub.add_parser("log")
     lg_sub = lg.add_subparsers(dest="action")
@@ -321,6 +339,9 @@ def main():
                 cmd_deadline_add(args)
             elif args.action == "complete":
                 cmd_deadline_complete(args)
+        elif args.group == "notes":
+            if args.action == "write":
+                cmd_notes_write(args)
         elif args.group == "log":
             if args.action == "entry":
                 cmd_log_entry(args)
