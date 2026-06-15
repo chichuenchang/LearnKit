@@ -9,7 +9,8 @@ Multiple active + no course → ask. Quiz: **interactive — one question at a t
 - `unit_01-unit_03` — contiguous range (inclusive)
 - `unit_01,unit_03,unit_05` — explicit list
 - `exam_1` — all units covered by exam (resolved from `course_structure.json` `exams[].units_covered`)
-- `exam_1 mock` (or any scope + `mock`) — mock mode: verbatim-heavy, every covered topic represented
+- `exam_1 mock` (or any scope + `mock`) — mock mode: verbatim-heavy, every covered topic represented; preserves real exam format (may include short answer)
+- `written` (or any scope + `written`) — include short-answer / manual-input questions. **Without this flag the quiz is all multiple-choice.**
 
 **Resolving exam scope**: Look up by `exam_id` or fuzzy title. Use `units_covered` as unit list. Not found: `"No exam 'exam_1' in {course_code}. Available: [list]"`. Show resolved scope using `unit_label` from `course_structure.json` pluralized: `"Units 1–3 (Exam 1 scope)"`, `"Weeks 1–3 (Exam 1 scope)"`, `"Chapters 1–3 (Exam 1 scope)"`, etc.
 
@@ -29,13 +30,13 @@ Read `courses\{slug}\data\progress.json`: find all past `quiz_history` entries f
 - Never seen → **NEUTRAL**: baseline
 - No topic > 40% of total questions
 - Always ≥1 question per topic linked to next upcoming exam
-- `short_answer` accuracy < 60% → increase short-answer proportion
+- `short_answer` accuracy < 60% → increase short-answer proportion (applies only when `written`/`mock` active; default quiz has no short answer)
 
 **Problem pool sourcing**: Read `courses\{slug}\data\problem_pool.json`. For problems whose `unit_id` ∈ scope:
 - **Coverage map** — split scope topics into pool-covered vs not.
-- **Verbatim problems** — serve pool problems directly (count toward the question total). Prioritize `EXAM-CRITICAL` tags and topics tied to the next upcoming exam.
+- **Verbatim problems** — serve pool problems directly (count toward the question total). Prioritize `EXAM-CRITICAL` tags and topics tied to the next upcoming exam. **Default (MCQ-only)**: serve only `mcq`-type pool problems; skip non-mcq types unless `written`/`mock` is active.
 - **Generated gap-fillers** — for scope topics with no pool problem, generate fresh questions matching the pool's observed style (question-type mix, phrasing, difficulty). Adaptive weights still apply.
-- **Format mirror** — when the pool covers the scope, derive the MCQ/short-answer ratio from the pool (overrides the ~70/30 default below).
+- **Format mirror** — only when `written`/`mock` is active: derive the MCQ/short-answer ratio from the pool. Default (no flag) → all MCQ regardless of pool ratio.
 - **Mix** — normal scope: blend, capping the verbatim share so fresh practice remains. `mock` keyword: verbatim-heavy, and ensure every covered topic appears (verbatim where available, generated otherwise).
 - **Empty or absent pool** → behavior unchanged (materials-only).
 
@@ -45,7 +46,7 @@ Read `courses\{slug}\data\progress.json`: find all past `quiz_history` entries f
 
 **Multi-unit material pooling**: Combine all `.md` from every unit in scope + `multi_unit\`. Distribute proportionally by volume, apply adaptive weights on top. Every unit gets ≥1 question.
 
-**Format**: Mirror ingested practice quiz if available. Default: ~70% MCQ, ~30% short answer.
+**Format**: **Default — all multiple-choice (100% MCQ)**, 4 options each. Short-answer / manual-input questions appear only when the `written` scope keyword is passed, or in `mock` mode (exam simulation preserves real format). With `written`: mirror ingested practice quiz if available, else ~70% MCQ / ~30% short answer.
 
 ---
 
