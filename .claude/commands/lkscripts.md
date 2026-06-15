@@ -34,12 +34,11 @@ if ($data.scanned) {
     # Read each page image via Read tool — Claude handles natively (multimodal)
     # $data.image_paths contains absolute PNG paths, read in order
     # Generate study notes from visual page content; same tagging rules apply (Section 1 of CLAUDE.md)
-    # First line of notes: "**Source**: {filename} | ... | **Note**: Scanned PDF — content read from page images"
+    # First line of notes: "**Source**: {filename} | ... | **Raw material**: raw/{unit_slug}/source_{slug}.{ext} | **Note**: Scanned PDF — content read from page images"
 
     # Clean up after notes generated:
-    $basename = [System.IO.Path]::GetFileNameWithoutExtension($data.filename)
-    $pagesDir = Join-Path $scriptsRoot "tmp_pages" $basename
-    Remove-Item $pagesDir -Recurse -ErrorAction SilentlyContinue
+    $pagesDir = $data.pages_dir   # sanitized dir reported by extract_text.py (handles trailing-space / illegal-char filenames)
+    if ($pagesDir) { Remove-Item $pagesDir -Recurse -ErrorAction SilentlyContinue }
 }
 ```
 
@@ -72,6 +71,8 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 | `progress ingest` | `--savedata --course --unit` | — |
 | `pool add` | `--savedata --course` | — (reads JSON array of problems from stdin) |
 | `pool remove` | `--savedata --course --problem-id` | — |
+| `image add` | `--savedata --course` | — (reads JSON array of image records from stdin) |
+| `image remove` | `--savedata --course --image-id` | — |
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |
 | `notes write` | `--dest` | — (reads content from stdin) |
@@ -95,6 +96,18 @@ if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
 # success → { added, skipped, ids[] }
 ```
 `--course` is the course slug. Each problem is one object in the array; one call writes many. `question_type` validated against the allowed set; duplicate question text (normalized) is skipped.
+
+**`image_extract.py` — render pages + detect label boxes (for the image bank):**
+```powershell
+$r = (& $pythonExe (Join-Path $scriptsRoot "image_extract.py") `
+    --file "C:\full\path\source.pdf" --out (Join-Path $scriptsRoot "tmp_pages")) | ConvertFrom-Json
+# $r.pages[] = { page, image_path, image_w, image_h, source(textlayer|ocr|none), words[] }
+# words[] = { text, bbox [x,y,w,h normalized 0-1], conf }
+# Clean up $r.pages_dir after building image records.
+```
+Label boxes come from the PDF text layer (`source:"textlayer"`, exact) or Tesseract OCR (`source:"ocr"`). Tesseract absent → image-only pages return `source:"none"` with no boxes (graceful). The agent classifies which words label parts/regions of the figure and does the flagged AI-fill; it does NOT invent coordinates.
+
+**`image add` — batch image-record write (reads stdin, like `pool add`):** one JSON array of image records → `image_bank.json`; assigns `img_{course}_{NNN}`, dedups by `(source_file, page)`.
 
 **Log entry format** — always prefix with type tag:
 ```powershell

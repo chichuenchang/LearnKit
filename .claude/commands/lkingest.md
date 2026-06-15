@@ -22,7 +22,7 @@ On confirm: **copy** into project. Never delete or move originals.
 
 1. **Extract text**: Run `scripts\extract_text.py` (via $pythonExe and $scriptsRoot — see `lkscripts.md`). Fails → report error and skip; don't continue with that file.
    - `scanned: false` → use `data.text` as normal for all downstream steps
-   - `scanned: true` → read each path in `data.image_paths` via Read tool; generate study notes from visual page content; clean up `tmp_pages/{basename}/` after notes written
+   - `scanned: true` → read each path in `data.image_paths` via Read tool; generate study notes from visual page content; clean up the page-image dir `data.pages_dir` after notes written
    - `capped: true` → surface before proceeding: `"Note: {filename} has {page_count} pages — first 20 ingested. Re-ingest and confirm to process remaining pages."`
 
 2. **Identify course**: Section 4 logic (CLAUDE.md).
@@ -58,9 +58,11 @@ On confirm: **copy** into project. Never delete or move originals.
 6. **Archive original**:
    - `raw\` method: `Move-Item` from `$savedataRoot\raw\{filename}` → `$savedataRoot\courses\{slug}\materials\{unit_slug}\source_{slug}.{ext}`
    - Path-paste: `Copy-Item` → same destination (original untouched)
+   - **Always also copy into the per-course raw archive**: `Copy-Item` the archived source → `$savedataRoot\courses\{slug}\raw\{unit_slug}\source_{slug}.{ext}`. The `raw\` archive mirrors the unit structure — subfolders are `{unit_slug}`, so they read as weeks/units/chapters/etc. per the course's `unit_label`. No extra prompt: the separation was chosen at course/syllabus setup (the "How is this course organized?" step). Multi-unit files → `raw\multi_unit\`; unclassified → `raw\unclassified\`.
 
 7. **Generate grade-focused study notes** and write silently via `notes write` (no Write tool):
-   - Content: first line `**Source**: {filename} | **Course**: {course_code} | **Unit**: {unit display name} | **Ingested**: {date}`, then `---`, then notes body with Section 1 tagging
+   - Content: first line `**Source**: {filename} | **Course**: {course_code} | **Unit**: {unit display name} | **Ingested**: {date} | **Raw material**: raw/{unit_slug}/source_{slug}.{ext}`, then `---`, then notes body with Section 1 tagging
+   - The `**Raw material**:` value points to the file's copy in the per-course raw archive (step 6). Multi-unit → `raw/multi_unit/...`; unclassified → `raw/unclassified/...`.
    - Write via PowerShell pipe → Python stdin (suppresses file preview):
    ```powershell
    $notesContent = @'
@@ -78,6 +80,14 @@ On confirm: **copy** into project. Never delete or move originals.
 
    Build one JSON array of all problems and write via a single `pool add` call (see lkscripts.md). Surface: `"Extracted {added} problem(s) to {course_code} pool ({skipped} duplicate(s) skipped)."`
 
+7c. **Capture labeled diagrams/figures to the image bank** (PDFs only): Run `image_extract.py --file {source} --out {scriptsRoot}\tmp_pages` (see lkscripts.md). For each returned page that is a **labeled diagram or figure** — any subject (anatomy, chemistry, geography, circuits, maps, …) — (skip title / text-only / summary pages):
+   - Save the page PNG → `materials\{unit_slug}\images\{source_slug}_p{NN}.png`.
+   - From the page's detected `words` (text-layer or OCR boxes), keep those that label a part/region/term of the figure: record `name`, `bbox`, `confidence`, assign a free-form subject-appropriate `type` (e.g. `bone`, `country`, `component`, `functional group`; or null), `source:"slide"`.
+   - Add notable UNlabeled structures as `source:"ai"`, `verified:false`, `label_bbox:null` (Rule 9a — flagged, surfaced `[AI — verify]`). Never override a printed label.
+   - Set `title` (slide heading) and `label_source` (the page's `source`). NEVER invent coordinates — use only the detected boxes.
+
+   Build one JSON array of all kept pages and write via a single `image add` call (see lkscripts.md). Then clean up the render dir via the returned `pages_dir`. Surface: `"Captured {N} illustration(s) — {S} slide-labeled structures, {A} AI-flagged."` No illustration pages → skip silently.
+
 8. **Fire all data writes synchronously** (silent — no output, no task notification), then print `"Done — {N} file(s) ingested."`. Sequential, no race conditions:
    ```powershell
    # --- progress ingest (one per file) ---
@@ -89,6 +99,7 @@ On confirm: **copy** into project. Never delete or move originals.
        --entry "- [INGEST] {N} file(s) -> {unit(s)}: {filenames, comma-separated}" | Out-Null
    ```
    When step 7b added problems, also log per affected course: `- [POOL] Extracted {N} problem(s) from {filename} -> {unit(s)}`.
+   When step 7c captured illustrations, also log per course: `- [IMAGE] Captured {N} illustration(s) from {filename} -> {unit}`.
 
 ---
 
@@ -171,4 +182,4 @@ Return to main pipeline at step 7 (generate study notes) after branch completes.
 - **Unsupported type** (.xlsx, .zip, etc.): Report and skip.
 - **Python fails**: Report error, skip file, continue. First file fails with env error → stop and ask user to check Python path via `/lksetup`.
 - **No course structure**: Ingest but assign to `unclassified`. Note: `"No course structure for {course_code} — filed as unclassified. Ingest syllabus to enable unit assignment."`
-- **Scanned PDF**: Detected when text yield < 50 words/page. Pages converted to images by `extract_text.py`, read by agent via Read tool. Notes generated from visual content. First line of notes: `**Source**: {filename} | **Unit**: {unit} | **Type**: {type} | **Ingested**: {date} | **Note**: Scanned PDF — content read from page images`
+- **Scanned PDF**: Detected when text yield < 50 words/page. Pages converted to images by `extract_text.py`, read by agent via Read tool. Notes generated from visual content. First line of notes: `**Source**: {filename} | **Unit**: {unit} | **Type**: {type} | **Ingested**: {date} | **Raw material**: raw/{unit_slug}/source_{slug}.{ext} | **Note**: Scanned PDF — content read from page images`

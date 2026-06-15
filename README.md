@@ -15,7 +15,7 @@ Works with any university course. Each student keeps their own private data.
 ### Python packages
 
 ```bash
-pip install pdfplumber python-pptx python-docx pymupdf
+pip install pdfplumber python-pptx python-docx pymupdf pytesseract
 ```
 
 | Package | Purpose |
@@ -24,6 +24,7 @@ pip install pdfplumber python-pptx python-docx pymupdf
 | `python-pptx` | Extract text from PowerPoint slides |
 | `python-docx` | Extract text from Word documents |
 | `pymupdf` | Render scanned PDF pages as images for visual extraction |
+| `pytesseract` | (Optional) Detect printed labels + positions on scanned slide diagrams for the image bank. Needs the Tesseract binary installed separately; without it, image-only slides are captured without label boxes. |
 
 > `/lksetup` will detect your Python interpreter and offer to install missing packages automatically.
 
@@ -78,6 +79,7 @@ savedata/              ← your private data (gitignored)
 | `/lkdeadlines` | View all upcoming deadlines |
 | `/lkprogress` | Study dashboard across all courses |
 | `/lkpool [course]` | Manage the pool of past quiz/exam problems |
+| `/lkimage [course] [scope]` | Review the image bank (labeled diagrams/figures, any subject) |
 | `/lkcourse add` | Register a new course |
 | `/lkcourse complete` | Archive a finished course |
 | `/lksave` | Reconcile any missed data writes from current session |

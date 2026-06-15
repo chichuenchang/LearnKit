@@ -2,7 +2,7 @@
 Text extraction helper for PT Study Agent.
 Usage: python extract_text.py --file <path> --output <path>
 Outputs JSON: { success, filename, file_type, page_count, word_count, text,
-                scanned, image_paths, capped, error }
+                scanned, image_paths, pages_dir, capped, error }
 """
 import argparse
 import json
@@ -64,7 +64,7 @@ def render_pdf_pages(path):
         image_paths.append(str(img_path))
 
     doc.close()
-    return image_paths, total_pages, capped
+    return image_paths, total_pages, capped, str(out_dir)
 
 
 def extract_pptx(path):
@@ -109,6 +109,7 @@ def main():
         "text": "",
         "scanned": False,
         "image_paths": [],
+        "pages_dir": None,
         "capped": False,
         "error": None,
     }
@@ -125,8 +126,9 @@ def main():
             result["page_count"] = page_count
             if is_scanned:
                 result["scanned"] = True
-                image_paths, _, capped = render_pdf_pages(args.file)
+                image_paths, _, capped, pages_dir = render_pdf_pages(args.file)
                 result["image_paths"] = image_paths
+                result["pages_dir"] = pages_dir
                 result["capped"] = capped
             else:
                 result["text"] = text

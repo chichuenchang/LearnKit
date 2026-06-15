@@ -10,6 +10,8 @@ Subcommands:
   progress ingest   Increment materials_ingested in progress.json
   pool add          Append problems (JSON array on stdin) to problem_pool.json
   pool remove       Delete a problem from problem_pool.json
+  image add         Append image records (JSON array on stdin) to image_bank.json
+  image remove      Delete an image record from image_bank.json
   deadline add      Append entry to global_deadlines.json
   deadline complete Mark deadline completed in global_deadlines.json
   notes write       Write study notes file from stdin
@@ -80,6 +82,14 @@ def pool_path(savedata: pathlib.Path, course: str) -> pathlib.Path:
 
 def pool_default(course: str) -> dict:
     return {"course": None, "course_id": course, "last_updated": None, "problems": []}
+
+
+def image_bank_path(savedata: pathlib.Path, course: str) -> pathlib.Path:
+    return savedata / "courses" / course / "data" / "image_bank.json"
+
+
+def image_bank_default(course: str) -> dict:
+    return {"course": None, "course_id": course, "last_updated": None, "images": []}
 
 
 def _normalize_q(text: str) -> str:
@@ -249,6 +259,102 @@ def cmd_pool_remove(args):
     out({"success": True, "removed": args.problem_id})
 
 
+# ── image add ─────────────────────────────────────────────────────────────────
+
+def cmd_image_add(args):
+    savedata = pathlib.Path(args.savedata)
+    path = image_bank_path(savedata, args.course)
+    data = load_json(path, image_bank_default(args.course))
+    data.setdefault("images", [])
+
+    raw = sys.stdin.buffer.read().decode("utf-8-sig").strip()
+    if not raw:
+        fail("no input on stdin (expected JSON array of image records)")
+    try:
+        incoming = json.loads(raw)
+    except Exception as e:
+        fail(f"invalid JSON on stdin: {e}")
+    if not isinstance(incoming, list):
+        fail("stdin JSON must be an array of image records")
+
+    existing_keys = {(im.get("source_file"), im.get("page")) for im in data["images"]}
+    prefix = f"img_{args.course}_"
+    maxnum = 0
+    for im in data["images"]:
+        iid = im.get("image_id", "")
+        if iid.startswith(prefix):
+            try:
+                maxnum = max(maxnum, int(iid[len(prefix):]))
+            except ValueError:
+                pass
+
+    added_ids = []
+    skipped = 0
+    for rec in incoming:
+        if not isinstance(rec, dict):
+            fail("each image record must be a JSON object")
+        src = rec.get("source_file")
+        page = rec.get("page")
+        if src is None or page is None:
+            fail("image record missing source_file or page")
+        key = (src, page)
+        if key in existing_keys:
+            skipped += 1
+            continue
+        existing_keys.add(key)
+
+        norm_structs = []
+        for s in (rec.get("structures") or []):
+            ssource = s.get("source") or "slide"
+            norm_structs.append({
+                "name": s.get("name"),
+                "type": s.get("type"),   # free-form / optional (course-agnostic label)
+                "source": ssource,
+                "label_bbox": s.get("label_bbox"),
+                "confidence": s.get("confidence"),
+                "verified": bool(s.get("verified", ssource == "slide")),
+            })
+
+        maxnum += 1
+        iid = f"{prefix}{maxnum:03d}"
+        data["images"].append({
+            "image_id": iid,
+            "unit_id": rec.get("unit_id"),
+            "unit_slug": rec.get("unit_slug"),
+            "source_file": src,
+            "page": int(page),
+            "image_path": rec.get("image_path"),
+            "image_w": rec.get("image_w"),
+            "image_h": rec.get("image_h"),
+            "title": rec.get("title"),
+            "label_source": rec.get("label_source"),
+            "structures": norm_structs,
+            "date_added": today_str(),
+        })
+        added_ids.append(iid)
+
+    data["last_updated"] = now_iso()
+    save_json(path, data)
+    out({"success": True, "added": len(added_ids), "skipped": skipped, "ids": added_ids})
+
+
+# ── image remove ──────────────────────────────────────────────────────────────
+
+def cmd_image_remove(args):
+    savedata = pathlib.Path(args.savedata)
+    path = image_bank_path(savedata, args.course)
+    data = load_json(path, image_bank_default(args.course))
+    data.setdefault("images", [])
+
+    before = len(data["images"])
+    data["images"] = [im for im in data["images"] if im.get("image_id") != args.image_id]
+    if len(data["images"]) == before:
+        fail(f"image id not found: {args.image_id!r}")
+    data["last_updated"] = now_iso()
+    save_json(path, data)
+    out({"success": True, "removed": args.image_id})
+
+
 # ── deadline add ──────────────────────────────────────────────────────────────
 
 def cmd_deadline_add(args):
@@ -408,6 +514,19 @@ def main():
     pr.add_argument("--course", required=True)
     pr.add_argument("--problem-id", required=True)
 
+    # image
+    img = sub.add_parser("image")
+    img_sub = img.add_subparsers(dest="action")
+
+    ia = img_sub.add_parser("add")
+    ia.add_argument("--savedata", required=True)
+    ia.add_argument("--course", required=True)
+
+    ir = img_sub.add_parser("remove")
+    ir.add_argument("--savedata", required=True)
+    ir.add_argument("--course", required=True)
+    ir.add_argument("--image-id", required=True)
+
     # deadline
     dg = sub.add_parser("deadline")
     dg_sub = dg.add_subparsers(dest="action")
@@ -456,6 +575,11 @@ def main():
                 cmd_pool_add(args)
             elif args.action == "remove":
                 cmd_pool_remove(args)
+        elif args.group == "image":
+            if args.action == "add":
+                cmd_image_add(args)
+            elif args.action == "remove":
+                cmd_image_remove(args)
         elif args.group == "deadline":
             if args.action == "add":
                 cmd_deadline_add(args)

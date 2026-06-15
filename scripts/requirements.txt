@@ -1,3 +1,4 @@
 pdfplumber
 python-pptx
 python-docx
+pytesseract

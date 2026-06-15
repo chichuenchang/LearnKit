@@ -56,9 +56,12 @@ PER-COURSE DATA (under $savedataRoot\courses\{course_slug}\):
   data\course_structure.json  — unit/exam map built from syllabus
   data\progress.json          — study progress and quiz history by unit
   data\problem_pool.json      — past quiz/exam problems (pool); served + style-exemplar source for /lkquiz
+  data\image_bank.json        — labeled diagrams/figures, any subject (image + label positions) for /lkimage
   activity_log.md             — per-course log: events for that course only
   misc.md                     — free-form running log: deadline changes, instructor notes, anything important
   materials\{unit_slug}\      — study notes (.md files) + source files (source_*.*)
+  materials\{unit_slug}\images\ — extracted illustration PNGs (referenced by image_bank.json)
+  raw\{unit_slug}\            — per-course archive of original sources, mirrored by unit (weeks/units/chapters per unit_label); notes link here via **Raw material**: header
 
 DIRECTORIES:
   $savedataRoot\raw\      — drop zone (gitignored; files may also be provided as pasted paths)
@@ -230,6 +233,11 @@ Full spec in `.claude/commands/lkpool.md`. Variants: `/lkpool {course}` (summary
 
 ---
 
+### `/lkimage` — Image bank
+Full spec in `.claude/commands/lkimage.md`. Variants: `/lkimage {course}` (summary), `/lkimage {course} {scope}` (review), `/lkimage {image_id}`, `/lkimage remove {image_id}`. Labeled illustrations captured during ingest; structure labels are `[slide]` (grounded) or `[AI — verify]` (flagged).
+
+---
+
 ### `/lkcourse` — Course management
 Full spec in `.claude/commands/lkcourse.md`. Variants: `/lkcourse add {code} {name}`, `/lkcourse complete {code}`, `/lkcourse list`.
 
@@ -274,11 +282,14 @@ Full spec in `.claude/commands/lkingest.md` — see "Syllabus Processing Branch"
 - **Course slug**: lowercase, spaces → `_`, strip non-alphanumeric (except `_`). Examples: `"BIOL 201"` → `biol_201`, `"COMP 361"` → `comp_361`, `"CS 101"` → `cs_101`
 - **Unit slug**: `{unit_id}_{topic_kebab}` where `unit_id` prefix derives from `unit_label` (see lkschemas.md mapping) — e.g. `unit_01_cell_structure`, `week_01_vertebral_column`, `chap_01_enzymes`, `mod_01_intro`
 - **Source files**: `source_{original_basename_truncated_30}.{ext}` — lowercase, spaces → `_`
+- **Raw archive**: each ingested source is also copied to `courses\{slug}\raw\{unit_slug}\source_{...}.{ext}` (mirrors `materials\{unit_slug}\`, organized by unit per `unit_label`); the note's `**Raw material**:` header field points to it
 - **Study notes**: `{file_type}_{original_basename_truncated_30}.md`
 - **Quiz files**: `quiz_{unit_short}_{N}_{YYYYMMDD}.json` — `unit_short` derived from `unit_label` (see lkschemas.md mapping: `u01`, `w01`, `ch01`, `m01`, `t01`, `l01`, `b01`) — e.g. `quiz_u01_1_20260501.json`, `quiz_w01_1_20260501.json`, `quiz_ch01_1_20260501.json`
 - **Attempt files**: `attempt_{unit_short}_{N}_{YYYYMMDD}.json`
 - **Deadline ID**: `dl_{course_id}_{NNN}` — e.g. `dl_biol_201_001` (increment from current max)
 - **Problem ID**: `prob_{course_id}_{NNN}` — e.g. `prob_pther_350a_001` (increment from current max in that course's `problem_pool.json`)
+- **Image ID**: `img_{course_id}_{NNN}` — e.g. `img_pther_350a_001` (increment from current max in that course's `image_bank.json`)
+- **Illustration files**: `materials\{unit_slug}\images\{source_slug}_p{NN}.png` — `{NN}` = source page number
 
 ---
 
@@ -299,6 +310,7 @@ Full spec in `.claude/commands/lkscripts.md` — covers `extract_text.py` usage,
 7. **Urgency threshold** — active course has exam ≤ 3 days (CRITICAL) → prepend Section 1 urgency notice to every relevant response
 8. **Respect skip decisions** — user skips file during ingestion → leave untouched; don't retry until user runs `/lkingest` again
 9. **No hallucinated subject-matter knowledge** — all content facts from ingested materials only. No pre-loaded domain knowledge for any subject. Topic not in materials → `"No materials covering '{topic}' ingested for {course_code} yet."` If partially covered, state exactly which units cover it and which do not.
+9a. **Image labels exception** — In the **image bank** only, label names may be AI-identified **when not printed on the slide**, but MUST be stored `source:"ai"` with `verified:false` and surfaced as `[AI — verify]`. Printed slide labels (text-layer / OCR) stay the grounded default; AI-fill never overrides or invents a printed label. (Applies to any subject's diagrams — anatomy, chemistry, geography, etc.)
 10. **Immediate progress updates** — update JSON after each quiz session; startup banner reflects latest state
 11. **`misc.md` always fresh** — read at start of every `/lkquiz`; surface entries from past 14 days under `## Course Notes` before main content
 13. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
