@@ -109,6 +109,19 @@ Label boxes come from the PDF text layer (`source:"textlayer"`, exact) or Tesser
 
 **`image add` — batch image-record write (reads stdin, like `pool add`):** one JSON array of image records → `image_bank.json`; assigns `img_{course}_{NNN}`, dedups by `(source_file, page)`.
 
+**`image_quiz.py` — build a self-contained image-MCQ HTML page (reads quiz-spec on stdin):**
+```powershell
+$specJson = @'
+{ "title": "PTHER 350A — Week 6 (image quiz)", "questions": [
+  { "image_path": "C:\\...\\images\\source_..._p05.png", "image_w": 1100, "image_h": 1500,
+    "target_bbox": [0.62,0.40,0.10,0.03], "stem": "What is the name of the highlighted structure?",
+    "options": ["Talus","Calcaneus","Navicular","Cuboid"], "answer_index": 0 } ] }
+'@
+$r = ($specJson | & $pythonExe (Join-Path $scriptsRoot "image_quiz.py") --out $htmlPath) | ConvertFrom-Json
+# success → { html_path, question_count }.  Then: Start-Process $r.html_path
+```
+Masks each `target_bbox` (Pillow), embeds images as base64 (single offline file). The agent builds `options` + `answer_index` (correct + 3 distractors); the script only renders.
+
 **Log entry format** — always prefix with type tag:
 ```powershell
 --entry "[DEADLINE] Added: Term Quiz 1 on 2026-05-13" --course "pther_350a"

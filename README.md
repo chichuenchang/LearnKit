@@ -79,7 +79,7 @@ savedata/              ← your private data (gitignored)
 | `/lkdeadlines` | View all upcoming deadlines |
 | `/lkprogress` | Study dashboard across all courses |
 | `/lkpool [course]` | Manage the pool of past quiz/exam problems |
-| `/lkimage [course] [scope]` | Review the image bank (labeled diagrams/figures, any subject) |
+| `/lkimage [course] [scope]` | Review the image bank, or `/lkimage quiz` for an image MCQ quiz (HTML) |
 | `/lkcourse add` | Register a new course |
 | `/lkcourse complete` | Archive a finished course |
 | `/lksave` | Reconcile any missed data writes from current session |

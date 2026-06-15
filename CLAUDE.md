@@ -234,7 +234,7 @@ Full spec in `.claude/commands/lkpool.md`. Variants: `/lkpool {course}` (summary
 ---
 
 ### `/lkimage` — Image bank
-Full spec in `.claude/commands/lkimage.md`. Variants: `/lkimage {course}` (summary), `/lkimage {course} {scope}` (review), `/lkimage {image_id}`, `/lkimage remove {image_id}`. Labeled illustrations captured during ingest; structure labels are `[slide]` (grounded) or `[AI — verify]` (flagged).
+Full spec in `.claude/commands/lkimage.md`. Variants: `/lkimage {course}` (summary), `/lkimage {course} {scope}` (review), `/lkimage {image_id}`, `/lkimage quiz {course} {scope}` (image MCQ quiz → HTML), `/lkimage remove {image_id}`. Labeled illustrations captured during ingest; structure labels are `[slide]` (grounded) or `[AI — verify]` (flagged).
 
 ---
 
