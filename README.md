@@ -24,7 +24,8 @@ pip install pdfplumber python-pptx python-docx pymupdf pytesseract
 | `python-pptx` | Extract text from PowerPoint slides |
 | `python-docx` | Extract text from Word documents |
 | `pymupdf` | Render scanned PDF pages as images for visual extraction |
-| `pytesseract` | (Optional) Detect printed labels + positions on scanned slide diagrams for the image bank. Needs the Tesseract binary installed separately; without it, image-only slides are captured without label boxes. |
+| `paddleocr` + `paddlepaddle-gpu` | (Optional, **primary** OCR) GPU-accelerated label detection for the image bank. Install paddle from the Paddle CUDA index: `pip install paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/stable/cu126/` then `pip install paddleocr`. |
+| `pytesseract` | (Optional, **fallback** OCR) Detect labels + positions via the Tesseract binary (UB-Mannheim build on Windows) when PaddleOCR isn't available. Without any OCR, image-only slides are captured without label boxes. |
 
 > `/lksetup` will detect your Python interpreter and offer to install missing packages automatically.
 

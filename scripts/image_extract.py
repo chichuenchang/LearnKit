@@ -38,8 +38,85 @@ def _norm_bbox(x0, y0, x1, y1, w, h):
             round((x1 - x0) / w, 4), round((y1 - y0) / h, 4)]
 
 
+_PADDLE = None
+_PADDLE_TRIED = False
+
+
+def _get_paddle():
+    """Lazily init ONE PaddleOCR (GPU) instance per process, or None if unavailable."""
+    global _PADDLE, _PADDLE_TRIED
+    if _PADDLE_TRIED:
+        return _PADDLE
+    _PADDLE_TRIED = True
+    try:
+        import ssl
+        # Windows: a malformed cert in the ROOT store crashes aiohttp's import-time
+        # SSL context (PaddleOCR imports aiohttp). Skip the windows-store cert load.
+        try:
+            ssl.SSLContext._load_windows_store_certs = lambda self, storename, purpose: None
+        except Exception:
+            pass
+        os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
+        from paddleocr import PaddleOCR
+        _PADDLE = PaddleOCR(lang="en")
+    except Exception:
+        _PADDLE = None
+    return _PADDLE
+
+
+def _paddle_words(png_path):
+    """Return [{text,bbox,conf}] via PaddleOCR (GPU), or None if unavailable."""
+    ocr = _get_paddle()
+    if ocr is None:
+        return None
+    try:
+        from PIL import Image
+        res = ocr.predict(png_path)
+    except Exception:
+        return None
+    if not res:
+        return []
+    r0 = res[0]
+    texts = r0.get("rec_texts") or []
+    scores = r0.get("rec_scores") or []
+    boxes = r0.get("rec_boxes")
+    polys = r0.get("rec_polys")
+    W, H = Image.open(png_path).size
+    words = []
+    for i, txt in enumerate(texts):
+        t = (txt or "").strip()
+        if not t:
+            continue
+        conf = float(scores[i]) if i < len(scores) else 1.0
+        if conf < OCR_MIN_CONF / 100.0:
+            continue
+        if boxes is not None and i < len(boxes):
+            b = boxes[i]
+            x0, y0, x1, y1 = float(b[0]), float(b[1]), float(b[2]), float(b[3])
+        elif polys is not None and i < len(polys):
+            xs = [float(pt[0]) for pt in polys[i]]
+            ys = [float(pt[1]) for pt in polys[i]]
+            x0, y0, x1, y1 = min(xs), min(ys), max(xs), max(ys)
+        else:
+            continue
+        words.append({"text": t, "bbox": _norm_bbox(x0, y0, x1, y1, W, H),
+                      "conf": round(conf, 2)})
+    return words
+
+
 def _ocr_words(png_path):
-    """Return [{text,bbox,conf}] via Tesseract, or None if OCR unavailable."""
+    """OCR a page → [{text,bbox,conf}] or None. PaddleOCR (GPU) primary, Tesseract
+    fallback. LK_OCR_DISABLE=1 skips OCR entirely (used by tests for speed)."""
+    if os.environ.get("LK_OCR_DISABLE"):
+        return None
+    w = _paddle_words(png_path)
+    if w is not None:
+        return w
+    return _tesseract_words(png_path)
+
+
+def _tesseract_words(png_path):
+    """Return [{text,bbox,conf}] via Tesseract, or None if unavailable."""
     try:
         import pytesseract
         from PIL import Image

@@ -1,4 +1,5 @@
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -12,8 +13,11 @@ SCANNED_PDF = REPO / "savedata/courses/pther_350a/materials/week_06_foot/source_
 
 
 def run_extract(pdf, out_dir):
+    # LK_OCR_DISABLE keeps the test fast/deterministic (no PaddleOCR/GPU init);
+    # exercises the text-layer + graceful-no-OCR paths.
+    env = {**os.environ, "LK_OCR_DISABLE": "1"}
     proc = subprocess.run([sys.executable, SCRIPT, "--file", str(pdf), "--out", out_dir],
-                          capture_output=True, text=True)
+                          capture_output=True, text=True, env=env)
     return json.loads(proc.stdout)
 
 
