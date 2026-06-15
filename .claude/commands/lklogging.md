@@ -20,6 +20,7 @@ Prepend after file header (newest first). Group under `## YYYY-MM-DD (Weekday)`.
 |------|--------|
 | `[QUIZ]` | `{display_name} — {score}/{total} ({pct}%) \| Weak: {topics or "none"}` |
 | `[INGEST]` | `{N} file(s) → {unit(s)}: {filenames, comma-separated}` |
+| `[POOL]` | `Extracted {N} problem(s) from {filename} → {unit(s)}` · `Added/Removed {problem_id}` |
 | `[DEADLINE]` | `{Added/Updated/Completed}: {title} on {date}` |
 | `[NOTE]` | `Misc note added` |
 | `[COURSE]` | `Course {action: added/archived} — {brief detail}` |

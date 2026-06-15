@@ -8,6 +8,8 @@ Output: JSON to stdout — {"success": true/false, ...}
 Subcommands:
   progress quiz     Write quiz result to progress.json
   progress ingest   Increment materials_ingested in progress.json
+  pool add          Append problems (JSON array on stdin) to problem_pool.json
+  pool remove       Delete a problem from problem_pool.json
   deadline add      Append entry to global_deadlines.json
   deadline complete Mark deadline completed in global_deadlines.json
   notes write       Write study notes file from stdin

@@ -77,6 +77,7 @@ savedata/              ← your private data (gitignored)
 | `/lkquiz [course] [scope]` | Adaptive interactive quiz |
 | `/lkdeadlines` | View all upcoming deadlines |
 | `/lkprogress` | Study dashboard across all courses |
+| `/lkpool [course]` | Manage the pool of past quiz/exam problems |
 | `/lkcourse add` | Register a new course |
 | `/lkcourse complete` | Archive a finished course |
 | `/lksave` | Reconcile any missed data writes from current session |
@@ -116,6 +117,7 @@ All courses, notes, quiz history, and progress restore automatically. Machine-sp
 | Documents | `.pdf`, `.docx` |
 | Syllabuses | `.pdf`, `.docx` |
 | Practice quizzes | `.pdf`, `.docx` |
+| Past exams | `.pdf`, `.docx` |
 
 ---
 

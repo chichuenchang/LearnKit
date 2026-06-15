@@ -5,7 +5,7 @@ Base context (path variables, behavioral rules) loaded from CLAUDE.md. Data sche
 Manages each course's `data\problem_pool.json` — the bank of past quiz/exam problems that `/lkquiz` serves verbatim and mines for style. All writes go through `data_writer.py` `pool add` / `pool remove` (Rule 15). Multiple active courses + none specified → ask (Rule 2). Never mix courses (Rule 1). Log every mutation (Rule 14).
 
 ### `/lkpool {course}` — summary
-Read `course_structure.json` and `problem_pool.json`. Print:
+Read `course_structure.json` and `problem_pool.json` (missing pool file → treat as empty, 0 problems). Print:
 - Total problem count.
 - Breakdown by unit (`display_name` → count) and by `source_type`.
 - **Coverage map**: for each unit's `topics`, mark `✓` if ≥1 pool problem has that `topic` (or maps to that unit), `—` if none. This shows where `/lkquiz` will generate gap-fillers vs serve verbatim.

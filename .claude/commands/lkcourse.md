@@ -28,7 +28,7 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (see lkschemas.
    courses\{slug}\materials\multi_unit\
    courses\{slug}\data\
    ```
-5. Create default empty JSON: `course_structure.json`, `progress.json` (see lkschemas.md for default empty values)
+5. Create default empty JSON: `course_structure.json`, `progress.json`, `problem_pool.json` (see lkschemas.md for default empty values)
 6. Create `courses\{slug}\activity_log.md`:
    ```markdown
    # {course_code} — Activity Log

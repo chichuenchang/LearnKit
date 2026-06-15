@@ -78,7 +78,7 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 | `log entry` | `--savedata --course --entry` | — |
 
 **Flag notes:**
-- `--course` = course slug (e.g. `pther_350a`) — used by `progress`, `log entry`
+- `--course` = course slug (e.g. `pther_350a`) — used by `progress`, `pool`, `log entry`
 - `--course-id` = course slug — used by `deadline add`
 - `--course-code` = display code (e.g. `PTHER 350A`) — used by `deadline add`
 - `deadline add` requires BOTH `--course-id` and `--course-code` (separate flags, not interchangeable)

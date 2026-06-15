@@ -5,7 +5,8 @@ Base context (path variables, behavioral rules) loaded from CLAUDE.md. Python sc
 **What's included:**
 ```
 savedata\data\
-savedata\courses\**\*.md       (study notes only — no source binaries)
+savedata\courses\**\*.md           (study notes only — no source binaries)
+savedata\courses\**\data\*.json    (course_structure, progress, problem_pool)
 savedata\archive\
 savedata\user.config.json
 ```

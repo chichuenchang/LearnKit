@@ -37,7 +37,7 @@ Read `courses\{slug}\data\progress.json`: find all past `quiz_history` entries f
 - **Generated gap-fillers** — for scope topics with no pool problem, generate fresh questions matching the pool's observed style (question-type mix, phrasing, difficulty). Adaptive weights still apply.
 - **Format mirror** — when the pool covers the scope, derive the MCQ/short-answer ratio from the pool (overrides the ~70/30 default below).
 - **Mix** — normal scope: blend, capping the verbatim share so fresh practice remains. `mock` keyword: verbatim-heavy, and ensure every covered topic appears (verbatim where available, generated otherwise).
-- **Empty pool** → behavior unchanged (materials-only).
+- **Empty or absent pool** → behavior unchanged (materials-only).
 
 **Question count:**
 - Single unit: 15–20
