@@ -55,10 +55,10 @@ On confirm: **copy** into project. Never delete or move originals.
    Option 1 → primary unit; add `_cross_ref_{slug}.md` in each other unit: `See also: [path to primary summary]`.
    Option 2 → `courses\{slug}\materials\multi_unit\`. `/lkquiz` for any relevant unit includes `multi_unit\` files.
 
-6. **Archive original**:
-   - `raw\` method: `Move-Item` from `$savedataRoot\raw\{filename}` → `$savedataRoot\courses\{slug}\materials\{unit_slug}\source_{slug}.{ext}`
-   - Path-paste: `Copy-Item` → same destination (original untouched)
-   - **Always also copy into the per-course raw archive**: `Copy-Item` the archived source → `$savedataRoot\courses\{slug}\raw\{unit_slug}\source_{slug}.{ext}`. The `raw\` archive mirrors the unit structure — subfolders are `{unit_slug}`, so they read as weeks/units/chapters/etc. per the course's `unit_label`. No extra prompt: the separation was chosen at course/syllabus setup (the "How is this course organized?" step). Multi-unit files → `raw\multi_unit\`; unclassified → `raw\unclassified\`.
+6. **Archive original** — the source lives in the per-course **raw archive ONLY**. `materials\` holds generated study notes + an `images\` subfolder, **never source files**.
+   - `raw\` method: `Move-Item` from `$savedataRoot\raw\{filename}` → `$savedataRoot\courses\{slug}\raw\{unit_slug}\source_{slug}.{ext}`
+   - Path-paste: `Copy-Item` → `$savedataRoot\courses\{slug}\raw\{unit_slug}\source_{slug}.{ext}` (original untouched)
+   - The `raw\` archive mirrors the unit structure — subfolders are `{unit_slug}` (weeks/units/chapters per the course's `unit_label`, chosen at course/syllabus setup). Multi-unit files → `raw\multi_unit\`; unclassified → `raw\unclassified\`.
 
 7. **Generate grade-focused study notes** and write silently via `notes write` (no Write tool):
    - Content: first line `**Source**: {filename} | **Course**: {course_code} | **Unit**: {unit display name} | **Ingested**: {date} | **Raw material**: raw/{unit_slug}/source_{slug}.{ext}`, then `---`, then notes body with Section 1 tagging
