@@ -33,6 +33,7 @@ On confirm: **copy** into project. Never delete or move originals.
    - `lab_notes` — "lab", "laboratory"
    - `practice_quiz` — "quiz", "practice questions", "sample questions"
    - `exam_review` — "exam review", "study guide", "review sheet"
+   - `past_exam` — "midterm", "final", past "exam" with discrete numbered/lettered question structure (distinct from `exam_review`, which is a prose study guide)
    - `assignment` — "assignment", "submit", "due date"
    - `announcement` — "announcement", "reminder", "please note", deadline language without study content
    - `other` — anything else
@@ -69,6 +70,14 @@ On confirm: **copy** into project. Never delete or move originals.
        --dest "{$savedataRoot}\courses\{course_id}\materials\{unit_slug}\{type}_{slug}.md" | Out-Null
    ```
 
+7b. **Extract problems to the pool** (only when file type ∈ `{practice_quiz, exam_review, past_exam}`): Scan the extracted text for discrete Q+A pairs. None found (prose study guide) → skip, notes only. For each problem found:
+   - Map to a unit by keyword overlap (same logic as step 5). Unmappable → `unit_id`/`unit_slug` null.
+   - Assign a `topic` label from the unit's `topics` / weak-topic vocabulary.
+   - Set `question_type`, `options` (mcq only), `answer`, optional `rationale` and Section 1 `tags`. All content strictly from the file — no invented problems (Rule 9).
+   - Set `source_type` = file classification, `verbatim: true`, `source_file` = ingested filename, `source` = inferred label (e.g. "Practice Quiz — Week 3").
+
+   Build one JSON array of all problems and write via a single `pool add` call (see lkscripts.md). Surface: `"Extracted {added} problem(s) to {course_code} pool ({skipped} duplicate(s) skipped)."`
+
 8. **Fire all data writes synchronously** (silent — no output, no task notification), then print `"Done — {N} file(s) ingested."`. Sequential, no race conditions:
    ```powershell
    # --- progress ingest (one per file) ---
@@ -79,6 +88,7 @@ On confirm: **copy** into project. Never delete or move originals.
        --savedata $savedataRoot --course {course_id} `
        --entry "- [INGEST] {N} file(s) -> {unit(s)}: {filenames, comma-separated}" | Out-Null
    ```
+   When step 7b added problems, also log per affected course: `- [POOL] Extracted {N} problem(s) from {filename} -> {unit(s)}`.
 
 ---
 
