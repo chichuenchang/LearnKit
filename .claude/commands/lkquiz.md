@@ -9,6 +9,7 @@ Multiple active + no course → ask. Quiz: **interactive — one question at a t
 - `unit_01-unit_03` — contiguous range (inclusive)
 - `unit_01,unit_03,unit_05` — explicit list
 - `exam_1` — all units covered by exam (resolved from `course_structure.json` `exams[].units_covered`)
+- `exam_1 mock` (or any scope + `mock`) — mock mode: verbatim-heavy, every covered topic represented
 
 **Resolving exam scope**: Look up by `exam_id` or fuzzy title. Use `units_covered` as unit list. Not found: `"No exam 'exam_1' in {course_code}. Available: [list]"`. Show resolved scope using `unit_label` from `course_structure.json` pluralized: `"Units 1–3 (Exam 1 scope)"`, `"Weeks 1–3 (Exam 1 scope)"`, `"Chapters 1–3 (Exam 1 scope)"`, etc.
 
@@ -29,6 +30,14 @@ Read `courses\{slug}\data\progress.json`: find all past `quiz_history` entries f
 - No topic > 40% of total questions
 - Always ≥1 question per topic linked to next upcoming exam
 - `short_answer` accuracy < 60% → increase short-answer proportion
+
+**Problem pool sourcing**: Read `courses\{slug}\data\problem_pool.json`. For problems whose `unit_id` ∈ scope:
+- **Coverage map** — split scope topics into pool-covered vs not.
+- **Verbatim problems** — serve pool problems directly (count toward the question total). Prioritize `EXAM-CRITICAL` tags and topics tied to the next upcoming exam.
+- **Generated gap-fillers** — for scope topics with no pool problem, generate fresh questions matching the pool's observed style (question-type mix, phrasing, difficulty). Adaptive weights still apply.
+- **Format mirror** — when the pool covers the scope, derive the MCQ/short-answer ratio from the pool (overrides the ~70/30 default below).
+- **Mix** — normal scope: blend, capping the verbatim share so fresh practice remains. `mock` keyword: verbatim-heavy, and ensure every covered topic appears (verbatim where available, generated otherwise).
+- **Empty pool** → behavior unchanged (materials-only).
 
 **Question count:**
 - Single unit: 15–20
@@ -153,3 +162,5 @@ Use `data_writer.py`. Fire silently — single synchronous PowerShell call, no n
     --entry "- [QUIZ] {display_name} — {score}/{total} ({pct}%) | Weak: {topics or 'none'}" | Out-Null
 ```
 Multi-unit entry format: `- [QUIZ] {Units/Weeks} 1–3 (Midterm 1) — 19/25 (76%) | Weak: enzyme kinetics ({display_name_2}), DNA replication ({display_name_3})`
+
+When pool problems were served, append ` (mock)` (mock scope) or ` (pool-augmented)` (normal scope) to the `{display_name}` segment of the log entry, e.g. `- [QUIZ] {display_name} (pool-augmented) — {score}/{total} ({pct}%) | Weak: ...`.
