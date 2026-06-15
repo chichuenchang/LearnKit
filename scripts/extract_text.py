@@ -15,6 +15,20 @@ SCANNED_WORDS_PER_PAGE_THRESHOLD = 50
 MAX_SCANNED_PAGES = 20
 
 
+def _safe_name(name: str) -> str:
+    """Sanitize a filename stem for use as a path component.
+
+    Windows forbids the chars <>:"/\\|?* and silently strips trailing
+    spaces/dots from directory names, which breaks rasterizers that write
+    to the un-stripped path (e.g. 'The Bones of the Foot ' → page write fails).
+    """
+    name = name.strip()
+    for ch in '<>:"/\\|?*':
+        name = name.replace(ch, "_")
+    name = name.rstrip(" .")
+    return name or "doc"
+
+
 def extract_pdf(path):
     import pdfplumber
     pages = []
@@ -32,7 +46,7 @@ def extract_pdf(path):
 
 def render_pdf_pages(path):
     import fitz
-    basename = pathlib.Path(path).stem
+    basename = _safe_name(pathlib.Path(path).stem)
     out_dir = SCRIPTS_DIR / "tmp_pages" / basename
     out_dir.mkdir(parents=True, exist_ok=True)
 
