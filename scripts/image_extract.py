@@ -7,12 +7,28 @@ import argparse
 import json
 import os
 import pathlib
+import shutil
 
 from extract_text import _safe_name  # reuse the path-component sanitizer
 
 TEXTLAYER_MIN_WORDS = 5
 MAX_PAGES = 60
 OCR_MIN_CONF = 40
+
+
+def _tesseract_cmd():
+    """Locate a working Tesseract binary. Prefers an explicit override and the
+    self-contained UB-Mannheim install over a bare PATH lookup (a conda-forge
+    tesseract on PATH can be DLL-broken under subprocess on Windows)."""
+    env = os.environ.get("LK_TESSERACT_CMD")
+    if env and os.path.exists(env):
+        return env
+    for c in (r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+              r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+              os.path.expandvars(r"%LOCALAPPDATA%\Programs\Tesseract-OCR\tesseract.exe")):
+        if os.path.exists(c):
+            return c
+    return shutil.which("tesseract")  # last resort (may be on PATH)
 
 
 def _norm_bbox(x0, y0, x1, y1, w, h):
@@ -29,6 +45,9 @@ def _ocr_words(png_path):
         from PIL import Image
     except Exception:
         return None
+    cmd = _tesseract_cmd()
+    if cmd:
+        pytesseract.pytesseract.tesseract_cmd = cmd
     try:
         img = Image.open(png_path)
         data = pytesseract.image_to_data(
