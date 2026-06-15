@@ -55,6 +55,7 @@ GLOBAL DATA (under $savedataRoot\data\):
 PER-COURSE DATA (under $savedataRoot\courses\{course_slug}\):
   data\course_structure.json  — unit/exam map built from syllabus
   data\progress.json          — study progress and quiz history by unit
+  data\problem_pool.json      — past quiz/exam problems (pool); served + style-exemplar source for /lkquiz
   activity_log.md             — per-course log: events for that course only
   misc.md                     — free-form running log: deadline changes, instructor notes, anything important
   materials\{unit_slug}\      — study notes (.md files) + source files (source_*.*)
@@ -224,6 +225,11 @@ Full spec in `.claude/commands/lkprogress.md`. Variants: `/lkprogress`, `/lkprog
 
 ---
 
+### `/lkpool` — Problem pool management
+Full spec in `.claude/commands/lkpool.md`. Variants: `/lkpool {course}` (summary + coverage map), `/lkpool add {course}`, `/lkpool list {course} [unit]`, `/lkpool remove {problem_id}`. Holds past quiz/exam problems used by `/lkquiz`.
+
+---
+
 ### `/lkcourse` — Course management
 Full spec in `.claude/commands/lkcourse.md`. Variants: `/lkcourse add {code} {name}`, `/lkcourse complete {code}`, `/lkcourse list`.
 
@@ -272,6 +278,7 @@ Full spec in `.claude/commands/lkingest.md` — see "Syllabus Processing Branch"
 - **Quiz files**: `quiz_{unit_short}_{N}_{YYYYMMDD}.json` — `unit_short` derived from `unit_label` (see lkschemas.md mapping: `u01`, `w01`, `ch01`, `m01`, `t01`, `l01`, `b01`) — e.g. `quiz_u01_1_20260501.json`, `quiz_w01_1_20260501.json`, `quiz_ch01_1_20260501.json`
 - **Attempt files**: `attempt_{unit_short}_{N}_{YYYYMMDD}.json`
 - **Deadline ID**: `dl_{course_id}_{NNN}` — e.g. `dl_biol_201_001` (increment from current max)
+- **Problem ID**: `prob_{course_id}_{NNN}` — e.g. `prob_pther_350a_001` (increment from current max in that course's `problem_pool.json`)
 
 ---
 

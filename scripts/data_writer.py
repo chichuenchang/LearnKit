@@ -8,6 +8,8 @@ Output: JSON to stdout — {"success": true/false, ...}
 Subcommands:
   progress quiz     Write quiz result to progress.json
   progress ingest   Increment materials_ingested in progress.json
+  pool add          Append problems (JSON array on stdin) to problem_pool.json
+  pool remove       Delete a problem from problem_pool.json
   deadline add      Append entry to global_deadlines.json
   deadline complete Mark deadline completed in global_deadlines.json
   notes write       Write study notes file from stdin
@@ -20,6 +22,7 @@ import sys
 from datetime import datetime, date
 
 VALID_DEADLINE_TYPES = {"exam", "quiz", "assignment", "lab", "lab_practical", "presentation", "other"}
+VALID_QUESTION_TYPES = {"mcq", "short_answer", "matching", "labeling", "true_false", "essay"}
 STATUS_PROGRESSION = ["not_started", "in_progress", "materials_complete", "quiz_passed", "mastered"]
 PASSING_SCORE = 70.0
 
@@ -69,6 +72,18 @@ def progress_default(course: str) -> dict:
 def unit_default() -> dict:
     return {"status": "not_started", "materials_ingested": 0,
             "quiz_history": [], "weak_areas": [], "confidence_level": 0}
+
+
+def pool_path(savedata: pathlib.Path, course: str) -> pathlib.Path:
+    return savedata / "courses" / course / "data" / "problem_pool.json"
+
+
+def pool_default(course: str) -> dict:
+    return {"course": None, "course_id": course, "last_updated": None, "problems": []}
+
+
+def _normalize_q(text: str) -> str:
+    return " ".join((text or "").lower().split())
 
 
 def advance_status(current: str, target: str) -> str:
@@ -143,6 +158,95 @@ def cmd_progress_ingest(args):
 
     save_json(path, data)
     out({"success": True, "materials_ingested": unit["materials_ingested"]})
+
+
+# ── pool add ──────────────────────────────────────────────────────────────────
+
+def cmd_pool_add(args):
+    savedata = pathlib.Path(args.savedata)
+    path = pool_path(savedata, args.course)
+    data = load_json(path, pool_default(args.course))
+    data.setdefault("problems", [])
+
+    raw = sys.stdin.buffer.read().decode("utf-8-sig").strip()
+    if not raw:
+        fail("no input on stdin (expected JSON array of problems)")
+    try:
+        incoming = json.loads(raw)
+    except Exception as e:
+        fail(f"invalid JSON on stdin: {e}")
+    if not isinstance(incoming, list):
+        fail("stdin JSON must be an array of problem objects")
+
+    existing_norm = {_normalize_q(p.get("question", "")) for p in data["problems"]}
+    prefix = f"prob_{args.course}_"
+    maxnum = 0
+    for p in data["problems"]:
+        pid = p.get("problem_id", "")
+        if pid.startswith(prefix):
+            try:
+                maxnum = max(maxnum, int(pid[len(prefix):]))
+            except ValueError:
+                pass
+
+    added_ids = []
+    skipped = 0
+    for prob in incoming:
+        if not isinstance(prob, dict):
+            fail("each problem must be a JSON object")
+        q = (prob.get("question") or "").strip()
+        qtype = prob.get("question_type")
+        if not q:
+            fail("problem missing 'question'")
+        if qtype not in VALID_QUESTION_TYPES:
+            fail(f"invalid question_type: {qtype!r}. Valid: {sorted(VALID_QUESTION_TYPES)}")
+        norm = _normalize_q(q)
+        if norm in existing_norm:
+            skipped += 1
+            continue
+        existing_norm.add(norm)
+        maxnum += 1
+        pid = f"{prefix}{maxnum:03d}"
+        data["problems"].append({
+            "problem_id": pid,
+            "unit_id": prob.get("unit_id"),
+            "unit_slug": prob.get("unit_slug"),
+            "topic": prob.get("topic"),
+            "question_type": qtype,
+            "question": q,
+            "options": prob.get("options") or [],
+            "answer": prob.get("answer"),
+            "rationale": prob.get("rationale"),
+            "tags": prob.get("tags") or [],
+            "source": prob.get("source"),
+            "source_file": prob.get("source_file") or "manual",
+            "source_type": prob.get("source_type") or "manual",
+            "verbatim": bool(prob.get("verbatim", False)),
+            "date_added": today_str(),
+        })
+        added_ids.append(pid)
+
+    data["last_updated"] = now_iso()
+    save_json(path, data)
+    out({"success": True, "added": len(added_ids), "skipped": skipped, "ids": added_ids})
+
+
+# ── pool remove ───────────────────────────────────────────────────────────────
+
+def cmd_pool_remove(args):
+    savedata = pathlib.Path(args.savedata)
+    path = pool_path(savedata, args.course)
+    data = load_json(path, pool_default(args.course))
+    data.setdefault("problems", [])
+
+    before = len(data["problems"])
+    data["problems"] = [p for p in data["problems"]
+                        if p.get("problem_id") != args.problem_id]
+    if len(data["problems"]) == before:
+        fail(f"problem id not found: {args.problem_id!r}")
+    data["last_updated"] = now_iso()
+    save_json(path, data)
+    out({"success": True, "removed": args.problem_id})
 
 
 # ── deadline add ──────────────────────────────────────────────────────────────
@@ -291,6 +395,19 @@ def main():
     pi.add_argument("--course", required=True)
     pi.add_argument("--unit", required=True)
 
+    # pool
+    plg = sub.add_parser("pool")
+    plg_sub = plg.add_subparsers(dest="action")
+
+    pa = plg_sub.add_parser("add")
+    pa.add_argument("--savedata", required=True)
+    pa.add_argument("--course", required=True)
+
+    pr = plg_sub.add_parser("remove")
+    pr.add_argument("--savedata", required=True)
+    pr.add_argument("--course", required=True)
+    pr.add_argument("--problem-id", required=True)
+
     # deadline
     dg = sub.add_parser("deadline")
     dg_sub = dg.add_subparsers(dest="action")
@@ -334,6 +451,11 @@ def main():
                 cmd_progress_quiz(args)
             elif args.action == "ingest":
                 cmd_progress_ingest(args)
+        elif args.group == "pool":
+            if args.action == "add":
+                cmd_pool_add(args)
+            elif args.action == "remove":
+                cmd_pool_remove(args)
         elif args.group == "deadline":
             if args.action == "add":
                 cmd_deadline_add(args)
