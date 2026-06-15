@@ -70,6 +70,8 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 |------------|---------------|----------------|
 | `progress quiz` | `--savedata --course --unit --score-pct --correct --total --incorrect` | `--skipped --partial --adaptive --weak-topics "a,b" --mcq "11/13" --sa "2/5"` |
 | `progress ingest` | `--savedata --course --unit` | — |
+| `pool add` | `--savedata --course` | — (reads JSON array of problems from stdin) |
+| `pool remove` | `--savedata --course --problem-id` | — |
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |
 | `notes write` | `--dest` | — (reads content from stdin) |
@@ -81,6 +83,18 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 - `--course-code` = display code (e.g. `PTHER 350A`) — used by `deadline add`
 - `deadline add` requires BOTH `--course-id` and `--course-code` (separate flags, not interchangeable)
 - `log entry --course slug` writes to that course's `activity_log.md`
+
+**`pool add` — batch problem write (reads stdin, like `notes write`):**
+```powershell
+$problemsJson = @'
+[ { "question": "Which nerve innervates gluteus medius?", "answer": "Superior gluteal nerve", "question_type": "mcq", "options": ["Superior gluteal nerve","Sciatic nerve"], "unit_id": "week_03", "unit_slug": "week_03_hip_joint_gluteal_region", "topic": "Nerves of gluteal region", "source": "Midterm 1 2025", "source_file": "source_midterm1.pdf", "source_type": "past_exam", "verbatim": true } ]
+'@
+$result = ($problemsJson | & $pythonExe $writerPath pool add `
+    --savedata $savedataRoot --course "pther_350a") | ConvertFrom-Json
+if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
+# success → { added, skipped, ids[] }
+```
+`--course` is the course slug. Each problem is one object in the array; one call writes many. `question_type` validated against the allowed set; duplicate question text (normalized) is skipped.
 
 **Log entry format** — always prefix with type tag:
 ```powershell
