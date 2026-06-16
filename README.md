@@ -15,7 +15,7 @@ Works with any university course. Each student keeps their own private data.
 ### Python packages
 
 ```bash
-pip install pdfplumber python-pptx python-docx pymupdf
+pip install pdfplumber python-pptx python-docx pymupdf pytesseract
 ```
 
 | Package | Purpose |
@@ -24,6 +24,8 @@ pip install pdfplumber python-pptx python-docx pymupdf
 | `python-pptx` | Extract text from PowerPoint slides |
 | `python-docx` | Extract text from Word documents |
 | `pymupdf` | Render scanned PDF pages as images for visual extraction |
+| `paddleocr` + `paddlepaddle-gpu` | (Optional, **primary** OCR) GPU-accelerated label detection for the image bank. Install paddle from the Paddle CUDA index: `pip install paddlepaddle-gpu -i https://www.paddlepaddle.org.cn/packages/stable/cu126/` then `pip install paddleocr`. |
+| `pytesseract` | (Optional, **fallback** OCR) Detect labels + positions via the Tesseract binary (UB-Mannheim build on Windows) when PaddleOCR isn't available. Without any OCR, image-only slides are captured without label boxes. |
 
 > `/lksetup` will detect your Python interpreter and offer to install missing packages automatically.
 
@@ -73,11 +75,12 @@ savedata/              ← your private data (gitignored)
 | Command | What it does |
 |---------|-------------|
 | `/lksetup` | First-time onboarding, Python config, savedata init |
-| `/lkingest` | Process files from `savedata/raw/` or pasted paths |
+| `/lkingest` | Process files from `savedata/raw/` or pasted paths → self-contained image-rich notes |
 | `/lkquiz [course] [scope]` | Adaptive interactive quiz |
 | `/lkdeadlines` | View all upcoming deadlines |
 | `/lkprogress` | Study dashboard across all courses |
 | `/lkpool [course]` | Manage the pool of past quiz/exam problems |
+| `/lkimage [course] [scope]` | Review the image bank, or `/lkimage quiz` for an image MCQ quiz (HTML) |
 | `/lkcourse add` | Register a new course |
 | `/lkcourse complete` | Archive a finished course |
 | `/lksave` | Reconcile any missed data writes from current session |

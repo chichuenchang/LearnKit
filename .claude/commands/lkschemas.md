@@ -62,3 +62,12 @@ Past quiz/exam problems. Served verbatim by `/lkquiz` and used as style exemplar
 **top-level**: `course`, `course_id`, `last_updated`, `problems[]`
 **problems[]**: `problem_id` (`prob_{course_id}_{NNN}`), `unit_id` (or null), `unit_slug` (or null), `topic` (same vocabulary as progress.json `weak_topics`), `question_type` (`mcq` | `short_answer` | `matching` | `labeling` | `true_false` | `essay`), `question`, `options` (array; `[]` unless mcq), `answer`, `rationale` (or null), `tags` (Section 1 tags), `source` (label e.g. "Midterm 1 2025"), `source_file` (filename or "manual"), `source_type` (`past_exam` | `practice_quiz` | `exam_review` | `manual`), `verbatim` (bool), `date_added`
 Default empty: `{"course": null, "course_id": null, "last_updated": null, "problems": []}`
+
+## Per-course `data\image_bank.json`
+Labeled diagrams/figures extracted during ingest (any subject — anatomy, chemistry, geography, circuits, …). Image + label positions for `/lkimage` review and (Phase 2) occlusion quizzes. Written only via `data_writer.py image add` / `image remove`.
+
+**top-level**: `course`, `course_id`, `last_updated`, `images[]`
+**images[]**: `image_id` (`img_{course_id}_{NNN}`), `unit_id`, `unit_slug`, `source_file`, `page` (1-based), `image_path` (under `materials\{unit}\images\`), `image_w`, `image_h` (pixels), `title`, `label_source` (`textlayer` | `ocr` | `vision` | `none`), `structures[]`, `date_added`
+**structures[]**: `name`, `type` (free-form, course-appropriate — e.g. `bone`, `country`, `component`, `functional group`; or null), `source` (`slide` = printed/grounded | `ai` = flagged, show `[AI — verify]`), `label_bbox` (normalized `[x,y,w,h]` 0–1 of the label text, or null), `confidence` (0–1 or null), `verified` (bool; true for slide)
+Default empty: `{"course": null, "course_id": null, "last_updated": null, "images": []}`
+Dedup key: `(source_file, page)`.

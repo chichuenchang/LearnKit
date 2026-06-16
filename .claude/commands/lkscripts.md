@@ -34,12 +34,11 @@ if ($data.scanned) {
     # Read each page image via Read tool — Claude handles natively (multimodal)
     # $data.image_paths contains absolute PNG paths, read in order
     # Generate study notes from visual page content; same tagging rules apply (Section 1 of CLAUDE.md)
-    # First line of notes: "**Source**: {filename} | ... | **Note**: Scanned PDF — content read from page images"
+    # First line of notes: "**Source**: {filename} | ... | **Raw material**: raw/{unit_slug}/source_{slug}.{ext} | **Note**: Scanned PDF — content read from page images"
 
     # Clean up after notes generated:
-    $basename = [System.IO.Path]::GetFileNameWithoutExtension($data.filename)
-    $pagesDir = Join-Path $scriptsRoot "tmp_pages" $basename
-    Remove-Item $pagesDir -Recurse -ErrorAction SilentlyContinue
+    $pagesDir = $data.pages_dir   # sanitized dir reported by extract_text.py (handles trailing-space / illegal-char filenames)
+    if ($pagesDir) { Remove-Item $pagesDir -Recurse -ErrorAction SilentlyContinue }
 }
 ```
 
@@ -72,9 +71,11 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 | `progress ingest` | `--savedata --course --unit` | — |
 | `pool add` | `--savedata --course` | — (reads JSON array of problems from stdin) |
 | `pool remove` | `--savedata --course --problem-id` | — |
+| `image add` | `--savedata --course` | — (reads JSON array of image records from stdin) |
+| `image remove` | `--savedata --course --image-id` | — |
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |
-| `notes write` | `--dest` | — (reads content from stdin) |
+| `notes write` | `--dest` | — (reads content from stdin; raw write, no figure embedding — prefer `notes_embed.py` for notes) |
 | `log entry` | `--savedata --course --entry` | — |
 
 **Flag notes:**
@@ -95,6 +96,44 @@ if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
 # success → { added, skipped, ids[] }
 ```
 `--course` is the course slug. Each problem is one object in the array; one call writes many. `question_type` validated against the allowed set; duplicate question text (normalized) is skipped.
+
+**`image_extract.py` — render pages + detect label boxes (for the image bank):**
+```powershell
+$r = (& $pythonExe (Join-Path $scriptsRoot "image_extract.py") `
+    --file "C:\full\path\source.pdf" --out (Join-Path $scriptsRoot "tmp_pages")) | ConvertFrom-Json
+# $r.pages[] = { page, image_path, image_w, image_h, source(textlayer|ocr|none), words[] }
+# words[] = { text, bbox [x,y,w,h normalized 0-1], conf }
+# Clean up $r.pages_dir after building image records.
+```
+Label boxes come from the PDF text layer (`source:"textlayer"`, exact) or Tesseract OCR (`source:"ocr"`). Tesseract absent → image-only pages return `source:"none"` with no boxes (graceful). The agent classifies which words label parts/regions of the figure and does the flagged AI-fill; it does NOT invent coordinates.
+
+**`image add` — batch image-record write (reads stdin, like `pool add`):** one JSON array of image records → `image_bank.json`; assigns `img_{course}_{NNN}`, dedups by `(source_file, page)`.
+
+**`image_quiz.py` — build a self-contained image-MCQ HTML page (reads quiz-spec on stdin):**
+```powershell
+$specJson = @'
+{ "title": "PTHER 350A — Week 6 (image quiz)", "questions": [
+  { "image_path": "C:\\...\\images\\source_..._p05.png", "image_w": 1100, "image_h": 1500,
+    "target_bbox": [0.62,0.40,0.10,0.03], "stem": "What is the name of the highlighted structure?",
+    "options": ["Talus","Calcaneus","Navicular","Cuboid"], "answer_index": 0 } ] }
+'@
+$r = ($specJson | & $pythonExe (Join-Path $scriptsRoot "image_quiz.py") --out $htmlPath) | ConvertFrom-Json
+# success → { html_path, question_count }.  Then: Start-Process $r.html_path
+```
+Masks each `target_bbox` (Pillow), embeds images as base64 (single offline file). The agent builds `options` + `answer_index` (correct + 3 distractors); the script only renders.
+
+**`notes_embed.py` — write a study note, embedding `{{FIG}}` figures as base64 (reads stdin):**
+```powershell
+$note = @'
+# ...
+Intro text.
+{{FIG: C:\...\tmp_pages\...\page_06.png | 0,0.5,1,0.5 | Deep compartment muscles}}
+More text.
+'@
+$r = ($note | & $pythonExe (Join-Path $scriptsRoot "notes_embed.py") --dest $mdPath) | ConvertFrom-Json
+# success → { figures_embedded, missing }
+```
+Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each is cropped (Pillow) → base64 → `![caption](data:image/png;base64,...)` inline. No tokens → writes through unchanged (replaces `notes write` for the note step). Missing/bad page → `*(figure unavailable)*`, never crashes.
 
 **Log entry format** — always prefix with type tag:
 ```powershell
