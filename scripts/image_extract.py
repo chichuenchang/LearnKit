@@ -12,7 +12,7 @@ import shutil
 from extract_text import _safe_name  # reuse the path-component sanitizer
 
 TEXTLAYER_MIN_WORDS = 5
-MAX_PAGES = 60
+MAX_PAGES = 60  # default page cap; override with --max-pages (0 = no cap)
 OCR_MIN_CONF = 40
 
 
@@ -152,7 +152,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--max-pages", type=int, default=MAX_PAGES,
+                    help="page render cap; 0 = no cap")
     args = ap.parse_args()
+    max_pages = args.max_pages
 
     result = {"success": False, "filename": os.path.basename(args.file),
               "pages_dir": None, "page_count": 0, "capped": False,
@@ -170,10 +173,11 @@ def main():
         doc = fitz.open(args.file)
         total = len(doc)
         result["page_count"] = total
-        result["capped"] = total > MAX_PAGES
+        render_count = total if max_pages <= 0 else min(total, max_pages)
+        result["capped"] = total > render_count
         mat = fitz.Matrix(2, 2)  # 2x render; PDF points -> pixels = *2
 
-        for i in range(min(total, MAX_PAGES)):
+        for i in range(render_count):
             page = doc[i]
             pix = page.get_pixmap(matrix=mat)
             img_path = out_dir / f"page_{i + 1:03d}.png"

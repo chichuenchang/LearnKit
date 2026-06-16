@@ -277,7 +277,7 @@ def cmd_image_add(args):
     if not isinstance(incoming, list):
         fail("stdin JSON must be an array of image records")
 
-    existing_keys = {(im.get("source_file"), im.get("page")) for im in data["images"]}
+    existing_keys = {(im.get("source_file"), im.get("page"), im.get("image_path")) for im in data["images"]}
     prefix = f"img_{args.course}_"
     maxnum = 0
     for im in data["images"]:
@@ -297,7 +297,7 @@ def cmd_image_add(args):
         page = rec.get("page")
         if src is None or page is None:
             fail("image record missing source_file or page")
-        key = (src, page)
+        key = (src, page, rec.get("image_path"))
         if key in existing_keys:
             skipped += 1
             continue

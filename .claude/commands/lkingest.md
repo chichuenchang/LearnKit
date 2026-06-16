@@ -23,7 +23,7 @@ On confirm: **copy** into project. Never delete or move originals.
 1. **Extract text**: Run `scripts\extract_text.py` (via $pythonExe and $scriptsRoot — see `lkscripts.md`). Fails → report error and skip; don't continue with that file.
    - `scanned: false` → use `data.text` as normal for all downstream steps
    - `scanned: true` → read each path in `data.image_paths` via Read tool; generate study notes from visual page content; clean up the page-image dir `data.pages_dir` after notes written
-   - `capped: true` → surface before proceeding: `"Note: {filename} has {page_count} pages — first 20 ingested. Re-ingest and confirm to process remaining pages."`
+   - `capped: true` → surface before proceeding: `"Note: {filename} has {page_count} pages — first 60 ingested. Re-ingest with --max-pages 0 (or higher N) to process all pages."`
 
 2. **Identify course**: Section 4 logic (CLAUDE.md).
 

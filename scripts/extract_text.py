@@ -12,7 +12,7 @@ import sys
 
 SCRIPTS_DIR = pathlib.Path(__file__).parent
 SCANNED_WORDS_PER_PAGE_THRESHOLD = 50
-MAX_SCANNED_PAGES = 20
+MAX_SCANNED_PAGES = 60  # default render cap for scanned PDFs; override with --max-pages
 
 
 def _safe_name(name: str) -> str:
@@ -44,7 +44,7 @@ def extract_pdf(path):
     return full_text, total_pages, is_scanned
 
 
-def render_pdf_pages(path):
+def render_pdf_pages(path, max_pages=MAX_SCANNED_PAGES):
     import fitz
     basename = _safe_name(pathlib.Path(path).stem)
     out_dir = SCRIPTS_DIR / "tmp_pages" / basename
@@ -52,8 +52,9 @@ def render_pdf_pages(path):
 
     doc = fitz.open(path)
     total_pages = len(doc)
-    capped = total_pages > MAX_SCANNED_PAGES
-    render_count = min(total_pages, MAX_SCANNED_PAGES)
+    cap = total_pages if max_pages <= 0 else min(total_pages, max_pages)
+    capped = total_pages > cap
+    render_count = cap
 
     image_paths = []
     mat = fitz.Matrix(2, 2)
@@ -98,6 +99,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--max-pages", type=int, default=MAX_SCANNED_PAGES,
+                        help="scanned-PDF page render cap; 0 = no cap")
     args = parser.parse_args()
 
     result = {
@@ -126,7 +129,7 @@ def main():
             result["page_count"] = page_count
             if is_scanned:
                 result["scanned"] = True
-                image_paths, _, capped, pages_dir = render_pdf_pages(args.file)
+                image_paths, _, capped, pages_dir = render_pdf_pages(args.file, args.max_pages)
                 result["image_paths"] = image_paths
                 result["pages_dir"] = pages_dir
                 result["capped"] = capped

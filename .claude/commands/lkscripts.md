@@ -11,6 +11,7 @@ $scriptPath = Join-Path $scriptsRoot "extract_text.py"
 $extractResult = & $pythonExe $scriptPath `
     --file "C:\full\path\to\source.file" `
     --output $tmpOutput
+    # optional: --max-pages N  (scanned-PDF render cap; default 60, 0 = no cap)
 
 $data = Get-Content $tmpOutput | ConvertFrom-Json
 if (-not $data.success) {
@@ -29,7 +30,7 @@ Remove-Item $tmpOutput -ErrorAction SilentlyContinue
 if ($data.scanned) {
     if ($data.capped) {
         # Surface to user before proceeding
-        Write-Host "Note: PDF has $($data.page_count) pages — first 20 ingested."
+        Write-Host "Note: PDF has $($data.page_count) pages — first 60 ingested. Re-run with --max-pages 0 (or a higher N) to process all."
     }
     # Read each page image via Read tool — Claude handles natively (multimodal)
     # $data.image_paths contains absolute PNG paths, read in order
@@ -101,6 +102,7 @@ if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
 ```powershell
 $r = (& $pythonExe (Join-Path $scriptsRoot "image_extract.py") `
     --file "C:\full\path\source.pdf" --out (Join-Path $scriptsRoot "tmp_pages")) | ConvertFrom-Json
+# optional: --max-pages N  (page cap; default 60, 0 = no cap). $r.capped = true when pages dropped.
 # $r.pages[] = { page, image_path, image_w, image_h, source(textlayer|ocr|none), words[] }
 # words[] = { text, bbox [x,y,w,h normalized 0-1], conf }
 # Clean up $r.pages_dir after building image records.
