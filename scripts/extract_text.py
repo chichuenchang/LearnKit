@@ -2,13 +2,20 @@
 Text extraction helper for PT Study Agent.
 Usage: python extract_text.py --file <path> --output <path>
 Outputs JSON: { success, filename, file_type, page_count, word_count, text,
-                scanned, image_paths, pages_dir, capped, error }
+                scanned, image_paths, pages_dir, capped, images, images_skipped,
+                error }
+  images        — for .html: [{path, alt}] extracted figures saved under pages_dir
+  images_skipped — count of <img> skipped (external URLs, svg, unreadable)
 """
 import argparse
+import base64
+import html as htmllib
 import json
 import os
 import pathlib
+import re
 import sys
+from html.parser import HTMLParser
 
 from lkconfig import get as cfg
 
@@ -98,6 +105,110 @@ def extract_text_file(path):
     return text, text.count("\n") + 1
 
 
+_DATA_URI_RE = re.compile(
+    r"^data:image/(?P<fmt>[\w.+-]+);base64,(?P<data>.+)$", re.IGNORECASE | re.DOTALL)
+_RASTER_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
+
+
+def _img_ext_from_fmt(fmt):
+    return {"jpeg": "jpg", "svg+xml": "svg"}.get(fmt.lower(), fmt.lower())
+
+
+class _HTMLExtractor(HTMLParser):
+    """Pull readable text + <img> (src, alt) from HTML; drop script/style/head."""
+    _SKIP = {"script", "style", "head", "noscript", "svg"}
+    _BLOCK = {"p", "div", "br", "li", "tr", "h1", "h2", "h3", "h4", "h5", "h6",
+              "section", "article", "table", "ul", "ol", "header", "footer",
+              "blockquote", "pre"}
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self._skip_depth = 0
+        self.text_parts = []
+        self.images = []  # [(src, alt)] in document order
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self._SKIP:
+            self._skip_depth += 1
+            return
+        if tag == "img":
+            d = dict(attrs)
+            src = (d.get("src") or "").strip()
+            if src:
+                self.images.append((src, (d.get("alt") or "").strip()))
+        if tag in self._BLOCK:
+            self.text_parts.append("\n")
+
+    def handle_startendtag(self, tag, attrs):
+        # self-closing <img .../> still yields an image
+        self.handle_starttag(tag, attrs)
+
+    def handle_endtag(self, tag):
+        if tag in self._SKIP and self._skip_depth > 0:
+            self._skip_depth -= 1
+        elif tag in self._BLOCK:
+            self.text_parts.append("\n")
+
+    def handle_data(self, data):
+        if self._skip_depth == 0:
+            self.text_parts.append(data)
+
+    def get_text(self):
+        lines = [" ".join(ln.split()) for ln in "".join(self.text_parts).splitlines()]
+        return "\n".join(ln for ln in lines if ln)
+
+
+def extract_html(path):
+    """Return (text, images, images_skipped, pages_dir).
+
+    images = [{path, alt}] for each embedded (base64) or local-file <img> saved
+    under SCRIPTS_DIR/tmp_html/<stem>. External (http/protocol-relative) images
+    and SVG/unreadable ones are skipped (counted). pages_dir is None if nothing
+    was saved (so the caller has nothing to clean up)."""
+    import shutil
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        raw = f.read()
+    parser = _HTMLExtractor()
+    parser.feed(raw)
+    text = parser.get_text()
+
+    stem = _safe_name(pathlib.Path(path).stem)
+    out_dir = SCRIPTS_DIR / "tmp_html" / stem
+    base_dir = pathlib.Path(path).resolve().parent
+
+    images, skipped, saved = [], 0, 0
+    for src, alt in parser.images:
+        src_u = htmllib.unescape(src)
+        try:
+            m = _DATA_URI_RE.match(src_u)
+            if m:
+                fmt = _img_ext_from_fmt(m.group("fmt"))
+                if fmt == "svg":                      # PIL can't rasterize SVG
+                    skipped += 1
+                    continue
+                blob = base64.b64decode(m.group("data"), validate=False)
+                out_dir.mkdir(parents=True, exist_ok=True)
+                dest = out_dir / f"img_{saved + 1:03d}.{fmt}"
+                dest.write_bytes(blob)
+                saved += 1
+                images.append({"path": str(dest), "alt": htmllib.unescape(alt)})
+            elif re.match(r"^(https?:)?//", src_u, re.IGNORECASE) or src_u.lower().startswith("data:"):
+                skipped += 1                            # remote URL or non-image data URI
+            else:
+                local = (base_dir / src_u).resolve()
+                if local.is_file() and local.suffix.lower() in _RASTER_EXT:
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    dest = out_dir / f"img_{saved + 1:03d}{local.suffix.lower()}"
+                    shutil.copyfile(local, dest)
+                    saved += 1
+                    images.append({"path": str(dest), "alt": htmllib.unescape(alt)})
+                else:
+                    skipped += 1
+        except Exception:
+            skipped += 1
+    return text, images, skipped, (str(out_dir) if saved else None)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", required=True)
@@ -117,6 +228,8 @@ def main():
         "image_paths": [],
         "pages_dir": None,
         "capped": False,
+        "images": [],
+        "images_skipped": 0,
         "error": None,
     }
 
@@ -148,6 +261,14 @@ def main():
         elif ext in (".txt", ".md"):
             result["file_type"] = ext.lstrip(".")
             result["text"], result["page_count"] = extract_text_file(args.file)
+        elif ext in (".html", ".htm"):
+            result["file_type"] = "html"
+            text, images, skipped, pages_dir = extract_html(args.file)
+            result["text"] = text
+            result["images"] = images
+            result["images_skipped"] = skipped
+            result["pages_dir"] = pages_dir
+            result["page_count"] = 1
         else:
             raise ValueError(f"Unsupported file type: {ext}")
 

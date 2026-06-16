@@ -26,6 +26,7 @@ On confirm: **copy** into project. Never delete or move originals.
    - `scanned: false` → use `data.text` as normal for all downstream steps
    - `scanned: true` → read each path in `data.image_paths` via Read tool; generate study notes from visual page content; clean up the page-image dir `data.pages_dir` after notes written
    - `capped: true` → only fires if auto-split is off (`auto_split_pages: 0`) or a single part still exceeds the render cap; surface: `"Note: {filename} has {page_count} pages — first 60 ingested. Re-ingest with --max-pages 0 (or higher N) to process all pages."`
+   - `file_type: "html"` → `data.text` is the readable text; `data.images[]` (`{path, alt}`, saved in `data.pages_dir`) are the figures — there is **no** 7a render for HTML, these `images` replace it (feed the note 7c, image bank 7b, and figure-problems 7d). Surface if `data.images_skipped > 0`: `"Note: {N} image(s) skipped (remote URLs / SVG) — for image-rich quizzes, Save-as-PDF gives more reliable figures."` Before step 8 cleanup of `data.pages_dir`, copy any kept image to `materials\{unit_slug}\images\`.
 
 2. **Identify course**: Section 4 logic (CLAUDE.md).
 
@@ -62,13 +63,14 @@ On confirm: **copy** into project. Never delete or move originals.
    - Path-paste: `Copy-Item` → `$savedataRoot\courses\{slug}\raw\{unit_slug}\source_{slug}.{ext}` (original untouched)
    - The `raw\` archive mirrors the unit structure — subfolders are `{unit_slug}` (weeks/units/chapters per the course's `unit_label`, chosen at course/syllabus setup). Multi-unit files → `raw\multi_unit\`; unclassified → `raw\unclassified\`.
 
-7a. **Render pages** (PDFs only): Run `image_extract.py --file {source} --out {scriptsRoot}\tmp_pages` (see lkscripts.md) → page PNGs in `pages_dir` + per-page label boxes (PaddleOCR / text-layer). These pages feed BOTH the image bank (7b) and the note figures (7c). Keep `pages_dir` until step 8 cleanup. Non-PDF → skip 7a–7b (no figures/illustrations).
+7a. **Render pages** (PDFs only): Run `image_extract.py --file {source} --out {scriptsRoot}\tmp_pages` (see lkscripts.md) → page PNGs in `pages_dir` + per-page label boxes (PaddleOCR / text-layer). These pages feed BOTH the image bank (7b) and the note figures (7c). Keep `pages_dir` until step 8 cleanup. **HTML** → skip this render; use `data.images[]` from step 1 as the figures (each is a whole standalone image, no label boxes). Other non-PDF (pptx/docx/txt/md) → skip 7a–7b (no figures).
 
 7b. **Capture labeled diagrams/figures to the image bank** (PDFs only): from the 7a pages, for each page that is a **labeled diagram or figure** — any subject (anatomy, chemistry, geography, circuits, maps, …) — (skip title / text-only / summary pages):
    - Save the page PNG → `materials\{unit_slug}\images\{source_slug}_p{NN}.png`.
    - From the detected `words` (text-layer or OCR boxes), keep those that label a part/region/term: record `name`, `bbox`, `confidence`, a free-form subject-appropriate `type` (e.g. `bone`, `country`, `component`, `functional group`; or null), `source:"slide"`.
    - Add notable UNlabeled structures as `source:"ai"`, `verified:false`, `label_bbox:null` (Rule 9a — flagged, `[AI — verify]`). Never override a printed label or invent coordinates.
    - Set `title` (slide heading) and `label_source` (the page's `source`). Build one JSON array of all kept pages → single `image add` call (see lkscripts.md). Surface: `"Captured {N} illustration(s) — {S} slide labels, {A} AI-flagged."` No illustration pages → skip silently.
+   - **HTML source**: instead of 7a pages, use `data.images[]`. For each figure worth banking, copy it to `materials\{unit_slug}\images\` and add a record with `label_source:"none"`, `image_path` = the copied PNG, `title` from nearby heading / `alt` text; no text-layer boxes (structures may be AI-flagged per Rule 9a). Same single `image add` call.
 
 7c. **Generate the image-rich study note** and write via `notes_embed.py` (no Write tool): write a grade-focused, Section-1-tagged note. Inline — where a diagram illustrates the text — drop a figure placeholder cropped to that single figure (on 2-up handout pages, top slide ≈ `0,0,1,0.5`, bottom slide ≈ `0,0.5,1,0.5`; tighten as needed):
    ```
@@ -84,6 +86,7 @@ On confirm: **copy** into project. Never delete or move originals.
    $notesContent | & $pythonExe (Join-Path $scriptsRoot "notes_embed.py") `
        --dest "{$savedataRoot}\courses\{course_id}\materials\{unit_slug}\{type}_{slug}.md" | Out-Null
    ```
+   - **HTML source**: embed `data.images[]` with whole-image FIG tokens — `{{FIG: {image path} | 0,0,1,1 | caption}}` (no crop; use the `alt` text or nearby heading as caption). Point them at the persisted `materials\...\images\` copies so the self-contained `.md` survives `pages_dir` cleanup.
    - Non-PDF / no relevant figures → write the note with no `{{FIG}}` tokens (notes_embed passes it through). `notes_embed.py` replaces `notes write` for ALL note writing.
 
 7d. **Extract problems to the pool** (only when file type ∈ `{practice_quiz, exam_review, past_exam}`): Scan the extracted text for discrete Q+A pairs. None found (prose study guide) → skip, notes only. For each problem found:
@@ -91,7 +94,7 @@ On confirm: **copy** into project. Never delete or move originals.
    - Assign a `topic` label from the unit's `topics` / weak-topic vocabulary.
    - Set `question_type`, `options` (mcq only), `answer`, optional `rationale` and Section 1 `tags`. All content strictly from the file — no invented problems (Rule 9).
    - Set `source_type` = file classification, `verbatim: true`, `source_file` = ingested filename, `source` = inferred label (e.g. "Practice Quiz — Week 3").
-   - **Image-based problem** (the figure is part of the question — diagram, X-ray, "identify the labeled structure"): from the 7a page render, copy that page PNG to `materials\{unit_slug}\images\{source_slug}_p{NN}.png` (reuse the 7b file if already saved), then set the problem's `figure`: `{ image_path: <abs path to that PNG>, bbox: [x,y,w,h] (normalized crop to the figure region, or null for whole page), caption }`. `image_path` must be a **persistent** PNG (under `materials\...\images`), not a `tmp_pages` path (those are cleaned at step 8). Text-only problem → omit `figure`.
+   - **Image-based problem** (the figure is part of the question — diagram, X-ray, "identify the labeled structure"): copy the figure source to a **persistent** PNG `materials\{unit_slug}\images\{source_slug}_p{NN}.png` (PDF → the 7a page PNG, reuse the 7b file if already saved; HTML → the matching `data.images[]` file), then set the problem's `figure`: `{ image_path: <abs path to that PNG>, bbox: [x,y,w,h] (normalized crop to the figure region, or null for whole image), caption }`. Never point `image_path` at a `tmp_pages`/`tmp_html` path (those are cleaned at step 8). Text-only problem → omit `figure`.
 
    Build one JSON array of all problems and write via a single `pool add` call (see lkscripts.md). Surface: `"Extracted {added} problem(s) to {course_code} pool ({skipped} duplicate(s) skipped, {F} with figures)."`
 
@@ -107,7 +110,7 @@ On confirm: **copy** into project. Never delete or move originals.
    ```
    When step 7d added problems, also log per affected course: `- [POOL] Extracted {N} problem(s) from {filename} -> {unit(s)}`.
    When step 7b captured illustrations, also log per course: `- [IMAGE] Captured {N} illustration(s) from {filename} -> {unit}`.
-   Finally, clean up the 7a render dir (`pages_dir` from `image_extract.py`).
+   Finally, clean up temp render dirs: the 7a render dir (`pages_dir` from `image_extract.py`), the HTML image dir (`data.pages_dir` from `extract_text.py`, under `tmp_html`), and the `tmp_split` dir if step 0 split. Persisted figures already live under `materials\...\images\`.
 
 ---
 

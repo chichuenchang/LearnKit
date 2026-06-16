@@ -60,6 +60,10 @@ if ($data.scanned) {
 }
 ```
 
+**Supported inputs**: `.pdf`, `.pptx`, `.docx`, `.txt`, `.md`, `.html`/`.htm`. Anything else → `success:false` ("Unsupported file type").
+
+**HTML branch** — when `$data.file_type -eq "html"`: `$data.text` holds readable text (script/style/head stripped); `$data.images` = `[{path, alt}]` of figures extracted from `<img>` tags — base64 data-URIs decoded + local-file images copied, both saved under `$data.pages_dir`. Remote (`http(s)://`, protocol-relative) and SVG/unreadable images are skipped (`$data.images_skipped` counts them). No `image_extract.py` step for HTML — these `images` ARE the figures for the note / image bank / figure-problems. Persist any you keep by copying from `$data.pages_dir` to `materials\{unit}\images\` **before** cleaning up `$data.pages_dir`.
+
 ---
 
 ## `pdf_split.py` — auto-split large PDFs (lkingest step 0)

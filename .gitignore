@@ -11,6 +11,7 @@ __pycache__/
 scripts/tmp_extract.json
 scripts/tmp_pages/
 scripts/tmp_split/
+scripts/tmp_html/
 
 # OS
 .DS_Store
