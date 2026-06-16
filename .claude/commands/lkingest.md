@@ -20,10 +20,12 @@ On confirm: **copy** into project. Never delete or move originals.
 
 **Shared pipeline for each file:**
 
+0. **Auto-split large PDFs** (PDFs only): Run `pdf_split.py --file {source} --out {scriptsRoot}\tmp_split` (see lkscripts.md). When `split: true`, treat each entry in `parts[]` as its own file through steps 1–7 (text, figures, note, problems) — all parts share the source's course + unit; give each a part-suffixed source slug (e.g. `source_x_part02`) so image-bank/pool dedup stays unique, and tag the note title `Part {index}/{part_count}` (pages {from_page}–{to_page}). Archive the **original** once to raw (step 6); the part PDFs are derived, not archived. Announce: `"{filename} has {page_count} pages — split into {part_count} parts of ≤{chunk}; ingesting each."` `split: false` → continue with the single file unchanged. Threshold/chunk = `auto_split_pages` (config.json, default 60). Non-PDF → skip. Clean up `tmp_split` at step 8.
+
 1. **Extract text**: Run `scripts\extract_text.py` (via $pythonExe and $scriptsRoot — see `lkscripts.md`). Fails → report error and skip; don't continue with that file.
    - `scanned: false` → use `data.text` as normal for all downstream steps
    - `scanned: true` → read each path in `data.image_paths` via Read tool; generate study notes from visual page content; clean up the page-image dir `data.pages_dir` after notes written
-   - `capped: true` → surface before proceeding: `"Note: {filename} has {page_count} pages — first 60 ingested. Re-ingest with --max-pages 0 (or higher N) to process all pages."`
+   - `capped: true` → only fires if auto-split is off (`auto_split_pages: 0`) or a single part still exceeds the render cap; surface: `"Note: {filename} has {page_count} pages — first 60 ingested. Re-ingest with --max-pages 0 (or higher N) to process all pages."`
 
 2. **Identify course**: Section 4 logic (CLAUDE.md).
 

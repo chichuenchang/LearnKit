@@ -9,6 +9,7 @@ Ingestion/render tuning knobs live in `scripts\config.json` (committed). `script
 | `scanned_words_per_page_threshold` | extract_text | below this words/page → PDF treated as scanned |
 | `max_scanned_pages` | extract_text | scanned-PDF page render cap (CLI `--max-pages` overrides) |
 | `image_max_pages` | image_extract | page render cap for image bank (CLI `--max-pages` overrides) |
+| `auto_split_pages` | pdf_split | PDFs over this many pages auto-split into ≤N-page parts (CLI `--chunk` overrides; 0 disables) |
 | `textlayer_min_words` | image_extract | min text-layer words before OCR fallback |
 | `ocr_min_conf` | image_extract | min OCR word confidence (0–100) to keep a label box |
 | `render_scale` | extract_text, image_extract | fitz Matrix scale (PDF points → pixels) |
@@ -58,6 +59,22 @@ if ($data.scanned) {
     if ($pagesDir) { Remove-Item $pagesDir -Recurse -ErrorAction SilentlyContinue }
 }
 ```
+
+---
+
+## `pdf_split.py` — auto-split large PDFs (lkingest step 0)
+
+Run **before** extraction for PDFs. Splits a PDF over `auto_split_pages` into sequential ≤N-page part PDFs so each part runs the pipeline on its own (bounded vision cost, one note per part).
+
+```powershell
+$split = (& $pythonExe (Join-Path $scriptsRoot "pdf_split.py") `
+    --file "C:\full\path\source.pdf" --out (Join-Path $scriptsRoot "tmp_split")) | ConvertFrom-Json
+# optional: --chunk N  (max pages/part; default = config auto_split_pages; 0 disables)
+# $split.split  → bool;  $split.parts[] = { path, index, part_count, from_page, to_page, pages }
+foreach ($p in $split.parts) { <# ingest $p.path as its own file: steps 1–7 #> }
+Remove-Item (Join-Path $scriptsRoot "tmp_split") -Recurse -ErrorAction SilentlyContinue
+```
+`split:false` (page_count ≤ chunk, or chunk ≤ 0) → `parts` holds one entry pointing at the **original** file, so the loop is uniform. When `split:true`, archive the original to raw once; the part PDFs are derived (regenerable) and live under `tmp_split` — clean them up after ingest. Non-PDF input → `success:false` (skip; only PDFs split).
 
 ---
 
