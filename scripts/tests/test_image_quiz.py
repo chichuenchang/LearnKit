@@ -61,6 +61,27 @@ class ImageQuizTests(unittest.TestCase):
         self.assertTrue(res["success"], res.get("error"))
         self.assertEqual(res["question_count"], 0)
 
+    def test_figure_problem_no_mask(self):
+        # pool figure-problem: verbatim stem/options, no target_bbox (no mask)
+        spec = {"title": "Figure Quiz", "questions": [
+            {"image_path": self.png, "stem": "Which bone is fractured?",
+             "options": ["Talus", "Calcaneus"], "answer_index": 1}]}
+        res = run_quiz(spec, self.html)
+        self.assertTrue(res["success"], res.get("error"))
+        self.assertEqual(res["question_count"], 1)
+        txt = pathlib.Path(self.html).read_text(encoding="utf-8")
+        self.assertIn("Which bone is fractured?", txt)          # verbatim stem kept
+        self.assertEqual(txt.count('class="opt"'), 2)
+
+    def test_crop_bbox_renders(self):
+        spec = {"title": "Crop Quiz", "questions": [
+            {"image_path": self.png, "crop_bbox": [0.0, 0.0, 0.5, 0.5],
+             "stem": "Identify the region.", "options": ["A", "B"], "answer_index": 0}]}
+        res = run_quiz(spec, self.html)
+        self.assertTrue(res["success"], res.get("error"))
+        self.assertEqual(res["question_count"], 1)
+        self.assertIn("data:image/png;base64,", pathlib.Path(self.html).read_text(encoding="utf-8"))
+
     def test_empty_stdin_fails(self):
         proc = subprocess.run([sys.executable, SCRIPT, "--out", self.html],
                               input="", capture_output=True, text=True)

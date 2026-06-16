@@ -60,7 +60,8 @@ Default empty: `{"course": null, "course_id": null, "unit_label": "Unit", "built
 Past quiz/exam problems. Served verbatim by `/lkquiz` and used as style exemplars to generate gap-filling questions. Written only via `data_writer.py pool add` / `pool remove`.
 
 **top-level**: `course`, `course_id`, `last_updated`, `problems[]`
-**problems[]**: `problem_id` (`prob_{course_id}_{NNN}`), `unit_id` (or null), `unit_slug` (or null), `topic` (same vocabulary as progress.json `weak_topics`), `question_type` (`mcq` | `short_answer` | `matching` | `labeling` | `true_false` | `essay`), `question`, `options` (array; `[]` unless mcq), `answer`, `rationale` (or null), `tags` (Section 1 tags), `source` (label e.g. "Midterm 1 2025"), `source_file` (filename or "manual"), `source_type` (`past_exam` | `practice_quiz` | `exam_review` | `manual`), `verbatim` (bool), `date_added`
+**problems[]**: `problem_id` (`prob_{course_id}_{NNN}`), `unit_id` (or null), `unit_slug` (or null), `topic` (same vocabulary as progress.json `weak_topics`), `question_type` (`mcq` | `short_answer` | `matching` | `labeling` | `true_false` | `essay`), `question`, `options` (array; `[]` unless mcq), `answer`, `rationale` (or null), `tags` (Section 1 tags), `source` (label e.g. "Midterm 1 2025"), `source_file` (filename or "manual"), `source_type` (`past_exam` | `practice_quiz` | `exam_review` | `manual`), `verbatim` (bool), `figure` (or null), `date_added`
+**figure** (image-based problems, else null): `image_path` (PNG under `materials\{unit}\images\`), `bbox` (normalized `[x,y,w,h]` display crop, or null = whole image), `caption`. Served as an HTML quiz via `image_quiz.py` (figure embedded; no mask). Persisted by `pool add` only when `image_path` is present.
 Default empty: `{"course": null, "course_id": null, "last_updated": null, "problems": []}`
 
 ## Per-course `data\image_bank.json`

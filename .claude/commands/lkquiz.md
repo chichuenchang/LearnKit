@@ -11,6 +11,7 @@ Multiple active + no course → ask. Quiz: **interactive — one question at a t
 - `exam_1` — all units covered by exam (resolved from `course_structure.json` `exams[].units_covered`)
 - `exam_1 mock` (or any scope + `mock`) — mock mode: verbatim-heavy, every covered topic represented; preserves real exam format (may include short answer)
 - `written` (or any scope + `written`) — include short-answer / manual-input questions. **Without this flag the quiz is all multiple-choice.**
+- `--html` (or `images`) — render image-based pool problems as a self-contained HTML page via `image_quiz.py` (Step 2b) instead of the terminal loop. **Required to study figure-bearing problems** — the terminal can't display images.
 
 **Resolving exam scope**: Look up by `exam_id` or fuzzy title. Use `units_covered` as unit list. Not found: `"No exam 'exam_1' in {course_code}. Available: [list]"`. Show resolved scope using `unit_label` from `course_structure.json` pluralized: `"Units 1–3 (Exam 1 scope)"`, `"Weeks 1–3 (Exam 1 scope)"`, `"Chapters 1–3 (Exam 1 scope)"`, etc.
 
@@ -38,6 +39,7 @@ Read `courses\{slug}\data\progress.json`: find all past `quiz_history` entries f
 - **Generated gap-fillers** — for scope topics with no pool problem, generate fresh questions matching the pool's observed style (question-type mix, phrasing, difficulty). Adaptive weights still apply.
 - **Format mirror** — only when `written`/`mock` is active: derive the MCQ/short-answer ratio from the pool. Default (no flag) → all MCQ regardless of pool ratio.
 - **Mix** — normal scope: blend, capping the verbatim share so fresh practice remains. `mock` keyword: verbatim-heavy, and ensure every covered topic appears (verbatim where available, generated otherwise).
+- **Figure-bearing problems** — pool problems with a non-null `figure` can't run in the terminal loop (no inline images). Served only under `--html` (Step 2b). Default terminal quiz skips them; if scope contains figure-problems and `--html` was not passed, note once: `"{N} image-based problem(s) in scope — re-run with --html to include them."`
 - **Empty or absent pool** → behavior unchanged (materials-only).
 
 **Question count:**
@@ -127,6 +129,14 @@ Evaluate immediately after user replies:
 ```
 
 Any input (or blank) → next question.
+
+---
+
+### Step 2b — Image-based problems (`--html` only)
+
+Pool problems in scope with a non-null `figure` → build ONE `image_quiz.py` spec (see lkscripts.md). Per figure-problem: `image_path` = `figure.image_path`, `crop_bbox` = `figure.bbox` (omit when null), **no** `target_bbox` (show unmasked), `stem` = `question`, `options` = `options`, `answer_index` = index of `answer` within `options`. Non-mcq figure-problems → skip (the HTML quiz is MCQ-only). Adaptive weighting (Step 0) still orders/selects them.
+
+Write the page to `courses\{slug}\materials\{unit_slug}\quiz_images_{scope}_{YYYYMMDD}.html` (multi-unit → first unit in scope), then `Start-Process` it. The page scores client-side — **no `progress.json` write** for the HTML portion (same as `/lkimage quiz`). Log per course: `- [QUIZ] Image quiz ({scope}) — {N} figure problem(s) -> HTML`. When the terminal portion also ran, this is in addition to the Step 4 write.
 
 ---
 

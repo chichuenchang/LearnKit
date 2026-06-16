@@ -3,6 +3,15 @@
 Usage: python image_quiz.py --out <html_path>   (reads a quiz-spec JSON on stdin)
 Output: JSON to stdout (ASCII-safe). The HTML embeds images as base64 data-URIs
 and uses inline CSS/JS only (fully offline, single file).
+
+Each question: { image_path, stem, options[], answer_index,
+                 crop_bbox?, target_bbox? }  (bboxes normalized [x,y,w,h]).
+  - crop_bbox  (optional): crop the displayed image to this region first. Use for
+    figure-bearing pool problems where the figure is part of the question.
+  - target_bbox (optional): blank + highlight this region with a "?". Use for
+    image-bank "name the highlighted structure" questions. Omit → no mask.
+If both are given, target_bbox is interpreted relative to the cropped image
+(callers normally use one or the other).
 """
 import argparse
 import base64
@@ -96,6 +105,17 @@ def _mask_highlight(img, bbox):
     return img
 
 
+def _crop(img, bbox):
+    """Crop img to a normalized [x,y,w,h] region (clamped to image bounds)."""
+    W, H = img.size
+    x, y, w, h = bbox
+    left, top = max(0, int(x * W)), max(0, int(y * H))
+    right, bottom = min(W, int((x + w) * W)), min(H, int((y + h) * H))
+    if right <= left or bottom <= top:        # degenerate box → leave image as-is
+        return img
+    return img.crop((left, top, right, bottom))
+
+
 def _data_uri(img):
     buf = io.BytesIO()
     img.save(buf, format="PNG")
@@ -132,7 +152,12 @@ def main():
         total = len(valid)
         cards = []
         for idx, (q, img) in enumerate(valid):
-            _mask_highlight(img, q["target_bbox"])
+            crop_bbox = q.get("crop_bbox")
+            if crop_bbox:
+                img = _crop(img, crop_bbox)
+            target_bbox = q.get("target_bbox")
+            if target_bbox:
+                _mask_highlight(img, target_bbox)
             uri = _data_uri(img)
             opts = q.get("options") or []
             ai = int(q.get("answer_index", 0))

@@ -131,6 +131,8 @@ if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
 ```
 `--course` is the course slug. Each problem is one object in the array; one call writes many. `question_type` validated against the allowed set; duplicate question text (normalized) is skipped.
 
+**Image-based problems** — add a `figure` object to any problem whose figure is part of the question: `"figure": { "image_path": "<abs path to a persistent PNG under materials\\{unit}\\images>", "bbox": [x,y,w,h]|null, "caption": "..." }`. `bbox` (normalized 0–1) crops the display to the figure region; `null` = whole image. Stored only when `image_path` is present (bad/missing → `figure:null`, no error). Served via `image_quiz.py` (see below), not the terminal loop.
+
 **`image_extract.py` — render pages + detect label boxes (for the image bank):**
 ```powershell
 $r = (& $pythonExe (Join-Path $scriptsRoot "image_extract.py") `
@@ -172,7 +174,11 @@ $specJson = @'
 $r = ($specJson | & $pythonExe (Join-Path $scriptsRoot "image_quiz.py") --out $htmlPath) | ConvertFrom-Json
 # success → { html_path, question_count }.  Then: Start-Process $r.html_path
 ```
-Masks each `target_bbox` (Pillow), embeds images as base64 (single offline file). The agent builds `options` + `answer_index` (correct + 3 distractors); the script only renders.
+Per question: `image_path`, `stem`, `options`, `answer_index` (required); `target_bbox` and `crop_bbox` optional (normalized `[x,y,w,h]`).
+- **Image-bank quiz** (`/lkimage quiz`): set `target_bbox` → the region is blanked + highlighted with a "?" so the student names it.
+- **Figure-bearing pool problems** (`/lkquiz --html`): set `crop_bbox` = the problem's `figure.bbox` (or omit for whole image) and **no** `target_bbox` → the figure shows unmasked with the verbatim `stem`/`options`. Missing image → that question is skipped.
+
+The agent builds `options` + `answer_index`; the script only crops/masks (Pillow) + embeds images as base64 (single offline file).
 
 **`notes_embed.py` — write a study note, embedding `{{FIG}}` figures as base64 (reads stdin):**
 ```powershell

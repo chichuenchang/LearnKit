@@ -106,6 +106,27 @@ class PoolAddTests(unittest.TestCase):
         self.assertEqual(prob["verbatim"], False)
         self.assertEqual(prob["tags"], [])
 
+    def test_figure_persisted(self):
+        fig = {"image_path": "materials/week_06_foot/images/source_foot_p07.png",
+               "bbox": [0.1, 0.2, 0.5, 0.4], "caption": "Foot X-ray"}
+        q = dict(MCQ, question="Which bone is fractured?", figure=fig)
+        add(self.sd, self.course, [q])
+        prob = read_pool(self.sd, self.course)["problems"][0]
+        self.assertEqual(prob["figure"]["image_path"], fig["image_path"])
+        self.assertEqual(prob["figure"]["bbox"], fig["bbox"])
+        self.assertEqual(prob["figure"]["caption"], "Foot X-ray")
+
+    def test_figure_defaults_null(self):
+        add(self.sd, self.course, [MCQ])                       # no figure given
+        self.assertIsNone(read_pool(self.sd, self.course)["problems"][0]["figure"])
+
+    def test_bad_figure_degrades_to_null(self):
+        # figure without image_path is invalid → stored as null, not an error
+        q = dict(MCQ, question="No image here?", figure={"caption": "oops"})
+        res = add(self.sd, self.course, [q])
+        self.assertTrue(res["success"])
+        self.assertIsNone(read_pool(self.sd, self.course)["problems"][0]["figure"])
+
     def test_empty_stdin_fails(self):
         res = _run(["pool", "add", "--savedata", self.sd,
                     "--course", self.course], stdin="")

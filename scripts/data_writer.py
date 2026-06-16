@@ -98,6 +98,21 @@ def _normalize_q(text: str) -> str:
     return " ".join((text or "").lower().split())
 
 
+def _norm_figure(fig):
+    """Normalize a problem's optional figure. Returns None unless a dict with a
+    non-empty image_path is given (so bad/empty figures degrade to text-only)."""
+    if not isinstance(fig, dict):
+        return None
+    ip = fig.get("image_path")
+    if not ip:
+        return None
+    return {
+        "image_path": ip,
+        "bbox": fig.get("bbox"),       # normalized [x,y,w,h] display crop, or null
+        "caption": fig.get("caption"),
+    }
+
+
 def advance_status(current: str, target: str) -> str:
     try:
         ci = STATUS_PROGRESSION.index(current)
@@ -234,6 +249,7 @@ def cmd_pool_add(args):
             "source_file": prob.get("source_file") or "manual",
             "source_type": prob.get("source_type") or "manual",
             "verbatim": bool(prob.get("verbatim", False)),
+            "figure": _norm_figure(prob.get("figure")),
             "date_added": today_str(),
         })
         added_ids.append(pid)

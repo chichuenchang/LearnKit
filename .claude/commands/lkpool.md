@@ -31,10 +31,10 @@ $problemsJson = @'
 $r = ($problemsJson | & $pythonExe $writerPath pool add --savedata $savedataRoot --course "{slug}") | ConvertFrom-Json
 if (-not $r.success) { Write-Host "Failed: $($r.error)" }
 ```
-`source_type` defaults to `manual`, `verbatim` to false. Confirm: `"Added {id} to {course_code} pool."` Then log: `[POOL] Added 1 problem (manual) -> {unit or 'unmapped'}`.
+`source_type` defaults to `manual`, `verbatim` to false. Confirm: `"Added {id} to {course_code} pool."` Then log: `[POOL] Added 1 problem (manual) -> {unit or 'unmapped'}`. For an image-based problem, include a `figure` object (`image_path` to a persistent PNG under `materials\{unit}\images`, optional `bbox`/`caption`) — see lkschemas.md; image problems are usually captured during `/lkingest` (step 7d) rather than added manually.
 
 ### `/lkpool list {course} [unit]` — list
-Read `problem_pool.json`. Print a table: `problem_id`, `question_type`, `topic`, `source`. Optional unit filter (match `unit_id` or `unit_slug`). Truncate question preview to ~60 chars if shown.
+Read `problem_pool.json`. Print a table: `problem_id`, `question_type`, `topic`, `source`. Mark rows whose `figure` is non-null with an `[img]` tag (these are studied via `/lkquiz --html`). Optional unit filter (match `unit_id` or `unit_slug`). Truncate question preview to ~60 chars if shown.
 
 ### `/lkpool remove {problem_id}` — delete
 Derive course slug from the id: strip the `prob_` prefix and the trailing `_{NNN}` segment (NNN is always the 3-digit final segment) → remainder is the course slug. Show the problem, confirm, then:
