@@ -166,7 +166,7 @@ Full schema reference in `.claude/commands/lkschemas.md`. Skills read that file 
 ## SECTION 6 — COMMANDS AND WORKFLOWS
 
 ### `/lkingest` — Process new course materials
-Full spec in `.claude/commands/lkingest.md`. Handles `raw\` folder and pasted paths, text extraction, course/unit identification, note generation, data updates, and logging.
+Full spec in `.claude/commands/lkingest.md`. Per file: extract text, identify course/unit, archive the source to `raw\{unit}\`, render pages + capture labeled diagrams to `image_bank.json` (+ `materials\{unit}\images\`), generate a **self-contained image-rich `.md` note** (text + agent-cropped figures embedded inline as base64), extract problems to `problem_pool.json` (quiz/exam/practice files), then update `progress.json` + activity logs. Handles `raw\` drop folder and pasted paths.
 
 ---
 
