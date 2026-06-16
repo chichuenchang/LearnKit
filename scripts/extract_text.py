@@ -17,6 +17,7 @@ import re
 import sys
 from html.parser import HTMLParser
 
+from imgutil import render_page_png
 from lkconfig import get as cfg
 
 SCRIPTS_DIR = pathlib.Path(__file__).parent
@@ -67,11 +68,9 @@ def render_pdf_pages(path, max_pages=MAX_SCANNED_PAGES):
 
     image_paths = []
     scale = cfg("render_scale")
-    mat = fitz.Matrix(scale, scale)
     for i in range(render_count):
-        pix = doc[i].get_pixmap(matrix=mat)
         img_path = out_dir / f"page_{i + 1:03d}.png"
-        pix.save(str(img_path))
+        render_page_png(doc[i], scale, img_path)
         image_paths.append(str(img_path))
 
     doc.close()

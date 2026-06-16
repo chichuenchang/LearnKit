@@ -4,6 +4,8 @@ Shared protocol file — not a user-invocable command. Referenced by all skill f
 
 Ingestion/render tuning knobs live in `scripts\config.json` (committed). `scripts\lkconfig.py` loads it with baked-in fallback defaults, so a missing/partial/malformed file never breaks ingestion. Edit values there — no code change needed.
 
+Shared internal helpers (not agent-invoked): `scripts\lkconfig.py` (config), `scripts\imgutil.py` (crop / base64 embed / PDF page render), `_safe_name` in `extract_text.py` (path sanitizer). Reused across the image scripts so each primitive lives in one place.
+
 | Key | Used by | Meaning |
 |-----|---------|---------|
 | `scanned_words_per_page_threshold` | extract_text | below this words/page → PDF treated as scanned |

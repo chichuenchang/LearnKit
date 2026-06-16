@@ -12,6 +12,7 @@ import shutil
 
 from extract_text import _safe_name  # reuse the path-component sanitizer
 
+from imgutil import render_page_png
 from lkconfig import get as cfg
 
 TEXTLAYER_MIN_WORDS = cfg("textlayer_min_words")
@@ -178,15 +179,12 @@ def main():
         result["page_count"] = total
         render_count = total if max_pages <= 0 else min(total, max_pages)
         result["capped"] = total > render_count
-        scale = cfg("render_scale")
-        mat = fitz.Matrix(scale, scale)  # render scale; PDF points -> pixels = *scale
+        scale = cfg("render_scale")  # PDF points -> pixels = *scale
 
         for i in range(render_count):
             page = doc[i]
-            pix = page.get_pixmap(matrix=mat)
             img_path = out_dir / f"page_{i + 1:03d}.png"
-            pix.save(str(img_path))
-            W, H = pix.width, pix.height
+            W, H = render_page_png(page, scale, img_path)
 
             tw = page.get_text("words")  # (x0,y0,x1,y1,word,block,line,wordno)
             words = []

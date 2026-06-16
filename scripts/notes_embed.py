@@ -9,12 +9,12 @@ No tokens -> the note is written through unchanged.
 Output: JSON to stdout (ASCII-safe): {success, dest, figures_embedded, missing, error}
 """
 import argparse
-import base64
-import io
 import json
 import os
 import re
 import sys
+
+from imgutil import crop_norm, data_uri
 
 FIG_RE = re.compile(
     r"\{\{FIG:\s*(?P<path>[^|]+?)\s*\|\s*"
@@ -30,12 +30,7 @@ def _embed_one(m, stats):
         from PIL import Image
         x, y, w, h = (float(m.group(k)) for k in ("x", "y", "w", "h"))
         img = Image.open(path).convert("RGB")
-        W, H = img.size
-        box = (int(x * W), int(y * H), int((x + w) * W), int((y + h) * H))
-        crop = img.crop(box)
-        buf = io.BytesIO()
-        crop.save(buf, format="PNG")
-        uri = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+        uri = data_uri(crop_norm(img, (x, y, w, h)))
         stats["embedded"] += 1
         cap_safe = cap.replace("[", "").replace("]", "")
         return f"![{cap_safe}]({uri})"

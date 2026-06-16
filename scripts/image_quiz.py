@@ -14,12 +14,12 @@ If both are given, target_bbox is interpreted relative to the cropped image
 (callers normally use one or the other).
 """
 import argparse
-import base64
 import html as htmllib
-import io
 import json
 import os
 import sys
+
+from imgutil import crop_norm, data_uri
 
 CARD_TMPL = """  <section class="card" data-i="{i}">
     <div class="meta">Q {n} / {total}</div>
@@ -105,23 +105,6 @@ def _mask_highlight(img, bbox):
     return img
 
 
-def _crop(img, bbox):
-    """Crop img to a normalized [x,y,w,h] region (clamped to image bounds)."""
-    W, H = img.size
-    x, y, w, h = bbox
-    left, top = max(0, int(x * W)), max(0, int(y * H))
-    right, bottom = min(W, int((x + w) * W)), min(H, int((y + h) * H))
-    if right <= left or bottom <= top:        # degenerate box → leave image as-is
-        return img
-    return img.crop((left, top, right, bottom))
-
-
-def _data_uri(img):
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
@@ -154,11 +137,11 @@ def main():
         for idx, (q, img) in enumerate(valid):
             crop_bbox = q.get("crop_bbox")
             if crop_bbox:
-                img = _crop(img, crop_bbox)
+                img = crop_norm(img, crop_bbox)
             target_bbox = q.get("target_bbox")
             if target_bbox:
                 _mask_highlight(img, target_bbox)
-            uri = _data_uri(img)
+            uri = data_uri(img)
             opts = q.get("options") or []
             ai = int(q.get("answer_index", 0))
             btns = []
