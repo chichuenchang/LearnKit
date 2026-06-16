@@ -134,7 +134,7 @@ Any input (or blank) → next question.
 
 ### Step 2b — Image-based problems (`--html` only)
 
-Pool problems in scope with a non-null `figure` → build ONE `image_quiz.py` spec (see lkscripts.md). Per figure-problem: `image_path` = `figure.image_path`, `crop_bbox` = `figure.bbox` (omit when null), **no** `target_bbox` (show unmasked), `stem` = `question`, `options` = `options`, `answer_index` = index of `answer` within `options`. Non-mcq figure-problems → skip (the HTML quiz is MCQ-only). Adaptive weighting (Step 0) still orders/selects them.
+Pool problems in scope with a non-null `figure` → build ONE `image_quiz.py` spec (fields in lkscripts.md): `crop_bbox` = `figure.bbox`, **no** `target_bbox` (unmasked), `stem`/`options` verbatim, `answer_index` = index of `answer` in `options`. Skip non-mcq (HTML quiz is MCQ-only). Adaptive weighting (Step 0) still applies.
 
 Write the page to `courses\{slug}\materials\{unit_slug}\quiz_images_{scope}_{YYYYMMDD}.html` (multi-unit → first unit in scope), then `Start-Process` it. The page scores client-side — **no `progress.json` write** for the HTML portion (same as `/lkimage quiz`). Log per course: `- [QUIZ] Image quiz ({scope}) — {N} figure problem(s) -> HTML`. When the terminal portion also ran, this is in addition to the Step 4 write.
 

@@ -94,7 +94,7 @@ On confirm: **copy** into project. Never delete or move originals.
    - Assign a `topic` label from the unit's `topics` / weak-topic vocabulary.
    - Set `question_type`, `options` (mcq only), `answer`, optional `rationale` and Section 1 `tags`. All content strictly from the file — no invented problems (Rule 9).
    - Set `source_type` = file classification, `verbatim: true`, `source_file` = ingested filename, `source` = inferred label (e.g. "Practice Quiz — Week 3").
-   - **Image-based problem** (the figure is part of the question — diagram, X-ray, "identify the labeled structure"): copy the figure source to a **persistent** PNG `materials\{unit_slug}\images\{source_slug}_p{NN}.png` (PDF → the 7a page PNG, reuse the 7b file if already saved; HTML → the matching `data.images[]` file), then set the problem's `figure`: `{ image_path: <abs path to that PNG>, bbox: [x,y,w,h] (normalized crop to the figure region, or null for whole image), caption }`. Never point `image_path` at a `tmp_pages`/`tmp_html` path (those are cleaned at step 8). Text-only problem → omit `figure`.
+   - **Image-based problem** (figure is part of the question — diagram, X-ray, "identify the structure"): copy the figure to a **persistent** PNG under `materials\{unit_slug}\images\` (PDF → the 7a page PNG, reuse 7b's; HTML → the `data.images[]` file), then set the problem's `figure` (shape in lkschemas.md) with `image_path` = that PNG. Never reference a `tmp_*` path (cleaned at step 8). Text-only problem → omit `figure`.
 
    Build one JSON array of all problems and write via a single `pool add` call (see lkscripts.md). Surface: `"Extracted {added} problem(s) to {course_code} pool ({skipped} duplicate(s) skipped, {F} with figures)."`
 

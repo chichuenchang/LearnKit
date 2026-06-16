@@ -64,7 +64,7 @@ if ($data.scanned) {
 
 **Supported inputs**: `.pdf`, `.pptx`, `.docx`, `.txt`, `.md`, `.html`/`.htm`. Anything else → `success:false` ("Unsupported file type").
 
-**HTML branch** — when `$data.file_type -eq "html"`: `$data.text` holds readable text (script/style/head stripped); `$data.images` = `[{path, alt}]` of figures extracted from `<img>` tags — base64 data-URIs decoded + local-file images copied, both saved under `$data.pages_dir`. Remote (`http(s)://`, protocol-relative) and SVG/unreadable images are skipped (`$data.images_skipped` counts them). No `image_extract.py` step for HTML — these `images` ARE the figures for the note / image bank / figure-problems. Persist any you keep by copying from `$data.pages_dir` to `materials\{unit}\images\` **before** cleaning up `$data.pages_dir`.
+**HTML branch** (`$data.file_type -eq "html"`): `$data.text` = readable text (script/style/head stripped); `$data.images` = `[{path, alt}]` figures — data-URIs decoded + local files copied into `$data.pages_dir`; remote/SVG skipped (count in `$data.images_skipped`). No `image_extract.py` step — these images ARE the figures (note / image bank / figure-problems). Copy any you keep to `materials\{unit}\images\` **before** cleaning `$data.pages_dir`.
 
 ---
 
@@ -137,7 +137,7 @@ if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
 ```
 `--course` is the course slug. Each problem is one object in the array; one call writes many. `question_type` validated against the allowed set; duplicate question text (normalized) is skipped.
 
-**Image-based problems** — add a `figure` object to any problem whose figure is part of the question: `"figure": { "image_path": "<abs path to a persistent PNG under materials\\{unit}\\images>", "bbox": [x,y,w,h]|null, "caption": "..." }`. `bbox` (normalized 0–1) crops the display to the figure region; `null` = whole image. Stored only when `image_path` is present (bad/missing → `figure:null`, no error). Served via `image_quiz.py` (see below), not the terminal loop.
+**Image-based problems** — give the problem a `figure` (shape in lkschemas.md). `image_path` must be a persistent PNG under `materials\{unit}\images` — stored only when present (else `figure:null`, no error). Served as HTML via `image_quiz.py` (below), never the terminal loop.
 
 **`image_extract.py` — render pages + detect label boxes (for the image bank):**
 ```powershell
