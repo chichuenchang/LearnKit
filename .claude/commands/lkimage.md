@@ -29,7 +29,7 @@ Generate a self-contained HTML page of "name the highlighted structure" MCQs (4 
 1. Read `image_bank.json`. **Eligible targets** = structures with `label_bbox != null` whose `unit_id` ∈ scope.
 2. Pick up to ~15 targets, spread across images/units (cap at eligible count). 0 eligible → see Edge cases.
 3. Per target build 4 **options**: the correct `name` + **3 distractors** — other structure names in scope, **prefer same `type`**; fall back to any scope names, then course-wide. Need ≥ 4 distinct names or skip that target. Shuffle; record `answer_index`.
-4. Assemble a quiz-spec JSON and pipe it to `image_quiz.py` (see lkscripts.md):
+4. Assemble a quiz-spec JSON and pipe it to `image_quiz.py` (see lkscripts.md). Each question MUST set `target_bbox` = the target structure's `label_bbox` (this blanks + highlights the label so the student names it). Omitting `target_bbox` renders the image **unmasked** — the answer shows. Do not set `crop_bbox` here (that is for figure-bearing pool problems).
    ```powershell
    $out = "{savedataRoot}\courses\{slug}\quiz\lkimage_quiz_{scope}_{YYYYMMDD}.html"
    $r = ($specJson | & $pythonExe (Join-Path $scriptsRoot "image_quiz.py") --out $out) | ConvertFrom-Json
