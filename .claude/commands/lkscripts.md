@@ -75,7 +75,7 @@ Use these exact flags. Do not guess — wrong flags cause silent failure or ambi
 | `image remove` | `--savedata --course --image-id` | — |
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |
-| `notes write` | `--dest` | — (reads content from stdin) |
+| `notes write` | `--dest` | — (reads content from stdin; raw write, no figure embedding — prefer `notes_embed.py` for notes) |
 | `log entry` | `--savedata --course --entry` | — |
 
 **Flag notes:**
@@ -121,6 +121,19 @@ $r = ($specJson | & $pythonExe (Join-Path $scriptsRoot "image_quiz.py") --out $h
 # success → { html_path, question_count }.  Then: Start-Process $r.html_path
 ```
 Masks each `target_bbox` (Pillow), embeds images as base64 (single offline file). The agent builds `options` + `answer_index` (correct + 3 distractors); the script only renders.
+
+**`notes_embed.py` — write a study note, embedding `{{FIG}}` figures as base64 (reads stdin):**
+```powershell
+$note = @'
+# ...
+Intro text.
+{{FIG: C:\...\tmp_pages\...\page_06.png | 0,0.5,1,0.5 | Deep compartment muscles}}
+More text.
+'@
+$r = ($note | & $pythonExe (Join-Path $scriptsRoot "notes_embed.py") --dest $mdPath) | ConvertFrom-Json
+# success → { figures_embedded, missing }
+```
+Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each is cropped (Pillow) → base64 → `![caption](data:image/png;base64,...)` inline. No tokens → writes through unchanged (replaces `notes write` for the note step). Missing/bad page → `*(figure unavailable)*`, never crashes.
 
 **Log entry format** — always prefix with type tag:
 ```powershell

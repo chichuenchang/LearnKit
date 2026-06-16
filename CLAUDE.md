@@ -59,7 +59,7 @@ PER-COURSE DATA (under $savedataRoot\courses\{course_slug}\):
   data\image_bank.json        — labeled diagrams/figures, any subject (image + label positions) for /lkimage
   activity_log.md             — per-course log: events for that course only
   misc.md                     — free-form running log: deadline changes, instructor notes, anything important
-  materials\{unit_slug}\      — generated study notes (.md) only — NO source files (sources live in raw\)
+  materials\{unit_slug}\      — generated study notes (.md, self-contained: figures embedded inline as base64) + images\ — NO source files (sources live in raw\)
   materials\{unit_slug}\images\ — extracted illustration PNGs (referenced by image_bank.json)
   raw\{unit_slug}\            — per-course archive of original sources, mirrored by unit (weeks/units/chapters per unit_label); notes link here via **Raw material**: header
 

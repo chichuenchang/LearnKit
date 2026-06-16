@@ -8,8 +8,8 @@ import unittest
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 SCRIPT = str(REPO / "scripts" / "image_extract.py")
-TEXT_PDF = REPO / "savedata/courses/pther_350a/materials/week_06_foot/source_the_arches_of_the_foot.pdf"
-SCANNED_PDF = REPO / "savedata/courses/pther_350a/materials/week_06_foot/source_the_bones_of_the_foot.pdf"
+TEXT_PDF = REPO / "savedata/courses/pther_350a/raw/week_06_foot/source_the_arches_of_the_foot.pdf"
+SCANNED_PDF = REPO / "savedata/courses/pther_350a/raw/week_06_foot/source_the_bones_of_the_foot.pdf"
 
 
 def run_extract(pdf, out_dir):
