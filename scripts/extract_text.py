@@ -10,9 +10,11 @@ import os
 import pathlib
 import sys
 
+from lkconfig import get as cfg
+
 SCRIPTS_DIR = pathlib.Path(__file__).parent
-SCANNED_WORDS_PER_PAGE_THRESHOLD = 50
-MAX_SCANNED_PAGES = 60  # default render cap for scanned PDFs; override with --max-pages
+SCANNED_WORDS_PER_PAGE_THRESHOLD = cfg("scanned_words_per_page_threshold")
+MAX_SCANNED_PAGES = cfg("max_scanned_pages")  # default render cap; override with --max-pages
 
 
 def _safe_name(name: str) -> str:
@@ -57,7 +59,8 @@ def render_pdf_pages(path, max_pages=MAX_SCANNED_PAGES):
     render_count = cap
 
     image_paths = []
-    mat = fitz.Matrix(2, 2)
+    scale = cfg("render_scale")
+    mat = fitz.Matrix(scale, scale)
     for i in range(render_count):
         pix = doc[i].get_pixmap(matrix=mat)
         img_path = out_dir / f"page_{i + 1:03d}.png"

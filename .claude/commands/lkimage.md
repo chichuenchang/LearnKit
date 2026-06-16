@@ -37,7 +37,7 @@ Generate a self-contained HTML page of "name the highlighted structure" MCQs (4 
    ```
 5. Log per course: `- [IMAGE] Quiz generated — {N} Qs ({scope})`. No `progress.json` write (the page scores client-side).
 
-**Edge cases**: 0 eligible targets → `"No image-bank questions for {scope}. Run /lkimage to check coverage."` · all `label_bbox` null (Tesseract absent at capture) → `"No structures have label positions (boxes). Re-ingest with Tesseract installed to enable image quizzes."` · < 4 distinct names course-wide → `"Need at least 4 labeled structures to build options."`
+**Edge cases**: 0 eligible targets → `"No image-bank questions for {scope}. Run /lkimage to check coverage."` · all `label_bbox` null (no OCR engine at capture) → `"No structures have label positions (boxes). Re-ingest with an OCR engine (PaddleOCR or Tesseract) installed to enable image quizzes."` · < 4 distinct names course-wide → `"Need at least 4 labeled structures to build options."`
 
 ### `/lkimage remove {image_id}` — delete a bad capture
 Resolve course from the id, confirm, then `data_writer.py image remove`. Log: `[IMAGE] Removed {image_id}`.

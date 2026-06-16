@@ -23,10 +23,12 @@ import pathlib
 import sys
 from datetime import datetime, date
 
+from lkconfig import get as cfg
+
 VALID_DEADLINE_TYPES = {"exam", "quiz", "assignment", "lab", "lab_practical", "presentation", "other"}
 VALID_QUESTION_TYPES = {"mcq", "short_answer", "matching", "labeling", "true_false", "essay"}
 STATUS_PROGRESSION = ["not_started", "in_progress", "materials_complete", "quiz_passed", "mastered"]
-PASSING_SCORE = 70.0
+PASSING_SCORE = cfg("passing_score")
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────

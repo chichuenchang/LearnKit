@@ -1,5 +1,21 @@
 Shared protocol file — not a user-invocable command. Referenced by all skill files.
 
+## Tuning config — `scripts\config.json`
+
+Ingestion/render tuning knobs live in `scripts\config.json` (committed). `scripts\lkconfig.py` loads it with baked-in fallback defaults, so a missing/partial/malformed file never breaks ingestion. Edit values there — no code change needed.
+
+| Key | Used by | Meaning |
+|-----|---------|---------|
+| `scanned_words_per_page_threshold` | extract_text | below this words/page → PDF treated as scanned |
+| `max_scanned_pages` | extract_text | scanned-PDF page render cap (CLI `--max-pages` overrides) |
+| `image_max_pages` | image_extract | page render cap for image bank (CLI `--max-pages` overrides) |
+| `textlayer_min_words` | image_extract | min text-layer words before OCR fallback |
+| `ocr_min_conf` | image_extract | min OCR word confidence (0–100) to keep a label box |
+| `render_scale` | extract_text, image_extract | fitz Matrix scale (PDF points → pixels) |
+| `passing_score` | data_writer | quiz score-pct at/above which a unit counts as passed |
+
+CLI `--max-pages` (per-file) takes precedence over the config default for that run.
+
 ## Python Script Protocol
 
 Use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Use `$scriptsRoot` for script path. Temp output goes to `$scriptsRoot\tmp_extract.json` (gitignored at project root level).
@@ -107,7 +123,7 @@ $r = (& $pythonExe (Join-Path $scriptsRoot "image_extract.py") `
 # words[] = { text, bbox [x,y,w,h normalized 0-1], conf }
 # Clean up $r.pages_dir after building image records.
 ```
-Label boxes come from the PDF text layer (`source:"textlayer"`, exact) or Tesseract OCR (`source:"ocr"`). Tesseract absent → image-only pages return `source:"none"` with no boxes (graceful). The agent classifies which words label parts/regions of the figure and does the flagged AI-fill; it does NOT invent coordinates.
+Label boxes come from the PDF text layer (`source:"textlayer"`, exact) or OCR (`source:"ocr"` — PaddleOCR primary on GPU, Tesseract fallback). No OCR engine available → image-only pages return `source:"none"` with no boxes (graceful). The agent classifies which words label parts/regions of the figure and does the flagged AI-fill; it does NOT invent coordinates.
 
 **`image add` — batch image-record write (reads stdin, like `pool add`):** one JSON array of image records → `image_bank.json`; assigns `img_{course}_{NNN}`, dedups by `(source_file, page)`.
 

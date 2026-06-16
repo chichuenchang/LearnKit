@@ -1,7 +1,8 @@
 """Render PDF pages to PNG and detect label text + boxes for the image bank.
 
 Usage: python image_extract.py --file <pdf> --out <dir>
-Output: JSON to stdout. Tesseract OCR is OPTIONAL (graceful degrade to source:"none").
+Output: JSON to stdout. OCR is OPTIONAL — PaddleOCR (GPU) primary, Tesseract
+fallback; neither present → graceful degrade to source:"none".
 """
 import argparse
 import json
@@ -11,9 +12,11 @@ import shutil
 
 from extract_text import _safe_name  # reuse the path-component sanitizer
 
-TEXTLAYER_MIN_WORDS = 5
-MAX_PAGES = 60  # default page cap; override with --max-pages (0 = no cap)
-OCR_MIN_CONF = 40
+from lkconfig import get as cfg
+
+TEXTLAYER_MIN_WORDS = cfg("textlayer_min_words")
+MAX_PAGES = cfg("image_max_pages")  # default page cap; override with --max-pages (0 = no cap)
+OCR_MIN_CONF = cfg("ocr_min_conf")
 
 
 def _tesseract_cmd():
@@ -175,7 +178,8 @@ def main():
         result["page_count"] = total
         render_count = total if max_pages <= 0 else min(total, max_pages)
         result["capped"] = total > render_count
-        mat = fitz.Matrix(2, 2)  # 2x render; PDF points -> pixels = *2
+        scale = cfg("render_scale")
+        mat = fitz.Matrix(scale, scale)  # render scale; PDF points -> pixels = *scale
 
         for i in range(render_count):
             page = doc[i]
@@ -194,7 +198,7 @@ def main():
                     if not txt:
                         continue
                     words.append({"text": txt,
-                                  "bbox": _norm_bbox(x0 * 2, y0 * 2, x1 * 2, y1 * 2, W, H),
+                                  "bbox": _norm_bbox(x0 * scale, y0 * scale, x1 * scale, y1 * scale, W, H),
                                   "conf": 1.0})
             else:
                 ocr = _ocr_words(str(img_path))

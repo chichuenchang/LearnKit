@@ -14,7 +14,7 @@ Print detected paths in a banner.
 
 **Step 2 — Locate Python interpreter**
 
-Test `python` in PATH with `import pdfplumber, pptx, docx`. Passes → use `python`, print `"Python: found in PATH — packages OK"`. Sets `packages_ok: true` in machine.config.json (Step 5).
+Test `python` in PATH with `import pdfplumber, pptx, docx, fitz, PIL`. Passes → use `python`, print `"Python: found in PATH — packages OK"`. Sets `packages_ok: true` in machine.config.json (Step 5). (OCR pkgs paddleocr / pytesseract are optional — not part of this gate.)
 
 Fails → probe common locations (`%USERPROFILE%\miniconda3`, `\anaconda3`, `\AppData\Local\Programs\Python\Python311`, `\Python312`) and show results:
 ```
@@ -27,7 +27,7 @@ Suggested interpreters (tested):
 
 Select [1-3]:
 ```
-If packages missing but Python found → offer `pip install pdfplumber python-pptx python-docx [Y/n]`. On success → `packages_ok: true`. On skip/fail → `packages_ok: false`, warn: `"Ingestion will not work until Python is configured. Run /lksetup again to fix."`
+If packages missing but Python found → offer `pip install pdfplumber python-pptx python-docx PyMuPDF Pillow [Y/n]`. On success → `packages_ok: true`. On skip/fail → `packages_ok: false`, warn: `"Ingestion will not work until Python is configured. Run /lksetup again to fix."`
 
 **Step 3 — Create savedata/ directory structure**
 

@@ -33,7 +33,7 @@ Governs every response, study guide, quiz, summary.
 ```
 Agent name  : LearnKit
 Shell       : PowerShell
-Python pkgs : pdfplumber, python-pptx, python-docx
+Python pkgs : pdfplumber, python-pptx, python-docx, PyMuPDF, Pillow  (OCR optional: paddleocr / pytesseract)
 
 PATH RESOLUTION (cached in machine.config.json — written by /lksetup, read on startup):
   $projectRoot   = machine.config.json → project_root field
@@ -95,7 +95,7 @@ Read `user.config.json` → `$userName` (fallback `"Student"`). Store for sessio
 
 **Step 1**: Check `packages_ok` field in `machine.config.json`.
 - `true` → skip package test entirely; assume env ready
-- Absent or `false` → run `& $pythonExe -c "import pdfplumber, pptx, docx; print('OK')"`. Fails → warn, don't block:
+- Absent or `false` → run `& $pythonExe -c "import pdfplumber, pptx, docx, fitz, PIL; print('OK')"`. Fails → warn, don't block:
   ```
   ⚠ Python packages not available — file ingestion will not work until resolved.
     Interpreter: {$pythonExe}
