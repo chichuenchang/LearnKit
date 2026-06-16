@@ -70,4 +70,4 @@ Labeled diagrams/figures extracted during ingest (any subject — anatomy, chemi
 **images[]**: `image_id` (`img_{course_id}_{NNN}`), `unit_id`, `unit_slug`, `source_file`, `page` (1-based), `image_path` (under `materials\{unit}\images\`), `image_w`, `image_h` (pixels), `title`, `label_source` (`textlayer` | `ocr` | `vision` | `none`), `structures[]`, `date_added`
 **structures[]**: `name`, `type` (free-form, course-appropriate — e.g. `bone`, `country`, `component`, `functional group`; or null), `source` (`slide` = printed/grounded | `ai` = flagged, show `[AI — verify]`), `label_bbox` (normalized `[x,y,w,h]` 0–1 of the label text, or null), `confidence` (0–1 or null), `verified` (bool; true for slide)
 Default empty: `{"course": null, "course_id": null, "last_updated": null, "images": []}`
-Dedup key: `(source_file, page)`.
+Dedup key: `(source_file, page, image_path)` — same page may yield multiple distinct crops.

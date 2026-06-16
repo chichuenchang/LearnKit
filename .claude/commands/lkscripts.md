@@ -125,7 +125,24 @@ $r = (& $pythonExe (Join-Path $scriptsRoot "image_extract.py") `
 ```
 Label boxes come from the PDF text layer (`source:"textlayer"`, exact) or OCR (`source:"ocr"` — PaddleOCR primary on GPU, Tesseract fallback). No OCR engine available → image-only pages return `source:"none"` with no boxes (graceful). The agent classifies which words label parts/regions of the figure and does the flagged AI-fill; it does NOT invent coordinates.
 
-**`image add` — batch image-record write (reads stdin, like `pool add`):** one JSON array of image records → `image_bank.json`; assigns `img_{course}_{NNN}`, dedups by `(source_file, page)`.
+**`image add` — batch image-record write (reads stdin, like `pool add`):** one JSON array of image records → `image_bank.json`; assigns `img_{course}_{NNN}`, dedups by `(source_file, page, image_path)`.
+
+**`image_bank_build.py` — batch image-bank builder (reads a capture spec on stdin):** for re-ingest of a deck where `image_extract.py` already rendered pages. Crops each slide/half, matches printed label phrases against the page text-layer to derive label boxes, then writes records via `image add`. For one-off ingest the agent builds the record array inline (lkingest.md step 7b) — use this only for batch passes.
+```powershell
+$spec = @'
+{ "savedata": "<savedataRoot>", "course": "pther_350a",
+  "img_json": "C:\\...\\tmp_pages\\img.json", "pages_dir": "C:\\...\\tmp_pages\\source_foot",
+  "images_dir": "<savedataRoot>\\courses\\pther_350a\\materials\\week_06_foot\\images",
+  "image_path_prefix": "materials/week_06_foot/images",
+  "slug": "source_foot", "unit_id": "week_06", "unit_slug": "week_06_foot",
+  "source_file": "source_foot.pdf",
+  "captures": [ { "page": 5, "half": "top", "title": "The Talus",
+                  "structures": [ ["Talus","bone"], ["Calcaneus","bone"] ] } ] }
+'@
+$r = ($spec | & $pythonExe (Join-Path $scriptsRoot "image_bank_build.py")) | ConvertFrom-Json
+# success → { success, added, skipped, ids[], report[] }.  report[] e.g. "p5t:1/2" = labels boxed/total.
+```
+`half` ∈ `top|bottom|full` (2-up handout → `top`/`bottom`; single-slide page → `full`). Only phrases found in the text-layer get a `label_bbox`; unmatched structures are dropped (coverage shown in `report`). Records carry `label_source:"textlayer"`.
 
 **`image_quiz.py` — build a self-contained image-MCQ HTML page (reads quiz-spec on stdin):**
 ```powershell
