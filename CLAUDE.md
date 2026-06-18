@@ -317,6 +317,7 @@ Full spec in `.claude/commands/lkscripts.md` — covers `extract_text.py` usage,
 14. **Log every action** — quiz, ingest, deadline change, course event → log entry; never skip
 15. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error.
 16. **Python path from config only** — always use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Never hardcode interpreter path in any command. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/lksetup`.
+17. **Study experience first** — notes are studied by a human for a grade; images are *why* the image pipeline exists (esp. anatomy). Keep notes image-rich; never thin figures to chase a text/fidelity metric (patch text instead). Judge by *"can the student learn this from the note alone?"* See `.claude/commands/lkingest.md`.
 
 ---
 

@@ -1,5 +1,9 @@
 ﻿Base context (path variables, behavioral rules, Section 1 tagging) loaded from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
 
+## Guiding principle — study experience first
+
+Notes are studied by a human cramming for an exam — judge by *"can I learn this topic from the note alone?"* **Images are why this pipeline exists**: for visual subjects (esp. anatomy), labeled figures teach better than prose. Make notes image-rich — embed every helpful figure, capture labeled diagrams to the bank generously, and never drop figures to chase a text/fidelity metric (patch the text instead). Rule 9 still governs text claims.
+
 ## `/lkingest` — Process new course materials
 
 **Two input methods — same pipeline:**
