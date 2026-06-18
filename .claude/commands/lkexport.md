@@ -1,8 +1,8 @@
-Base context (path variables, behavioral rules) loaded from CLAUDE.md. Python script protocol and data_writer.py reference in lkscripts.md.
+Base context (path vars, behavioral rules) from CLAUDE.md. Python script protocol + data_writer.py ref in lkscripts.md.
 
-## `/lkexport [path]` — Pack savedata into a zip file
+## `/lkexport [path]` — Pack savedata into zip
 
-**What's included:**
+**Included:**
 ```
 savedata\data\
 savedata\courses\**\*.md           (study notes only — no source binaries)
@@ -11,7 +11,7 @@ savedata\archive\
 savedata\user.config.json
 ```
 
-**What's excluded:**
+**Excluded:**
 ```
 machine.config.json            (machine-specific — set fresh on each machine via /lksetup)
 raw\                           (drop zone — transient)
@@ -19,7 +19,7 @@ raw\                           (drop zone — transient)
 ```
 
 Output filename: `learnkit_export_{user_name}_{YYYYMMDD}.zip`
-Default output location: `$projectRoot`. Override with optional `[path]` argument.
+Default location: `$projectRoot`. Override via optional `[path]` arg.
 
 Run `export_savedata.py --savedata $savedataRoot --output $exportPath`. Parse JSON result. Report:
 ```

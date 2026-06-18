@@ -1,14 +1,14 @@
-Base context (path variables, behavioral rules) loaded from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
+Base context (path variables, behavioral rules) from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol + data_writer.py reference in lkscripts.md. Log entry format in lklogging.md.
 
 ## `/lkpool` — Problem pool management
 
-Manages each course's `data\problem_pool.json` — the bank of past quiz/exam problems that `/lkquiz` serves verbatim and mines for style. All writes go through `data_writer.py` `pool add` / `pool remove` (Rule 15). Multiple active courses + none specified → ask (Rule 2). Never mix courses (Rule 1). Log every mutation (Rule 14).
+Manages each course's `data\problem_pool.json` — bank of past quiz/exam problems `/lkquiz` serves verbatim + mines for style. All writes through `data_writer.py` `pool add` / `pool remove` (Rule 15). Multiple active courses + none specified → ask (Rule 2). Never mix courses (Rule 1). Log every mutation (Rule 14).
 
 ### `/lkpool {course}` — summary
-Read `course_structure.json` and `problem_pool.json` (missing pool file → treat as empty, 0 problems). Print:
+Read `course_structure.json` + `problem_pool.json` (missing pool file → empty, 0 problems). Print:
 - Total problem count.
-- Breakdown by unit (`display_name` → count) and by `source_type`.
-- **Coverage map**: for each unit's `topics`, mark `✓` if ≥1 pool problem has that `topic` (or maps to that unit), `—` if none. This shows where `/lkquiz` will generate gap-fillers vs serve verbatim.
+- Breakdown by unit (`display_name` → count) + by `source_type`.
+- **Coverage map**: for each unit's `topics`, `✓` if ≥1 pool problem has that `topic` (or maps to that unit), `—` if none. Shows where `/lkquiz` generates gap-fillers vs serves verbatim.
 
 ```
 PTHER 350A — Problem Pool
@@ -22,7 +22,7 @@ Total: 47 problems   (past_exam 31 · practice_quiz 12 · manual 4)
 ```
 
 ### `/lkpool add {course}` — manual add
-Prompt for: question text, `question_type` (mcq/short_answer/matching/labeling/true_false/essay), options (if mcq), answer, optional topic and unit. Build a one-element JSON array, pipe to `pool add`:
+Prompt for: question text, `question_type` (mcq/short_answer/matching/labeling/true_false/essay), options (if mcq), answer, optional topic + unit. Build one-element JSON array, pipe to `pool add`:
 
 ```powershell
 $problemsJson = @'
@@ -31,13 +31,13 @@ $problemsJson = @'
 $r = ($problemsJson | & $pythonExe $writerPath pool add --savedata $savedataRoot --course "{slug}") | ConvertFrom-Json
 if (-not $r.success) { Write-Host "Failed: $($r.error)" }
 ```
-`source_type` defaults to `manual`, `verbatim` to false. Confirm: `"Added {id} to {course_code} pool."` Then log: `[POOL] Added 1 problem (manual) -> {unit or 'unmapped'}`. For an image-based problem, include a `figure` object (`image_path` to a persistent PNG under `materials\{unit}\images`, optional `bbox`/`caption`) — see lkschemas.md; image problems are usually captured during `/lkingest` (step 7d) rather than added manually.
+`source_type` defaults `manual`, `verbatim` false. Confirm: `"Added {id} to {course_code} pool."` Log: `[POOL] Added 1 problem (manual) -> {unit or 'unmapped'}`. Image-based problem → include `figure` object (`image_path` to persistent PNG under `materials\{unit}\images`, optional `bbox`/`caption`) — see lkschemas.md; image problems usually captured during `/lkingest` (step 7d), not added manually.
 
 ### `/lkpool list {course} [unit]` — list
-Read `problem_pool.json`. Print a table: `problem_id`, `question_type`, `topic`, `source`. Mark rows whose `figure` is non-null with an `[img]` tag (these are studied via `/lkquiz --html`). Optional unit filter (match `unit_id` or `unit_slug`). Truncate question preview to ~60 chars if shown.
+Read `problem_pool.json`. Print table: `problem_id`, `question_type`, `topic`, `source`. Mark rows with non-null `figure` with `[img]` tag (studied via `/lkquiz --html`). Optional unit filter (match `unit_id` or `unit_slug`). Truncate question preview to ~60 chars if shown.
 
 ### `/lkpool remove {problem_id}` — delete
-Derive course slug from the id: strip the `prob_` prefix and the trailing `_{NNN}` segment (NNN is always the 3-digit final segment) → remainder is the course slug. Show the problem, confirm, then:
+Derive course slug from id: strip `prob_` prefix + trailing `_{NNN}` segment (NNN always 3-digit final segment) → remainder is course slug. Show problem, confirm, then:
 
 ```powershell
 $r = (& $pythonExe $writerPath pool remove --savedata $savedataRoot --course "{slug}" --problem-id "{problem_id}") | ConvertFrom-Json

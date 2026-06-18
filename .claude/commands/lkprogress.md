@@ -1,6 +1,6 @@
-Base context (path variables, behavioral rules) loaded from CLAUDE.md. Data schemas in lkschemas.md.
+Base context (path vars, behavioral rules) from CLAUDE.md. Data schemas in lkschemas.md.
 
-## `/lkprogress` — Study dashboard
+## `/lkprogress` — Dashboard
 
 **`/lkprogress`**: Overview, all active courses. Read lkschemas.md before querying progress.json.
 ```
@@ -16,4 +16,4 @@ Global weak areas needing attention:
   COMP 361: graph algorithms, dynamic programming
 ```
 
-**`/lkprogress {course_code}`**: Detailed per-unit breakdown showing each unit's status, materials ingested, quiz scores, and weak areas.
+**`/lkprogress {course_code}`**: Per-unit breakdown. Each unit: status, materials ingested, quiz scores, weak areas.

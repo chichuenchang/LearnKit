@@ -1,14 +1,14 @@
 # Image-Based Anatomy Learning — Phase 1 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans. Implement task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
-> **Git note:** the user manages git for this feature. The `Commit` steps below are reference points; do NOT run them during this session — leave the working tree for the user.
+> **Git:** user manages git for this feature. `Commit` steps below = reference points; do NOT run this session — leave working tree for user.
 
-**Goal:** During ingest, extract labeled anatomy illustrations from slide PDFs into a per-course `image_bank.json` (image + structures with positions), and add a `/lkimage` review command.
+**Goal:** During ingest, extract labeled anatomy illustrations from slide PDFs into per-course `image_bank.json` (image + structures with positions); add `/lkimage` review command.
 
-**Architecture:** `image_extract.py` renders PDF pages (fitz) and detects label text+boxes via PyMuPDF text-layer words (exact) or Tesseract OCR (image-only, optional/graceful). The agent classifies which labels are anatomy + does flagged AI-fill, then writes records via a new `data_writer.py image add`. Vision-LLM never guesses coordinates (survey finding).
+**Architecture:** `image_extract.py` renders PDF pages (fitz), detects label text+boxes via PyMuPDF text-layer words (exact) or Tesseract OCR (image-only, optional/graceful). Agent classifies which labels are anatomy, does flagged AI-fill, writes records via new `data_writer.py image add`. Vision-LLM never guesses coordinates (survey finding).
 
-**Tech Stack:** Python 3.11 stdlib; PyMuPDF (`fitz`, installed); `pytesseract`+Tesseract (optional, absent on this machine → graceful `source:"none"`); `unittest`+`subprocess` for tests; Markdown command files.
+**Tech Stack:** Python 3.11 stdlib; PyMuPDF (`fitz`, installed); `pytesseract`+Tesseract (optional, absent here → graceful `source:"none"`); `unittest`+`subprocess` for tests; Markdown command files.
 
 **Spec:** `docs/superpowers/specs/2026-06-15-image-anatomy-phase1-design.md`
 
@@ -20,7 +20,7 @@
 |------|----------------|--------|
 | `scripts/data_writer.py` | `image add` / `image remove` subcommands | Modify |
 | `scripts/image_extract.py` | Render pages + detect label words (textlayer/ocr/none) | Create |
-| `scripts/tests/test_image.py` | Unittest for the image subcommands | Create |
+| `scripts/tests/test_image.py` | Unittest for image subcommands | Create |
 | `scripts/tests/test_image_extract.py` | Smoke test for `image_extract.py` | Create |
 | `.claude/commands/lkschemas.md` | `image_bank.json` schema | Modify |
 | `.claude/commands/lkscripts.md` | `image_extract.py` + `image` subcommands | Modify |
@@ -38,7 +38,7 @@
 - Create: `scripts/tests/test_image.py`
 - Modify: `scripts/data_writer.py`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write failing test**
 
 Create `scripts/tests/test_image.py`:
 
@@ -155,20 +155,20 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run test, verify fails**
 
 Run: `python scripts/tests/test_image.py -v`
 Expected: FAIL/ERROR on all (argparse rejects `image` group → stdout not JSON → `json.loads` raises).
 
 - [ ] **Step 3: Add constant + helpers + commands to `data_writer.py`**
 
-Add the constant after `VALID_QUESTION_TYPES` (near line 23):
+Add constant after `VALID_QUESTION_TYPES` (near line 23):
 
 ```python
 VALID_STRUCTURE_TYPES = {"muscle", "bone", "nerve", "artery", "joint", "ligament", "other"}
 ```
 
-Add helpers after the `pool_default` helper:
+Add helpers after `pool_default` helper:
 
 ```python
 def image_bank_path(savedata: pathlib.Path, course: str) -> pathlib.Path:
@@ -179,7 +179,7 @@ def image_bank_default(course: str) -> dict:
     return {"course": None, "course_id": course, "last_updated": None, "images": []}
 ```
 
-Add the command functions after `cmd_pool_remove`:
+Add command functions after `cmd_pool_remove`:
 
 ```python
 # ── image add ─────────────────────────────────────────────────────────────────
@@ -281,7 +281,7 @@ def cmd_image_remove(args):
     out({"success": True, "removed": args.image_id})
 ```
 
-Wire argparse after the `pool` block in `main()`:
+Wire argparse after `pool` block in `main()`:
 
 ```python
     # image
@@ -298,7 +298,7 @@ Wire argparse after the `pool` block in `main()`:
     ir.add_argument("--image-id", required=True)
 ```
 
-Add dispatch after the `pool` branch in the `try`:
+Add dispatch after `pool` branch in `try`:
 
 ```python
         elif args.group == "image":
@@ -308,19 +308,19 @@ Add dispatch after the `pool` branch in the `try`:
                 cmd_image_remove(args)
 ```
 
-Also add to the module docstring subcommand list (after the `pool remove` line):
+Add to module docstring subcommand list (after `pool remove` line):
 
 ```python
   image add         Append image records (JSON array on stdin) to image_bank.json
   image remove      Delete an image record from image_bank.json
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Run test, verify passes**
 
 Run: `python scripts/tests/test_image.py -v`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Commit** *(reference only — git is user-managed; skip this session)*
+- [ ] **Step 5: Commit** *(reference only — git user-managed; skip this session)*
 
 ```bash
 git add scripts/data_writer.py scripts/tests/test_image.py
@@ -335,7 +335,7 @@ git commit -m "feat: add image add/remove subcommands to data_writer"
 - Create: `scripts/image_extract.py`
 - Create: `scripts/tests/test_image_extract.py`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write failing test**
 
 Create `scripts/tests/test_image_extract.py`:
 
@@ -395,7 +395,7 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run test, verify fails**
 
 Run: `python scripts/tests/test_image_extract.py -v`
 Expected: FAIL — `image_extract.py` does not exist (subprocess stdout empty → `json.loads` raises).
@@ -521,10 +521,10 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Run test, verify passes**
 
 Run: `python scripts/tests/test_image_extract.py -v`
-Expected: PASS (3 tests; `test_scanned_pdf_graceful` confirms `source` is `none` here since Tesseract is absent).
+Expected: PASS (3 tests; `test_scanned_pdf_graceful` confirms `source` is `none` here since Tesseract absent).
 
 - [ ] **Step 5: Commit** *(reference only — skip this session)*
 
@@ -541,7 +541,7 @@ git commit -m "feat: add image_extract.py page render + label detection"
 - Modify: `.claude/commands/lkschemas.md`
 - Modify: `.claude/commands/lkscripts.md`
 
-- [ ] **Step 1: Append the image_bank schema to `lkschemas.md`**
+- [ ] **Step 1: Append image_bank schema to `lkschemas.md`**
 
 Add at end of file:
 
@@ -559,14 +559,14 @@ Dedup key: `(source_file, page)`.
 
 - [ ] **Step 2: Add `image` subcommands + `image_extract.py` to `lkscripts.md`**
 
-In the "Complete subcommand reference" table, add after the `pool remove` row:
+In "Complete subcommand reference" table, add after `pool remove` row:
 
 ```markdown
 | `image add` | `--savedata --course` | — (reads JSON array of image records from stdin) |
 | `image remove` | `--savedata --course --image-id` | — |
 ```
 
-Then add this block before the "Log entry format" heading:
+Then add this block before "Log entry format" heading:
 
 ````markdown
 **`image_extract.py` — render pages + detect label boxes (for the image bank):**
@@ -603,7 +603,7 @@ git commit -m "docs: document image_bank schema and image subcommands"
 
 - [ ] **Step 1: Add step 7d after step 7c**
 
-Find the step `7c.` block (the pool extraction step) and the line that follows it. Immediately before step `8.` ("Fire all data writes synchronously"), insert:
+Find step `7c.` block (pool extraction step) and line that follows. Immediately before step `8.` ("Fire all data writes synchronously"), insert:
 
 ```markdown
 7d. **Capture anatomy illustrations to the image bank** (PDFs only): Run `image_extract.py --file {source} --out {scriptsRoot}\tmp_pages` (see lkscripts.md). For each returned page that is a **labeled anatomy illustration** (skip title / text-only / summary pages):
@@ -615,9 +615,9 @@ Find the step `7c.` block (the pool extraction step) and the line that follows i
    Build one JSON array of all kept pages and write via a single `image add` call (see lkscripts.md). Then clean up the render dir via the returned `pages_dir`. Surface: `"Captured {N} illustration(s) — {S} slide-labeled structures, {A} AI-flagged."` No illustration pages → skip silently.
 ```
 
-- [ ] **Step 2: Add a log line in step 8**
+- [ ] **Step 2: Add log line in step 8**
 
-After the existing `[POOL]` log note in step 8, add:
+After existing `[POOL]` log note in step 8, add:
 
 ```markdown
    When step 7d captured illustrations, also log per course: `- [IMAGE] Captured {N} illustration(s) from {filename} -> {unit}`
@@ -677,7 +677,7 @@ Resolve course from the id, confirm, then `data_writer.py image remove`. Log: `[
 
 - [ ] **Step 2: Add `[IMAGE]` tag to `lklogging.md`**
 
-In the tag table, add after the `[POOL]` row:
+In tag table, add after `[POOL]` row:
 
 ```markdown
 | `[IMAGE]` | `Captured {N} illustration(s) from {filename} → {unit}` · `Removed {image_id}` |
@@ -706,13 +706,13 @@ git commit -m "feat: add /lkimage review command and IMAGE log tag"
 
 - [ ] **Step 1: CLAUDE.md §2 — add image bank + images dir**
 
-After the `data\problem_pool.json` line in the per-course data list, add:
+After `data\problem_pool.json` line in per-course data list, add:
 
 ```
   data\image_bank.json        — labeled anatomy illustrations (image + structure labels) for /lkimage
 ```
 
-After the `materials\{unit_slug}\` line, add:
+After `materials\{unit_slug}\` line, add:
 
 ```
   materials\{unit_slug}\images\ — extracted illustration PNGs (referenced by image_bank.json)
@@ -720,7 +720,7 @@ After the `materials\{unit_slug}\` line, add:
 
 - [ ] **Step 2: CLAUDE.md §6 — add `/lkimage`**
 
-After the `/lkpool` command block, insert:
+After `/lkpool` command block, insert:
 
 ```markdown
 ### `/lkimage` — Anatomy image bank
@@ -731,7 +731,7 @@ Full spec in `.claude/commands/lkimage.md`. Variants: `/lkimage {course}` (summa
 
 - [ ] **Step 3: CLAUDE.md §8 — add `img_` naming**
 
-After the `Problem ID` bullet, add:
+After `Problem ID` bullet, add:
 
 ```markdown
 - **Image ID**: `img_{course_id}_{NNN}` — e.g. `img_pther_350a_001` (increment from current max in that course's `image_bank.json`)
@@ -748,13 +748,13 @@ After Rule 9 (No hallucinated subject-matter knowledge), add:
 
 - [ ] **Step 5: README — add `/lkimage` row + Tesseract note**
 
-In the Commands table, add after the `/lkpool` row:
+In Commands table, add after `/lkpool` row:
 
 ```markdown
 | `/lkimage [course] [scope]` | Review the anatomy image bank (labeled illustrations) |
 ```
 
-In the "Python packages" install line, append `pytesseract` and add a note row:
+In "Python packages" install line, append `pytesseract` and add note row:
 
 ```markdown
 | `pytesseract` | (Optional) Detect printed labels + positions on scanned anatomy slides. Needs the Tesseract binary installed separately; without it, image-only slides are captured without label boxes. |
@@ -786,12 +786,12 @@ git commit -m "docs: register image bank + /lkimage in CLAUDE.md and README"
 
 **Files:** none (verification only)
 
-- [ ] **Step 1: Run the whole test suite**
+- [ ] **Step 1: Run whole test suite**
 
 Run: `python -m unittest discover -s scripts/tests -p "test_*.py" -v`
 Expected: PASS — `test_pool` (8) + `test_extract` (5) + `test_image` (6) + `test_image_extract` (3) = 22 tests.
 
-- [ ] **Step 2: End-to-end image_extract on a real source**
+- [ ] **Step 2: End-to-end image_extract on real source**
 
 Run:
 ```bash
@@ -813,7 +813,7 @@ Expected: `success True`, page_count > 0, at least one textlayer page, a sample 
 - [ ] **Step 3: Confirm no stray writes to real savedata**
 
 Run: `git status --porcelain savedata/`
-Expected: empty (tests use temp dirs; the e2e smoke cleans its render dir).
+Expected: empty (tests use temp dirs; e2e smoke cleans its render dir).
 
 ---
 

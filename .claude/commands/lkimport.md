@@ -1,10 +1,10 @@
-Base context (path variables, behavioral rules) loaded from CLAUDE.md. Python script protocol and data_writer.py reference in lkscripts.md.
+Base context (path vars, behavioral rules) from CLAUDE.md. Python script protocol + data_writer.py ref in lkscripts.md.
 
 ## `/lkimport <path>` — Restore savedata from zip
 
-Pre-check: path exists and ends in `.zip` → else: `"File not found or not a .zip: {path}"`
+Pre-check: path exists, ends `.zip` → else: `"File not found or not a .zip: {path}"`
 
-If `savedata/` already has data → warn:
+`savedata/` already has data → warn:
 ```
 ⚠ savedata/ already contains data.
 Import will merge — existing files will be overwritten by zip contents.

@@ -1,22 +1,22 @@
-Base context (path variables, behavioral rules) loaded from CLAUDE.md. Python script protocol and data_writer.py reference in lkscripts.md. Data schemas in lkschemas.md (for default empty JSON values).
+Base context (path vars, behavioral rules) from CLAUDE.md. Python script protocol + data_writer.py ref in lkscripts.md. Data schemas in lkschemas.md (default empty JSON values).
 
-## `/lksetup` — New-user onboarding and machine configuration
+## `/lksetup` — Onboarding + machine config
 
-Run when `savedata/` does not exist, or explicitly invoked at any time. Safe to re-run.
+Run when `savedata/` absent, or on explicit invoke. Re-run safe.
 
-**Step 1 — Detect project root (automatic)**
+**Step 1 — Detect project root (auto)**
 Run `git rev-parse --show-toplevel` (fallback: cwd). Derive:
 - `$projectRoot` = git output or cwd
 - `$savedataRoot` = `Join-Path $projectRoot "savedata"`
 - `$scriptsRoot`  = `Join-Path $projectRoot "scripts"`
 
-Print detected paths in a banner.
+Print paths banner.
 
-**Step 2 — Locate Python interpreter**
+**Step 2 — Locate Python**
 
-Test `python` in PATH with `import pdfplumber, pptx, docx, fitz, PIL`. Passes → use `python`, print `"Python: found in PATH — packages OK"`. Sets `packages_ok: true` in machine.config.json (Step 5). (OCR pkgs paddleocr / pytesseract are optional — not part of this gate.)
+Test `python` in PATH with `import pdfplumber, pptx, docx, fitz, PIL`. Pass → use `python`, print `"Python: found in PATH — packages OK"`. Sets `packages_ok: true` in machine.config.json (Step 5). (OCR pkgs paddleocr / pytesseract optional — not in gate.)
 
-Fails → probe common locations (`%USERPROFILE%\miniconda3`, `\anaconda3`, `\AppData\Local\Programs\Python\Python311`, `\Python312`) and show results:
+Fail → probe common locations (`%USERPROFILE%\miniconda3`, `\anaconda3`, `\AppData\Local\Programs\Python\Python311`, `\Python312`), show:
 ```
 Python not found in PATH or packages missing.
 
@@ -27,12 +27,12 @@ Suggested interpreters (tested):
 
 Select [1-3]:
 ```
-If packages missing but Python found → offer `pip install pdfplumber python-pptx python-docx PyMuPDF Pillow [Y/n]`. On success → `packages_ok: true`. On skip/fail → `packages_ok: false`, warn: `"Ingestion will not work until Python is configured. Run /lksetup again to fix."`
+Packages missing but Python found → offer `pip install pdfplumber python-pptx python-docx PyMuPDF Pillow [Y/n]`. Success → `packages_ok: true`. Skip/fail → `packages_ok: false`, warn: `"Ingestion will not work until Python is configured. Run /lksetup again to fix."`
 
-**Step 3 — Create savedata/ directory structure**
+**Step 3 — Create savedata/ structure**
 
 Create subdirs under `$savedataRoot`: `data\`, `courses\`, `archive\`, `raw\`
-Create default data JSON files only if not already present (re-run safe):
+Create default data JSON only if absent (re-run safe):
 - `data\courses_index.json` → default empty
 - `data\global_deadlines.json` → default empty
 
@@ -41,10 +41,10 @@ Create default data JSON files only if not already present (re-run safe):
 Your name (for display in banners — e.g., "Alex", "slimj"):
 > _
 ```
-Blank → use `"Student"` as default.
+Blank → default `"Student"`.
 
 **Step 5 — Write config files**
-Write `user.config.json` and `machine.config.json` per Section 2 schemas.
+Write `user.config.json` + `machine.config.json` per Section 2 schemas.
 `machine.config.json` must include: `machine_id`, `python_exe`, `project_root`, `savedata_root`, `scripts_root` (absolute paths from Step 1), `packages_ok` (bool — true only if Step 2 passed).
 
 **Step 6 — Summary**
@@ -64,7 +64,7 @@ Next steps:
 ──────────────────────────────────────────────────────
 ```
 
-**Re-running on existing savedata** → show menu:
+**Re-run on existing savedata** → show menu:
 ```
 savedata/ already exists. What would you like to do?
   [1] Reconfigure Python path only

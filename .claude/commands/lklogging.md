@@ -1,4 +1,4 @@
-Standalone log format reference. Read this file before writing any log entries.
+Standalone log format reference. Read before writing any log entries.
 
 ## Log Location
 
@@ -6,7 +6,7 @@ Standalone log format reference. Read this file before writing any log entries.
 
 ## Entry Format
 
-Prepend after file header (newest first). Group under `## YYYY-MM-DD (Weekday)`. Today's heading exists → append; don't duplicate.
+Prepend after file header (newest first). Group under `## YYYY-MM-DD (Weekday)`. Today's heading exists → append, no duplicate.
 
 ```markdown
 ## 2026-05-11 (Monday)
@@ -26,8 +26,8 @@ Prepend after file header (newest first). Group under `## YYYY-MM-DD (Weekday)`.
 | `[NOTE]` | `Misc note added` |
 | `[COURSE]` | `Course {action: added/archived} — {brief detail}` |
 
-All entries one line. `{display_name}` = value from `course_structure.json` (e.g. `"Week 1: Vertebral Column"` or `"Unit 1: Cell Structure"`).
+One line per entry. `{display_name}` = value from `course_structure.json` (e.g. `"Week 1: Vertebral Column"` or `"Unit 1: Cell Structure"`).
 
 ## Quiz Pass Note
 
-First quiz pass on unit (score ≥ 70%) → append to the `[QUIZ]` line: `  → {display_name} marked quiz_passed`
+First quiz pass on unit (score ≥ 70%) → append to `[QUIZ]` line: `  → {display_name} marked quiz_passed`

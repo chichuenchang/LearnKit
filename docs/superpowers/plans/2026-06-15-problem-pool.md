@@ -1,10 +1,10 @@
 # Problem Pool Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give each LearnKit course a structured `problem_pool.json` of past quiz/exam problems that `/lkquiz` serves verbatim and uses as style exemplars to generate gap-filling questions.
+**Goal:** Give each LearnKit course structured `problem_pool.json` of past quiz/exam problems. `/lkquiz` serves verbatim, uses as style exemplars to generate gap-filling questions.
 
-**Architecture:** New per-course `data\problem_pool.json` written only through two new `data_writer.py` subcommands (`pool add` reading a JSON array from stdin, `pool remove`). `/lkingest` auto-extracts problems; a new `/lkpool` command manages them manually; `/lkquiz` Step 0 reads the pool to blend verbatim + generated questions, with a new `mock` scope keyword.
+**Architecture:** New per-course `data\problem_pool.json`. Written only through two new `data_writer.py` subcommands (`pool add` reads JSON array from stdin, `pool remove`). `/lkingest` auto-extracts problems; new `/lkpool` command manages manually; `/lkquiz` Step 0 reads pool to blend verbatim + generated questions, with new `mock` scope keyword.
 
 **Tech Stack:** Python 3.11 stdlib (`argparse`, `json`, `pathlib`); `unittest` + `subprocess` for tests; Markdown command/skill files under `.claude/commands/`.
 
@@ -17,7 +17,7 @@
 | File | Responsibility | Action |
 |------|----------------|--------|
 | `scripts/data_writer.py` | Add `pool add` / `pool remove` subcommands + helpers | Modify |
-| `scripts/tests/test_pool.py` | Unittest suite for the pool subcommands | Create |
+| `scripts/tests/test_pool.py` | Unittest suite for pool subcommands | Create |
 | `.claude/commands/lkschemas.md` | Document `problem_pool.json` schema | Modify |
 | `.claude/commands/lkscripts.md` | Document `pool` subcommands | Modify |
 | `CLAUDE.md` | Section 2 data list, Section 6 `/lkpool`, Section 8 `prob_` naming | Modify |
@@ -25,7 +25,7 @@
 | `.claude/commands/lkingest.md` | `past_exam` file type + extraction step | Modify |
 | `.claude/commands/lkquiz.md` | Pool sourcing in Step 0 + `mock` scope token | Modify |
 
-Tasks 1–2 are code (TDD). Tasks 3–8 are documentation/spec edits verified by read-back.
+Tasks 1–2 code (TDD). Tasks 3–8 documentation/spec edits, verified by read-back.
 
 ---
 
@@ -35,7 +35,7 @@ Tasks 1–2 are code (TDD). Tasks 3–8 are documentation/spec edits verified by
 - Create: `scripts/tests/test_pool.py`
 - Modify: `scripts/data_writer.py`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write failing test**
 
 Create `scripts/tests/test_pool.py`:
 
@@ -158,14 +158,14 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run test, verify it fails**
 
 Run: `python -m unittest scripts.tests.test_pool -v` (from repo root)
-Expected: FAIL — `pool` is not a registered subcommand, so `data_writer.py` exits via argparse and stdout is not valid JSON → `json.loads` raises. Failures/errors on every test.
+Expected: FAIL — `pool` not registered subcommand, so `data_writer.py` exits via argparse, stdout not valid JSON → `json.loads` raises. Failures/errors on every test.
 
 - [ ] **Step 3: Add helpers + `cmd_pool_add` to `data_writer.py`**
 
-Add the constant next to the existing `VALID_DEADLINE_TYPES` (near line 22):
+Add constant next to existing `VALID_DEADLINE_TYPES` (near line 22):
 
 ```python
 VALID_QUESTION_TYPES = {"mcq", "short_answer", "matching", "labeling", "true_false", "essay"}
@@ -186,7 +186,7 @@ def _normalize_q(text: str) -> str:
     return " ".join((text or "").lower().split())
 ```
 
-Add the command function (e.g. after `cmd_progress_ingest`, near line 146):
+Add command function (e.g. after `cmd_progress_ingest`, near line 146):
 
 ```python
 # ── pool add ──────────────────────────────────────────────────────────────────
@@ -260,7 +260,7 @@ def cmd_pool_add(args):
     out({"success": True, "added": len(added_ids), "skipped": skipped, "ids": added_ids})
 ```
 
-Wire argparse in `main()` after the `progress` block (near line 293), before `deadline`:
+Wire argparse in `main()` after `progress` block (near line 293), before `deadline`:
 
 ```python
     # pool
@@ -277,7 +277,7 @@ Wire argparse in `main()` after the `progress` block (near line 293), before `de
     pr.add_argument("--problem-id", required=True)
 ```
 
-Add dispatch in the `try` block (near line 337), after the `progress` branch:
+Add dispatch in `try` block (near line 337), after `progress` branch:
 
 ```python
         elif args.group == "pool":
@@ -287,9 +287,9 @@ Add dispatch in the `try` block (near line 337), after the `progress` branch:
                 cmd_pool_remove(args)
 ```
 
-(Note: `cmd_pool_remove` is added in Task 2; the dispatch line referencing it is added now but only exercised in Task 2. `pool add` tests pass regardless.)
+(Note: `cmd_pool_remove` added in Task 2; dispatch line referencing it added now but only exercised in Task 2. `pool add` tests pass regardless.)
 
-- [ ] **Step 4: Run test to verify add tests pass**
+- [ ] **Step 4: Run test, verify add tests pass**
 
 Run: `python -m unittest scripts.tests.test_pool.PoolAddTests -v`
 Expected: PASS (6 tests). `test_id_increment_across_calls`, `test_dedup_same_question`, `test_defaults_for_minimal_short_answer`, `test_add_single`, `test_invalid_question_type`, `test_empty_stdin_fails`.
@@ -309,9 +309,9 @@ git commit -m "feat: add pool add subcommand to data_writer"
 - Modify: `scripts/data_writer.py`
 - Modify: `scripts/tests/test_pool.py`
 
-- [ ] **Step 1: Add the failing test**
+- [ ] **Step 1: Add failing test**
 
-Append to `scripts/tests/test_pool.py` (before the `if __name__` line):
+Append to `scripts/tests/test_pool.py` (before `if __name__` line):
 
 ```python
 class PoolRemoveTests(unittest.TestCase):
@@ -337,10 +337,10 @@ class PoolRemoveTests(unittest.TestCase):
         self.assertIn("not found", res["error"])
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run test, verify it fails**
 
 Run: `python -m unittest scripts.tests.test_pool.PoolRemoveTests -v`
-Expected: FAIL — `cmd_pool_remove` is referenced in dispatch but not defined → the subprocess raises `NameError`, stdout empty, `json.loads` fails. (Both tests error.)
+Expected: FAIL — `cmd_pool_remove` referenced in dispatch but not defined → subprocess raises `NameError`, stdout empty, `json.loads` fails. (Both tests error.)
 
 - [ ] **Step 3: Implement `cmd_pool_remove`**
 
@@ -365,7 +365,7 @@ def cmd_pool_remove(args):
     out({"success": True, "removed": args.problem_id})
 ```
 
-- [ ] **Step 4: Run the full suite**
+- [ ] **Step 4: Run full suite**
 
 Run: `python -m unittest scripts.tests.test_pool -v`
 Expected: PASS (8 tests total).
@@ -379,13 +379,13 @@ git commit -m "feat: add pool remove subcommand to data_writer"
 
 ---
 
-### Task 3: Schema + scripts documentation
+### Task 3: Schema + scripts docs
 
 **Files:**
 - Modify: `.claude/commands/lkschemas.md`
 - Modify: `.claude/commands/lkscripts.md`
 
-- [ ] **Step 1: Append the pool schema to `lkschemas.md`**
+- [ ] **Step 1: Append pool schema to `lkschemas.md`**
 
 Add at end of file:
 
@@ -401,14 +401,14 @@ Default empty: `{"course": null, "course_id": null, "last_updated": null, "probl
 
 - [ ] **Step 2: Add `pool` subcommands to `lkscripts.md`**
 
-In the "Complete subcommand reference" table, add these rows after the `progress ingest` row:
+In "Complete subcommand reference" table, add rows after `progress ingest` row:
 
 ```markdown
 | `pool add` | `--savedata --course` | — (reads JSON array of problems from stdin) |
 | `pool remove` | `--savedata --course --problem-id` | — |
 ```
 
-Then add this block after the existing flag notes (before the "Log entry format" heading):
+Then add block after existing flag notes (before "Log entry format" heading):
 
 ````markdown
 **`pool add` — batch problem write (reads stdin, like `notes write`):**
@@ -421,7 +421,7 @@ $result = ($problemsJson | & $pythonExe $writerPath pool add `
 if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
 # success → { added, skipped, ids[] }
 ```
-`--course` is the course slug. Each problem is one object in the array; one call writes many. `question_type` validated against the allowed set; duplicate question text (normalized) is skipped.
+`--course` is course slug. Each problem one object in array; one call writes many. `question_type` validated against allowed set; duplicate question text (normalized) skipped.
 ````
 
 - [ ] **Step 2b: Verify**
@@ -443,17 +443,17 @@ git commit -m "docs: document problem_pool schema and pool subcommands"
 **Files:**
 - Modify: `CLAUDE.md`
 
-- [ ] **Step 1: Add the pool file to the Section 2 per-course data list**
+- [ ] **Step 1: Add pool file to Section 2 per-course data list**
 
-In Section 2, under `PER-COURSE DATA (...)`, after the `data\progress.json` line, add:
+In Section 2, under `PER-COURSE DATA (...)`, after `data\progress.json` line, add:
 
 ```
   data\problem_pool.json      — past quiz/exam problems (pool); served + style-exemplar source for /lkquiz
 ```
 
-- [ ] **Step 2: Add the `/lkpool` command entry to Section 6**
+- [ ] **Step 2: Add `/lkpool` command entry to Section 6**
 
-After the `/lkprogress` command block (and before `/lkcourse`), insert:
+After `/lkprogress` command block (and before `/lkcourse`), insert:
 
 ```markdown
 ### `/lkpool` — Problem pool management
@@ -462,9 +462,9 @@ Full spec in `.claude/commands/lkpool.md`. Variants: `/lkpool {course}` (summary
 ---
 ```
 
-- [ ] **Step 3: Add the problem-id naming convention to Section 8**
+- [ ] **Step 3: Add problem-id naming convention to Section 8**
 
-After the `Deadline ID` bullet, add:
+After `Deadline ID` bullet, add:
 
 ```markdown
 - **Problem ID**: `prob_{course_id}_{NNN}` — e.g. `prob_pther_350a_001` (increment from current max in that course's `problem_pool.json`)
@@ -489,7 +489,7 @@ git commit -m "docs: register problem pool in CLAUDE.md (data, command, naming)"
 **Files:**
 - Create: `.claude/commands/lkpool.md`
 
-- [ ] **Step 1: Write the command file**
+- [ ] **Step 1: Write command file**
 
 Create `.claude/commands/lkpool.md`:
 
@@ -498,13 +498,13 @@ Base context (path variables, behavioral rules) loaded from CLAUDE.md. Data sche
 
 ## `/lkpool` — Problem pool management
 
-Manages each course's `data\problem_pool.json` — the bank of past quiz/exam problems that `/lkquiz` serves verbatim and mines for style. All writes go through `data_writer.py` `pool add` / `pool remove` (Rule 15). Multiple active courses + none specified → ask (Rule 2). Never mix courses (Rule 1). Log every mutation (Rule 14).
+Manages each course's `data\problem_pool.json` — bank of past quiz/exam problems `/lkquiz` serves verbatim and mines for style. All writes go through `data_writer.py` `pool add` / `pool remove` (Rule 15). Multiple active courses + none specified → ask (Rule 2). Never mix courses (Rule 1). Log every mutation (Rule 14).
 
 ### `/lkpool {course}` — summary
 Read `course_structure.json` and `problem_pool.json`. Print:
 - Total problem count.
 - Breakdown by unit (`display_name` → count) and by `source_type`.
-- **Coverage map**: for each unit's `topics`, mark `✓` if ≥1 pool problem has that `topic` (or maps to that unit), `—` if none. This shows where `/lkquiz` will generate gap-fillers vs serve verbatim.
+- **Coverage map**: for each unit's `topics`, mark `✓` if ≥1 pool problem has that `topic` (or maps to that unit), `—` if none. Shows where `/lkquiz` generates gap-fillers vs serves verbatim.
 
 ```
 PTHER 350A — Problem Pool
@@ -518,7 +518,7 @@ Total: 47 problems   (past_exam 31 · practice_quiz 12 · manual 4)
 ```
 
 ### `/lkpool add {course}` — manual add
-Prompt for: question text, `question_type` (mcq/short_answer/matching/labeling/true_false/essay), options (if mcq), answer, optional topic and unit. Build a one-element JSON array, pipe to `pool add`:
+Prompt for: question text, `question_type` (mcq/short_answer/matching/labeling/true_false/essay), options (if mcq), answer, optional topic and unit. Build one-element JSON array, pipe to `pool add`:
 
 ```powershell
 $problemsJson = @'
@@ -530,10 +530,10 @@ if (-not $r.success) { Write-Host "Failed: $($r.error)" }
 `source_type` defaults to `manual`, `verbatim` to false. Confirm: `"Added {id} to {course_code} pool."` Then log: `[POOL] Added 1 problem (manual) -> {unit or 'unmapped'}`.
 
 ### `/lkpool list {course} [unit]` — list
-Read `problem_pool.json`. Print a table: `problem_id`, `question_type`, `topic`, `source`. Optional unit filter (match `unit_id` or `unit_slug`). Truncate question preview to ~60 chars if shown.
+Read `problem_pool.json`. Print table: `problem_id`, `question_type`, `topic`, `source`. Optional unit filter (match `unit_id` or `unit_slug`). Truncate question preview to ~60 chars if shown.
 
 ### `/lkpool remove {problem_id}` — delete
-Derive course slug from the id: strip the `prob_` prefix and the trailing `_{NNN}` segment (NNN is always the 3-digit final segment) → remainder is the course slug. Show the problem, confirm, then:
+Derive course slug from id: strip `prob_` prefix and trailing `_{NNN}` segment (NNN always 3-digit final segment) → remainder is course slug. Show problem, confirm, then:
 
 ```powershell
 $r = (& $pythonExe $writerPath pool remove --savedata $savedataRoot --course "{slug}" --problem-id "{problem_id}") | ConvertFrom-Json
@@ -561,17 +561,17 @@ git commit -m "feat: add /lkpool command spec"
 **Files:**
 - Modify: `.claude/commands/lkingest.md`
 
-- [ ] **Step 1: Add `past_exam` to the classifier**
+- [ ] **Step 1: Add `past_exam` to classifier**
 
-In step 3 ("Classify file type"), add a bullet after the `exam_review` line:
+In step 3 ("Classify file type"), add bullet after `exam_review` line:
 
 ```markdown
    - `past_exam` — "midterm", "final", past "exam" with discrete numbered/lettered question structure (distinct from `exam_review`, which is a prose study guide)
 ```
 
-- [ ] **Step 2: Add the extraction step**
+- [ ] **Step 2: Add extraction step**
 
-After step 7 ("Generate grade-focused study notes...") and before step 8 ("Fire all data writes..."), insert a new step 7b:
+After step 7 ("Generate grade-focused study notes...") and before step 8 ("Fire all data writes..."), insert new step 7b:
 
 ````markdown
 7b. **Extract problems to the pool** (only when file type ∈ `{practice_quiz, exam_review, past_exam}`): Scan the extracted text for discrete Q+A pairs. None found (prose study guide) → skip, notes only. For each problem found:
@@ -583,9 +583,9 @@ After step 7 ("Generate grade-focused study notes...") and before step 8 ("Fire 
    Build one JSON array of all problems and write via a single `pool add` call (see lkscripts.md). Surface: `"Extracted {added} problem(s) to {course_code} pool ({skipped} duplicate(s) skipped)."`
 ````
 
-- [ ] **Step 3: Add a log line for extraction**
+- [ ] **Step 3: Add log line for extraction**
 
-In step 8's log-entry block, after the existing `[INGEST]` entry, add (only when problems were extracted):
+In step 8's log-entry block, after existing `[INGEST]` entry, add (only when problems extracted):
 
 ```markdown
    - When step 7b added problems, also: `- [POOL] Extracted {N} problem(s) from {filename} -> {unit(s)}`
@@ -610,9 +610,9 @@ git commit -m "feat: extract problems to pool during /lkingest"
 **Files:**
 - Modify: `.claude/commands/lkquiz.md`
 
-- [ ] **Step 1: Add `mock` to the scope grammar**
+- [ ] **Step 1: Add `mock` to scope grammar**
 
-In the `{scope} accepts:` list, add:
+In `{scope} accepts:` list, add:
 
 ```markdown
 - `exam_1 mock` (or any scope + `mock`) — mock mode: verbatim-heavy, every covered topic represented
@@ -620,7 +620,7 @@ In the `{scope} accepts:` list, add:
 
 - [ ] **Step 2: Add pool sourcing to Step 0**
 
-In "Step 0 — Pre-quiz setup", after the `progress.json` adaptive-weighting paragraph, add:
+In "Step 0 — Pre-quiz setup", after `progress.json` adaptive-weighting paragraph, add:
 
 ````markdown
 **Problem pool sourcing**: Read `courses\{slug}\data\problem_pool.json`. For problems whose `unit_id` ∈ scope:
@@ -632,9 +632,9 @@ In "Step 0 — Pre-quiz setup", after the `progress.json` adaptive-weighting par
 - **Empty pool** → behavior unchanged (materials-only).
 ````
 
-- [ ] **Step 3: Note pool usage in the Step 4 log entry**
+- [ ] **Step 3: Note pool usage in Step 4 log entry**
 
-In "Step 4 — Data updates", change the log `--entry` to append a mode suffix when the pool contributed:
+In "Step 4 — Data updates", change log `--entry` to append mode suffix when pool contributed:
 
 ```markdown
 Append ` (mock)` or ` (pool-augmented)` to the log entry's `{display_name}` segment when pool problems were served, e.g. `- [QUIZ] {display_name} (pool-augmented) — {score}/{total} ...`.
@@ -658,12 +658,12 @@ git commit -m "feat: source problem pool in /lkquiz with mock scope"
 
 **Files:** none (verification only)
 
-- [ ] **Step 1: Run the whole test suite**
+- [ ] **Step 1: Run whole test suite**
 
 Run: `python -m unittest discover -s scripts/tests -v`
 Expected: PASS (8 tests).
 
-- [ ] **Step 2: End-to-end smoke against a scratch dir**
+- [ ] **Step 2: End-to-end smoke against scratch dir**
 
 Run:
 ```bash
@@ -678,7 +678,7 @@ f = pathlib.Path(sd)/"courses"/"smoke_1"/"data"/"problem_pool.json"
 print("FILE:", f.read_text())
 PY
 ```
-Expected: `ADD: {"success": true, "added": 1, "skipped": 0, "ids": ["prob_smoke_1_001"]}` and a well-formed pool file.
+Expected: `ADD: {"success": true, "added": 1, "skipped": 0, "ids": ["prob_smoke_1_001"]}` and well-formed pool file.
 
 - [ ] **Step 3: Confirm no stray writes to real savedata**
 
@@ -697,9 +697,8 @@ Expected: empty (no real course data touched by tests/smoke).
 - §5 `/lkquiz` integration + `mock` → Task 7. ✓
 - §6 doc updates → Tasks 3, 4, 6, 7. ✓
 
-**Placeholder scan:** No TBD/TODO; all code and insertion text is literal. ✓
+**Placeholder scan:** No TBD/TODO; all code and insertion text literal. ✓
 
-**Type consistency:** `pool add` / `pool remove`, flags `--savedata --course --problem-id`, `problem_id` = `prob_{course}_{NNN}`, output keys `added`/`skipped`/`ids`/`removed` are identical across plan, tests, and docs. The dispatch line referencing `cmd_pool_remove` is added in Task 1 but the function is defined in Task 2 — Task 1's tests only exercise `pool add`, so this is safe; Task 2 completes the pair. ✓
+**Type consistency:** `pool add` / `pool remove`, flags `--savedata --course --problem-id`, `problem_id` = `prob_{course}_{NNN}`, output keys `added`/`skipped`/`ids`/`removed` identical across plan, tests, docs. Dispatch line referencing `cmd_pool_remove` added in Task 1 but function defined in Task 2 — Task 1's tests only exercise `pool add`, so safe; Task 2 completes pair. ✓
 
-**Note:** `test_add_single` contains a deliberately inert `... if False else None` line guarding a field check that does not apply (the per-problem object has no `course_id`); it is a no-op and can be deleted during implementation. (Implementer: just remove that line.)
-```
+**Note:** `test_add_single` contains deliberately inert `... if False else None` line guarding a field check that does not apply (per-problem object has no `course_id`); no-op, can be deleted during implementation. (Implementer: just remove that line.)

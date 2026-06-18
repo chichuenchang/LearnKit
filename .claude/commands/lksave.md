@@ -1,12 +1,12 @@
 Base context (path variables, behavioral rules) loaded from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
 
-## `/lksave` — Reconcile pending data writes
+## `/lksave` — Reconcile pending writes
 
-Recovery command for long sessions where agent may have drifted and missed writing data. Reviews actions taken this session from conversation context, checks that all expected file writes occurred, and writes any that are missing.
+Recovery command. Long session, agent may drift, miss writes. Reviews session actions from context, checks expected file writes happened, writes missing ones.
 
-Read lkschemas.md and lklogging.md before starting reconciliation.
+Read lkschemas.md and lklogging.md before reconciling.
 
-**For each action type, verify and recover if missing:**
+**Per action type — verify, recover if missing:**
 
 | Action | Expected writes |
 |--------|----------------|
@@ -17,9 +17,9 @@ Read lkschemas.md and lklogging.md before starting reconciliation.
 
 **Steps:**
 1. List all commands run this session (from context)
-2. For each, read the relevant files and check for the expected entries
-3. Missing entry → write it now using lklogging.md format via data_writer.py — use `run_in_background: true` on the tool call for log entry writes so they don't block
-4. Already present → skip silently
+2. Each: read relevant files, check for expected entries
+3. Missing entry → write now via data_writer.py, lklogging.md format — use `run_in_background: true` on log entry writes so they don't block
+4. Present → skip silently
 
 **Report:**
 ```

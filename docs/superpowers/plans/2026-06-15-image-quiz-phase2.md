@@ -1,12 +1,12 @@
 # Image MCQ Quiz — Phase 2 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Agentic workers:** REQUIRED SUB-SKILL. Use superpowers:subagent-driven-development (preferred) or superpowers:executing-plans. Implement task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
-> **Git note:** the user manages git for this feature. The `Commit` steps are reference points; do NOT run them this session — leave the working tree for the user.
+> **Git note:** user manages git for this feature. `Commit` steps = reference points; do NOT run them this session — leave working tree for user.
 
-**Goal:** `/lkimage quiz {course} {scope}` builds a self-contained HTML page of MCQ questions ("name the highlighted structure", 4 options A–D) from the image bank and opens it in the browser.
+**Goal:** `/lkimage quiz {course} {scope}` builds self-contained HTML page of MCQ questions ("name the highlighted structure", 4 options A–D) from image bank, opens in browser.
 
-**Architecture:** The agent selects targets + builds 4 options (correct + 3 distractors) and emits a quiz-spec JSON; `scripts/image_quiz.py` masks+highlights each target (Pillow), embeds images as base64 data-URIs, and renders ONE self-contained `.html` (inline CSS/JS, vanilla, no deps). The agent opens it (`Start-Process`) and logs.
+**Architecture:** Agent selects targets + builds 4 options (correct + 3 distractors), emits quiz-spec JSON; `scripts/image_quiz.py` masks+highlights each target (Pillow), embeds images as base64 data-URIs, renders ONE self-contained `.html` (inline CSS/JS, vanilla, no deps). Agent opens it (`Start-Process`), logs.
 
 **Tech Stack:** Python 3.11 stdlib + Pillow (installed); `unittest`+`subprocess` for tests; self-contained HTML5/CSS/JS.
 
@@ -19,7 +19,7 @@
 | File | Responsibility | Action |
 |------|----------------|--------|
 | `scripts/image_quiz.py` | quiz-spec JSON (stdin) → masked images + self-contained HTML | Create |
-| `scripts/tests/test_image_quiz.py` | unittest for the HTML builder | Create |
+| `scripts/tests/test_image_quiz.py` | unittest for HTML builder | Create |
 | `.claude/commands/lkimage.md` | `/lkimage quiz` variant (agent flow) | Modify |
 | `.claude/commands/lkscripts.md` | `image_quiz.py` reference | Modify |
 | `.claude/commands/lklogging.md` | `[IMAGE]` "Quiz generated" phrasing | Modify |
@@ -34,7 +34,7 @@
 - Create: `scripts/image_quiz.py`
 - Create: `scripts/tests/test_image_quiz.py`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write failing test**
 
 Create `scripts/tests/test_image_quiz.py`:
 
@@ -112,10 +112,10 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run test, verify it fails**
 
 Run: `python scripts/tests/test_image_quiz.py -v`
-Expected: FAIL — `image_quiz.py` does not exist (subprocess stdout empty → `json.loads` raises).
+Expected: FAIL — `image_quiz.py` absent (subprocess stdout empty → `json.loads` raises).
 
 - [ ] **Step 3: Create `scripts/image_quiz.py`**
 
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Run test, verify it passes**
 
 Run: `python scripts/tests/test_image_quiz.py -v`
 Expected: PASS (4 tests).
@@ -301,9 +301,9 @@ git commit -m "feat: add image_quiz.py MCQ HTML builder"
 - Modify: `.claude/commands/lkimage.md`
 - Modify: `.claude/commands/lkscripts.md`
 
-- [ ] **Step 1: Add the `/lkimage quiz` section to `lkimage.md`**
+- [ ] **Step 1: Add `/lkimage quiz` section to `lkimage.md`**
 
-After the `### \`/lkimage {image_id}\` — one image` block (before `### \`/lkimage remove\``), insert:
+After `### \`/lkimage {image_id}\` — one image` block (before `### \`/lkimage remove\``), insert:
 
 ```markdown
 ### `/lkimage quiz {course} {scope}` — image MCQ quiz (Phase 2)
@@ -325,7 +325,7 @@ Generate a self-contained HTML page of "name the highlighted structure" MCQs (4 
 
 - [ ] **Step 2: Add `image_quiz.py` to `lkscripts.md`**
 
-After the `image_extract.py` block (before the `image add` line), insert:
+After `image_extract.py` block (before `image add` line), insert:
 
 ````markdown
 **`image_quiz.py` — build a self-contained image-MCQ HTML page (reads quiz-spec on stdin):**
@@ -363,25 +363,25 @@ git commit -m "feat: add /lkimage quiz flow + image_quiz.py doc"
 - Modify: `CLAUDE.md`
 - Modify: `README.md`
 
-- [ ] **Step 1: `lklogging.md` — extend the `[IMAGE]` row**
+- [ ] **Step 1: `lklogging.md` — extend `[IMAGE]` row**
 
-Replace the `[IMAGE]` row:
+Replace `[IMAGE]` row:
 
 ```markdown
 | `[IMAGE]` | `Captured {N} illustration(s) from {filename} → {unit}` · `Quiz generated — {N} Qs ({scope})` · `Removed {image_id}` |
 ```
 
-- [ ] **Step 2: `CLAUDE.md` §6 — add quiz to the `/lkimage` variants**
+- [ ] **Step 2: `CLAUDE.md` §6 — add quiz to `/lkimage` variants**
 
-Replace the `/lkimage` Full-spec line:
+Replace `/lkimage` Full-spec line:
 
 ```markdown
 Full spec in `.claude/commands/lkimage.md`. Variants: `/lkimage {course}` (summary), `/lkimage {course} {scope}` (review), `/lkimage {image_id}`, `/lkimage quiz {course} {scope}` (image MCQ quiz → HTML), `/lkimage remove {image_id}`. Labeled illustrations captured during ingest; structure labels are `[slide]` (grounded) or `[AI — verify]` (flagged).
 ```
 
-- [ ] **Step 3: `README.md` — extend the `/lkimage` row**
+- [ ] **Step 3: `README.md` — extend `/lkimage` row**
 
-Replace the `/lkimage` row:
+Replace `/lkimage` row:
 
 ```markdown
 | `/lkimage [course] [scope]` | Review the image bank, or `/lkimage quiz` for an image MCQ quiz (HTML) |
@@ -405,7 +405,7 @@ git commit -m "docs: register /lkimage quiz in logging, CLAUDE, README"
 
 **Files:** none (verification only)
 
-- [ ] **Step 1: Run the whole test suite**
+- [ ] **Step 1: Run whole test suite**
 
 Run: `python -m unittest discover -s scripts/tests -p "test_*.py" -v`
 Expected: PASS — `test_pool` (8) + `test_extract` (5) + `test_image` (6) + `test_image_extract` (3) + `test_image_quiz` (4) = 26 tests.
@@ -457,7 +457,7 @@ Expected: `clean`.
 
 **Placeholder scan:** No TBD/TODO; full code + literal insertion text. ✓
 
-**Type consistency:** quiz-spec keys (`image_path`, `target_bbox`, `options`, `answer_index`, `stem`, `title`) identical across `image_quiz.py`, the tests, `lkimage.md`, and `lkscripts.md`. Output keys `success`/`html_path`/`question_count`/`error` consistent. HTML markers `class="card"`, `class="opt"`, `data-correct="1"` match between `image_quiz.py` and the test assertions. ✓
+**Type consistency:** quiz-spec keys (`image_path`, `target_bbox`, `options`, `answer_index`, `stem`, `title`) identical across `image_quiz.py`, tests, `lkimage.md`, `lkscripts.md`. Output keys `success`/`html_path`/`question_count`/`error` consistent. HTML markers `class="card"`, `class="opt"`, `data-correct="1"` match between `image_quiz.py` and test assertions. ✓
 
-**Note:** the JS in `PAGE_TMPL` uses `{{`/`}}` to escape literal braces inside a `str.format` template; the only real substitutions are `{title}` and `{cards}`. The ✓/✗/▶/— glyphs are written as `\u…` JS escapes / HTML entities so the file stays clean and the stdout JSON stays ASCII.
+**Note:** JS in `PAGE_TMPL` uses `{{`/`}}` to escape literal braces inside `str.format` template; only real substitutions are `{title}` and `{cards}`. The ✓/✗/▶/— glyphs written as `\u…` JS escapes / HTML entities so file stays clean and stdout JSON stays ASCII.
 ```

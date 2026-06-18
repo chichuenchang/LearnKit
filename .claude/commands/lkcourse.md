@@ -1,4 +1,4 @@
-Base context (path variables, behavioral rules) loaded from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
+Base context (path vars, behavioral rules) from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol + data_writer.py ref in lkscripts.md. Log format spec in lklogging.md.
 
 ## `/lkcourse` — Course management
 
@@ -16,20 +16,20 @@ How is this course organized?
   [6] Lectures (Lecture 1, Lecture 2, ...)
   [7] Books (Book 1, Book 2, ...)
 ```
-Store as `unit_label: "{chosen label}"` in course_structure.json (see lkschemas.md for prefix/short-code mapping).
+Store as `unit_label: "{chosen label}"` in course_structure.json (prefix/short-code mapping: lkschemas.md).
 
-1. Generate slug: `BIOL 201` → `biol_201`
-2. Check for slug collision → warn and confirm if similar exists
+1. Make slug: `BIOL 201` → `biol_201`
+2. Check slug collision → warn + confirm if similar exists
 3. Add entry to `courses_index.json` (`active_courses`)
-4. Create directory skeleton under `$savedataRoot\courses\{slug}\`:
+4. Make directory skeleton under `$savedataRoot\courses\{slug}\`:
    ```
    courses\{slug}\
    courses\{slug}\materials\
    courses\{slug}\materials\multi_unit\
    courses\{slug}\data\
    ```
-5. Create default empty JSON: `course_structure.json`, `progress.json`, `problem_pool.json` (see lkschemas.md for default empty values)
-6. Create `courses\{slug}\activity_log.md`:
+5. Make default empty JSON: `course_structure.json`, `progress.json`, `problem_pool.json` (default empty values: lkschemas.md)
+6. Make `courses\{slug}\activity_log.md`:
    ```markdown
    # {course_code} — Activity Log
    **Course**: {course_code} — {course_name} | **Semester**: {semester}
@@ -37,7 +37,7 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (see lkschemas.
 
    ---
    ```
-7. Create `courses\{slug}\misc.md`:
+7. Make `courses\{slug}\misc.md`:
    ```markdown
    # {course_code} — Notes & Miscellaneous
    **Course**: {course_code} — {course_name} | **Semester**: {semester} | **Created**: {date}
@@ -58,7 +58,7 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (see lkschemas.
 
 ---
 
-### `/lkcourse complete {code}` — Archive completed course
+### `/lkcourse complete {code}` — Archive done course
 
 1. Show confirmation:
    ```
@@ -87,4 +87,4 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (see lkschemas.
 
 ### `/lkcourse list`
 
-Table of all active + archived courses with status, progress, semester.
+Table of all active + archived courses: status, progress, semester.

@@ -1,6 +1,6 @@
-Base context (path variables, behavioral rules) loaded from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
+Base context (path variables, behavioral rules) from CLAUDE.md. Data schemas: lkschemas.md. Python script protocol + data_writer.py reference: lkscripts.md. Log entry format: lklogging.md.
 
-## `/lkdeadlines` — View and manage deadlines
+## `/lkdeadlines` — View, manage deadlines
 
 **`/lkdeadlines`**: All incomplete deadlines, all active courses, sorted by date.
 ```
@@ -18,11 +18,11 @@ Mark as completed: /lkdeadlines complete {deadline_id}
 ```
 ≤ 3 days → `← CRITICAL`. 4–14 days → `← URGENT`.
 
-**`/lkdeadlines {course_code}`**: Filtered to one course.
+**`/lkdeadlines {course_code}`**: Filter to one course.
 
 **`/lkdeadlines add`**: User-initiated deadline parse from pasted announcement text.
 
-**`/lkdeadlines complete {deadline_id}`**: Set `completed: true` in `global_deadlines.json` via `deadline complete --deadline-id`. Read lklogging.md, write `[DEADLINE]` log entry to the course's `activity_log.md`.
+**`/lkdeadlines complete {deadline_id}`**: Set `completed: true` in `global_deadlines.json` via `deadline complete --deadline-id`. Read lklogging.md, write `[DEADLINE]` log entry to course's `activity_log.md`.
 
 **Duplicate detection before saving any deadline:**
 1. Exact match (same `type + title + date`, same course) → skip silently: `"'{title} on {date}' already recorded — skipping duplicate"`

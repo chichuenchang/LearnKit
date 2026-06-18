@@ -1,12 +1,12 @@
-# Image-Rich Notes Implementation Plan
+# Image-Rich Notes Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans. Implement task-by-task. Steps use checkbox (`- [ ]`) tracking.
 >
-> **Git note:** the user manages git. `Commit` steps are reference only — do NOT run them this session.
+> **Git:** user manages git. `Commit` steps reference only — do NOT run this session.
 
-**Goal:** `/lkingest` produces self-contained image-rich `.md` notes — agent-cropped diagrams embedded inline as base64 next to the relevant text.
+**Goal:** `/lkingest` makes self-contained image-rich `.md` notes — agent-cropped diagrams embedded inline as base64 next to relevant text.
 
-**Architecture:** The agent writes the note with lightweight `{{FIG: page | x,y,w,h | caption}}` placeholders; `scripts/notes_embed.py` crops each figure (Pillow) from the rendered page, base64-embeds it, and writes the final `.md`. Ingest renders pages before note-gen so the agent can crop. No-figure notes pass through unchanged.
+**Architecture:** Agent writes note with lightweight `{{FIG: page | x,y,w,h | caption}}` placeholders; `scripts/notes_embed.py` crops each figure (Pillow) from rendered page, base64-embeds, writes final `.md`. Ingest renders pages before note-gen so agent can crop. No-figure notes pass through unchanged.
 
 **Tech Stack:** Python 3.11 stdlib (`re`, `base64`, `io`) + Pillow (installed); `unittest`+`subprocess` tests; Markdown command files.
 
@@ -33,7 +33,7 @@
 - Create: `scripts/notes_embed.py`
 - Create: `scripts/tests/test_notes_embed.py`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write failing test**
 
 Create `scripts/tests/test_notes_embed.py`:
 
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run test, verify fails**
 
 Run: `python scripts/tests/test_notes_embed.py -v`
 Expected: FAIL — `notes_embed.py` missing (subprocess stdout empty → `json.loads` raises).
@@ -190,7 +190,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Run test, verify passes**
 
 Run: `python scripts/tests/test_notes_embed.py -v`
 Expected: PASS (4 tests).
@@ -204,24 +204,24 @@ git commit -m "feat: add notes_embed.py figure embedder"
 
 ---
 
-### Task 2: `/lkingest` — reorder + figure embedding
+### Task 2: `/lkingest` — reorder + figure embed
 
 **Files:**
 - Modify: `.claude/commands/lkingest.md`
 
-The current order is: 7 (notes via `notes write`) → 7b (pool) → 7c (image bank). Reorder so pages are rendered BEFORE note-gen, and the note embeds figures.
+Current order: 7 (notes via `notes write`) → 7b (pool) → 7c (image bank). Reorder so pages render BEFORE note-gen, and note embeds figures.
 
-- [ ] **Step 1: Replace step 7 with the render step (7a)**
+- [ ] **Step 1: Replace step 7 with render step (7a)**
 
-Find step 7 (`7. **Generate grade-focused study notes** ...` through its powershell `notes write` block ending in ```` ``` ````) and replace the WHOLE step 7 block with:
+Find step 7 (`7. **Generate grade-focused study notes** ...` through its powershell `notes write` block ending in ```` ``` ````) and replace WHOLE step 7 block with:
 
 ````markdown
 7a. **Render pages** (PDFs): Run `image_extract.py --file {source} --out {scriptsRoot}\tmp_pages` (see lkscripts.md) → page PNGs in `pages_dir` + per-page label boxes (PaddleOCR / text-layer). These pages feed BOTH the image bank (7b) and the note figures (7c). Keep `pages_dir` until step 8 cleanup. Non-PDF → skip (no figures).
 ````
 
-- [ ] **Step 2: Replace step 7b (pool) so it becomes the image-bank step (7b)**
+- [ ] **Step 2: Replace step 7b (pool), make it image-bank step (7b)**
 
-Find step `7b. **Extract problems to the pool**` (the whole block through its `pool add` surface line) and replace it with the image-bank capture step (moved from the old 7c):
+Find step `7b. **Extract problems to the pool**` (whole block through its `pool add` surface line) and replace with image-bank capture step (moved from old 7c):
 
 ````markdown
 7b. **Capture labeled diagrams/figures to the image bank** (PDFs only): from the 7a pages, for each page that is a **labeled diagram or figure** (any subject; skip title/text/summary pages):
@@ -230,9 +230,9 @@ Find step `7b. **Extract problems to the pool**` (the whole block through its `p
    - Set `title` + `label_source`. Build one JSON array → single `image add` call (lkscripts.md). Surface: `"Captured {N} illustration(s) — {S} slide labels, {A} AI-flagged."`
 ````
 
-- [ ] **Step 3: Replace step 7c (old image bank) with the image-rich note step (7c)**
+- [ ] **Step 3: Replace step 7c (old image bank) with image-rich note step (7c)**
 
-Find step `7c. **Capture anatomy illustrations...` / `7c. **Capture labeled diagrams/figures to the image bank**` (the OLD image-bank block, now duplicated by Step 2 above) and replace it with the note-generation step:
+Find step `7c. **Capture anatomy illustrations...` / `7c. **Capture labeled diagrams/figures to the image bank**` (OLD image-bank block, now duplicated by Step 2 above) and replace with note-generation step:
 
 ````markdown
 7c. **Generate the image-rich study note** and write via `notes_embed.py` (no Write tool): write a grade-focused, Section-1-tagged note. Inline, where a diagram illustrates the text, drop a figure placeholder:
@@ -254,9 +254,9 @@ Find step `7c. **Capture anatomy illustrations...` / `7c. **Capture labeled diag
 7d. **Extract problems to the pool** (only when file type ∈ `{practice_quiz, exam_review, past_exam}`): scan the extracted text for discrete Q+A pairs (none → skip). Map each to a unit, assign `topic`, set `question_type`/`options`/`answer`/`tags` (from the file only, Rule 9), `source_type` = classification, `verbatim:true`, `source_file`. Build one JSON array → single `pool add` call (lkscripts.md). Surface: `"Extracted {added} problem(s) to {course_code} pool ({skipped} duplicate(s) skipped)."`
 ````
 
-- [ ] **Step 4: Update step 8 cleanup to use the 7a pages_dir**
+- [ ] **Step 4: Update step 8 cleanup to use 7a pages_dir**
 
-In step 8, ensure the render dir is cleaned. After the `[INGEST]`/`[POOL]`/`[IMAGE]` log lines, confirm/append:
+In step 8, ensure render dir cleaned. After `[INGEST]`/`[POOL]`/`[IMAGE]` log lines, confirm/append:
 
 ```markdown
    After all writes, clean up the 7a render dir (`pages_dir` from `image_extract.py`).
@@ -308,7 +308,7 @@ $r = ($note | & $pythonExe (Join-Path $scriptsRoot "notes_embed.py") --dest $mdP
 Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each is cropped (Pillow) → base64 → `![caption](data:image/png;base64,...)`. No tokens → writes through unchanged (replaces `notes write` for the note step). Missing/bad page → `*(figure unavailable)*`, never crashes.
 ````
 
-- [ ] **Step 2: `CLAUDE.md` §2 — note that materials notes are self-contained image-rich**
+- [ ] **Step 2: `CLAUDE.md` §2 — note materials notes self-contained image-rich**
 
 Replace the `materials\{unit_slug}\` line:
 
@@ -318,7 +318,7 @@ Replace the `materials\{unit_slug}\` line:
 
 - [ ] **Step 3: `README.md` — mention image-rich notes**
 
-In the `/lkingest` row of the Commands table, replace it:
+In `/lkingest` row of Commands table, replace:
 
 ```markdown
 | `/lkingest` | Process files from `savedata/raw/` or pasted paths → self-contained image-rich notes |
@@ -338,16 +338,16 @@ git commit -m "docs: document notes_embed + image-rich notes"
 
 ---
 
-### Task 4: Full-suite verification + real end-to-end
+### Task 4: Full-suite verify + real end-to-end
 
-**Files:** none (verification only)
+**Files:** none (verify only)
 
-- [ ] **Step 1: Run the whole test suite**
+- [ ] **Step 1: Run whole test suite**
 
 Run: `python -m unittest discover -s scripts/tests -p "test_*.py" -v`
 Expected: PASS — pool(8) + extract(5) + image(6) + image_extract(3) + image_quiz(4) + notes_embed(4) = 30 tests.
 
-- [ ] **Step 2: Real end-to-end — render a page, embed a cropped figure**
+- [ ] **Step 2: Real end-to-end — render page, embed cropped figure**
 
 Run:
 ```bash
@@ -392,4 +392,4 @@ Expected: `clean`.
 
 **Type consistency:** token grammar `{{FIG: path | x,y,w,h | caption}}`, output keys `success`/`figures_embedded`/`missing`/`dest`, and `data:image/png;base64,` marker match across `notes_embed.py`, the tests, `lkingest.md`, and `lkscripts.md`. ✓
 
-**Note:** Task 2 reuses much of the old step 7c image-bank text in the new 7b — the engineer should delete the now-duplicated old block (Task 2 step 3 explicitly replaces it with the note step). After the edits there must be exactly one image-bank step (7b) and one note step (7c).
+**Note:** Task 2 reuses much of old step 7c image-bank text in new 7b — engineer must delete now-duplicated old block (Task 2 step 3 explicitly replaces it with note step). After edits there must be exactly one image-bank step (7b) and one note step (7c).

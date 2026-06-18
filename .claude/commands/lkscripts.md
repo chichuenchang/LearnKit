@@ -1,10 +1,10 @@
-Shared protocol file — not a user-invocable command. Referenced by all skill files.
+Shared protocol file — not user-invocable command. Referenced by all skill files.
 
 ## Tuning config — `scripts\config.json`
 
-Ingestion/render tuning knobs live in `scripts\config.json` (committed). `scripts\lkconfig.py` loads it with baked-in fallback defaults, so a missing/partial/malformed file never breaks ingestion. Edit values there — no code change needed.
+Ingest/render knobs in `scripts\config.json` (committed). `scripts\lkconfig.py` loads with baked-in fallback defaults — missing/partial/malformed file never breaks ingestion. Edit values there. No code change.
 
-Shared internal helpers (not agent-invoked): `scripts\lkconfig.py` (config), `scripts\imgutil.py` (crop / base64 embed / PDF page render), `_safe_name` in `extract_text.py` (path sanitizer). Reused across the image scripts so each primitive lives in one place.
+Shared internal helpers (not agent-invoked): `scripts\lkconfig.py` (config), `scripts\imgutil.py` (crop / base64 embed / PDF page render), `_safe_name` in `extract_text.py` (path sanitizer). Reused across image scripts — each primitive lives one place.
 
 | Key | Used by | Meaning |
 |-----|---------|---------|
@@ -17,11 +17,11 @@ Shared internal helpers (not agent-invoked): `scripts\lkconfig.py` (config), `sc
 | `render_scale` | extract_text, image_extract | fitz Matrix scale (PDF points → pixels) |
 | `passing_score` | data_writer | quiz score-pct at/above which a unit counts as passed |
 
-CLI `--max-pages` (per-file) takes precedence over the config default for that run.
+CLI `--max-pages` (per-file) precedes config default for that run.
 
 ## Python Script Protocol
 
-Use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Use `$scriptsRoot` for script path. Temp output goes to `$scriptsRoot\tmp_extract.json` (gitignored at project root level).
+Use `$pythonExe` (loaded startup Step 0 from machine.config.json). Use `$scriptsRoot` for script path. Temp output → `$scriptsRoot\tmp_extract.json` (gitignored at project root level).
 
 ```powershell
 $tmpOutput  = Join-Path $scriptsRoot "tmp_extract.json"
@@ -62,15 +62,15 @@ if ($data.scanned) {
 }
 ```
 
-**Supported inputs**: `.pdf`, `.pptx`, `.docx`, `.txt`, `.md`, `.html`/`.htm`. Anything else → `success:false` ("Unsupported file type").
+**Supported inputs**: `.pdf`, `.pptx`, `.docx`, `.txt`, `.md`, `.html`/`.htm`. Else → `success:false` ("Unsupported file type").
 
-**HTML branch** (`$data.file_type -eq "html"`): `$data.text` = readable text (script/style/head stripped); `$data.images` = `[{path, alt}]` figures — data-URIs decoded + local files copied into `$data.pages_dir`; remote/SVG skipped (count in `$data.images_skipped`). No `image_extract.py` step — these images ARE the figures (note / image bank / figure-problems). Copy any you keep to `materials\{unit}\images\` **before** cleaning `$data.pages_dir`.
+**HTML branch** (`$data.file_type -eq "html"`): `$data.text` = readable text (script/style/head stripped); `$data.images` = `[{path, alt}]` figures — data-URIs decoded + local files copied into `$data.pages_dir`; remote/SVG skipped (count in `$data.images_skipped`). No `image_extract.py` step — these images ARE figures (note / image bank / figure-problems). Copy any kept to `materials\{unit}\images\` **before** cleaning `$data.pages_dir`.
 
 ---
 
 ## `pdf_split.py` — auto-split large PDFs (lkingest step 0)
 
-Run **before** extraction for PDFs. Splits a PDF over `auto_split_pages` into sequential ≤N-page part PDFs so each part runs the pipeline on its own (bounded vision cost, one note per part).
+Run **before** extraction for PDFs. Splits PDF over `auto_split_pages` into sequential ≤N-page part PDFs — each part runs pipeline on its own (bounded vision cost, one note per part).
 
 ```powershell
 $split = (& $pythonExe (Join-Path $scriptsRoot "pdf_split.py") `
@@ -80,7 +80,7 @@ $split = (& $pythonExe (Join-Path $scriptsRoot "pdf_split.py") `
 foreach ($p in $split.parts) { <# ingest $p.path as its own file: steps 1–7 #> }
 Remove-Item (Join-Path $scriptsRoot "tmp_split") -Recurse -ErrorAction SilentlyContinue
 ```
-`split:false` (page_count ≤ chunk, or chunk ≤ 0) → `parts` holds one entry pointing at the **original** file, so the loop is uniform. When `split:true`, archive the original to raw once; the part PDFs are derived (regenerable) and live under `tmp_split` — clean them up after ingest. Non-PDF input → `success:false` (skip; only PDFs split).
+`split:false` (page_count ≤ chunk, or chunk ≤ 0) → `parts` holds one entry pointing at **original** file — loop stays uniform. `split:true` → archive original to raw once; part PDFs derived (regenerable), live under `tmp_split` — clean after ingest. Non-PDF input → `success:false` (skip; only PDFs split).
 
 ---
 
@@ -99,11 +99,11 @@ if (-not $result.success) {
 }
 ```
 
-Output lands directly on stdout — no temp file, no cleanup needed. Same error-check pattern for all subcommands.
+Output lands on stdout — no temp file, no cleanup. Same error-check pattern for all subcommands.
 
 ### Complete subcommand reference
 
-Use these exact flags. Do not guess — wrong flags cause silent failure or ambiguous-option errors.
+Use these exact flags. Don't guess — wrong flags cause silent failure or ambiguous-option errors.
 
 | Subcommand | Required flags | Optional flags |
 |------------|---------------|----------------|
@@ -135,11 +135,11 @@ $result = ($problemsJson | & $pythonExe $writerPath pool add `
 if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
 # success → { added, skipped, ids[] }
 ```
-`--course` is the course slug. Each problem is one object in the array; one call writes many. `question_type` validated against the allowed set; duplicate question text (normalized) is skipped.
+`--course` = course slug. Each problem one object in array; one call writes many. `question_type` validated against allowed set; duplicate question text (normalized) skipped.
 
-**Image-based problems** — give the problem a `figure` (shape in lkschemas.md). `image_path` must be a persistent PNG under `materials\{unit}\images` — stored only when present (else `figure:null`, no error). Served as HTML via `image_quiz.py` (below), never the terminal loop.
+**Image-based problems** — give problem a `figure` (shape in lkschemas.md). `image_path` must be persistent PNG under `materials\{unit}\images` — stored only when present (else `figure:null`, no error). Served as HTML via `image_quiz.py` (below), never terminal loop.
 
-**`image_extract.py` — render pages + detect label boxes (for the image bank):**
+**`image_extract.py` — render pages + detect label boxes (for image bank):**
 ```powershell
 $r = (& $pythonExe (Join-Path $scriptsRoot "image_extract.py") `
     --file "C:\full\path\source.pdf" --out (Join-Path $scriptsRoot "tmp_pages")) | ConvertFrom-Json
@@ -148,11 +148,11 @@ $r = (& $pythonExe (Join-Path $scriptsRoot "image_extract.py") `
 # words[] = { text, bbox [x,y,w,h normalized 0-1], conf }
 # Clean up $r.pages_dir after building image records.
 ```
-Label boxes come from the PDF text layer (`source:"textlayer"`, exact) or OCR (`source:"ocr"` — PaddleOCR primary on GPU, Tesseract fallback). No OCR engine available → image-only pages return `source:"none"` with no boxes (graceful). The agent classifies which words label parts/regions of the figure and does the flagged AI-fill; it does NOT invent coordinates.
+Label boxes from PDF text layer (`source:"textlayer"`, exact) or OCR (`source:"ocr"` — PaddleOCR primary on GPU, Tesseract fallback). No OCR engine → image-only pages return `source:"none"` with no boxes (graceful). Agent classifies which words label parts/regions of figure + does flagged AI-fill; does NOT invent coordinates.
 
 **`image add` — batch image-record write (reads stdin, like `pool add`):** one JSON array of image records → `image_bank.json`; assigns `img_{course}_{NNN}`, dedups by `(source_file, page, image_path)`.
 
-**`image_bank_build.py` — batch image-bank builder (reads a capture spec on stdin):** for re-ingest of a deck where `image_extract.py` already rendered pages. Crops each slide/half, matches printed label phrases against the page text-layer to derive label boxes, then writes records via `image add`. For one-off ingest the agent builds the record array inline (lkingest.md step 7b) — use this only for batch passes.
+**`image_bank_build.py` — batch image-bank builder (reads capture spec on stdin):** for re-ingest of deck where `image_extract.py` already rendered pages. Crops each slide/half, matches printed label phrases against page text-layer to derive label boxes, writes records via `image add`. One-off ingest → agent builds record array inline (lkingest.md step 7b); use this only for batch passes.
 ```powershell
 $spec = @'
 { "savedata": "<savedataRoot>", "course": "pther_350a",
@@ -167,9 +167,9 @@ $spec = @'
 $r = ($spec | & $pythonExe (Join-Path $scriptsRoot "image_bank_build.py")) | ConvertFrom-Json
 # success → { success, added, skipped, ids[], report[] }.  report[] e.g. "p5t:1/2" = labels boxed/total.
 ```
-`half` ∈ `top|bottom|full` (2-up handout → `top`/`bottom`; single-slide page → `full`). Only phrases found in the text-layer get a `label_bbox`; unmatched structures are dropped (coverage shown in `report`). Records carry `label_source:"textlayer"`.
+`half` ∈ `top|bottom|full` (2-up handout → `top`/`bottom`; single-slide page → `full`). Only phrases found in text-layer get `label_bbox`; unmatched structures dropped (coverage in `report`). Records carry `label_source:"textlayer"`.
 
-**`image_quiz.py` — build a self-contained image-MCQ HTML page (reads quiz-spec on stdin):**
+**`image_quiz.py` — build self-contained image-MCQ HTML page (reads quiz-spec on stdin):**
 ```powershell
 $specJson = @'
 { "title": "PTHER 350A — Week 6 (image quiz)", "questions": [
@@ -181,12 +181,12 @@ $r = ($specJson | & $pythonExe (Join-Path $scriptsRoot "image_quiz.py") --out $h
 # success → { html_path, question_count }.  Then: Start-Process $r.html_path
 ```
 Per question: `image_path`, `stem`, `options`, `answer_index` (required); `target_bbox` and `crop_bbox` optional (normalized `[x,y,w,h]`).
-- **Image-bank quiz** (`/lkimage quiz`): set `target_bbox` → the region is blanked + highlighted with a "?" so the student names it.
-- **Figure-bearing pool problems** (`/lkquiz --html`): set `crop_bbox` = the problem's `figure.bbox` (or omit for whole image) and **no** `target_bbox` → the figure shows unmasked with the verbatim `stem`/`options`. Missing image → that question is skipped.
+- **Image-bank quiz** (`/lkimage quiz`): set `target_bbox` → region blanked + highlighted with "?" so student names it.
+- **Figure-bearing pool problems** (`/lkquiz --html`): set `crop_bbox` = problem's `figure.bbox` (or omit for whole image) and **no** `target_bbox` → figure shows unmasked with verbatim `stem`/`options`. Missing image → that question skipped.
 
-The agent builds `options` + `answer_index`; the script only crops/masks (Pillow) + embeds images as base64 (single offline file).
+Agent builds `options` + `answer_index`; script only crops/masks (Pillow) + embeds images as base64 (single offline file).
 
-**`notes_embed.py` — write a study note, embedding `{{FIG}}` figures as base64 (reads stdin):**
+**`notes_embed.py` — write study note, embedding `{{FIG}}` figures as base64 (reads stdin):**
 ```powershell
 $note = @'
 # ...
@@ -197,7 +197,7 @@ More text.
 $r = ($note | & $pythonExe (Join-Path $scriptsRoot "notes_embed.py") --dest $mdPath) | ConvertFrom-Json
 # success → { figures_embedded, missing }
 ```
-Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each is cropped (Pillow) → base64 → `![caption](data:image/png;base64,...)` inline. No tokens → writes through unchanged (replaces `notes write` for the note step). Missing/bad page → `*(figure unavailable)*`, never crashes.
+Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each cropped (Pillow) → base64 → `![caption](data:image/png;base64,...)` inline. No tokens → writes through unchanged (replaces `notes write` for note step). Missing/bad page → `*(figure unavailable)*`, never crashes.
 
 **Log entry format** — always prefix with type tag:
 ```powershell
@@ -214,4 +214,4 @@ Start-Job -ScriptBlock { param($e,$w,$s,$entry,$c)
     & $e $w log entry --savedata $s --entry $entry --course $c
 } -ArgumentList $pythonExe,$writerPath,$savedataRoot,$logEntry,$courseSlug | Out-Null
 ```
-All other `data_writer.py` subcommands remain synchronous — their success/failure matters.
+All other `data_writer.py` subcommands stay synchronous — their success/failure matters.

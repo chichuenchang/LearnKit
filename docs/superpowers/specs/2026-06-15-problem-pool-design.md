@@ -8,16 +8,12 @@
 
 ## Goal
 
-Give each course a structured **problem pool** holding the actual problems from that
-course's past quizzes and exams. The pool is used two ways at once:
+Each course gets structured **problem pool** holding actual problems from that course's past quizzes/exams. Pool used two ways at once:
 
-1. **Served verbatim** — real past problems can appear directly in quizzes.
-2. **Read as style exemplars** — LearnKit studies the pool's style, then generates
-   fresh questions in the *same style* to cover scope topics the pool does **not**
-   already cover (gap-filling).
+1. **Served verbatim** — real past problems appear directly in quizzes.
+2. **Read as style exemplars** — LearnKit studies pool style, generates fresh questions in *same style* to cover scope topics pool does **not** cover (gap-filling).
 
-A mock quiz is therefore: verbatim pool problems + generated, style-matched
-gap-fillers.
+Mock quiz = verbatim pool problems + generated, style-matched gap-fillers.
 
 ---
 
@@ -25,8 +21,8 @@ gap-fillers.
 
 | Decision | Choice |
 |----------|--------|
-| Mock behavior | Serve verbatim pool problems **and** generate fresh gap-fillers in the same style for uncovered areas |
-| Population | Auto-extract during `/lkingest` (quiz/exam/practice files) **plus** a manual `/lkpool add` path |
+| Mock behavior | Serve verbatim pool problems **and** generate fresh gap-fillers in same style for uncovered areas |
+| Population | Auto-extract during `/lkingest` (quiz/exam/practice files) **plus** manual `/lkpool add` path |
 | Quiz integration | **Augment existing `/lkquiz`** (no separate command); `mock` scope keyword = verbatim-heavy + full coverage |
 | Storage | Per-course file `data\problem_pool.json` (one-file-per-concern, parallel to `course_structure.json` / `progress.json`) |
 
@@ -90,52 +86,36 @@ New per-course file: `savedata\courses\{slug}\data\problem_pool.json`.
 
 ### Auto (inside `/lkingest`)
 
-- Add a new file type to the classifier: **`past_exam`** — matches "midterm" / "final" /
-  "exam" together with discrete question structure (distinct from `exam_review`, which
-  is a prose study guide).
-- For file types in `{practice_quiz, exam_review, past_exam}`: after study notes are
-  written (unchanged), attempt to **extract discrete Q+A pairs** from the extracted text.
-  - Map each problem to a unit via keyword overlap (reuse existing unit-identification
-    logic). Unmappable → `unit_id: null`.
-  - Assign a `topic` label drawn from the unit's topics / weak-topic vocabulary.
-  - Set `source_type` from the file classification, `verbatim: true`, `source_file` =
-    ingested filename, `source` = inferred label (e.g. "Practice Quiz — Week 3").
-  - Batch-write all extracted problems to the pool in one `pool add` call.
-- If **no discrete Q+A** is found (prose study guide), skip the pool — notes only.
-- All extracted content comes from the ingested file only (Behavioral Rule 9 — no
-  hallucinated subject matter).
+- Add new file type to classifier: **`past_exam`** — matches "midterm" / "final" / "exam" together with discrete question structure (distinct from `exam_review`, prose study guide).
+- For file types in `{practice_quiz, exam_review, past_exam}`: after study notes written (unchanged), attempt to **extract discrete Q+A pairs** from extracted text.
+  - Map each problem to unit via keyword overlap (reuse existing unit-identification logic). Unmappable → `unit_id: null`.
+  - Assign `topic` label drawn from unit's topics / weak-topic vocabulary.
+  - Set `source_type` from file classification, `verbatim: true`, `source_file` = ingested filename, `source` = inferred label (e.g. "Practice Quiz — Week 3").
+  - Batch-write all extracted problems to pool in one `pool add` call.
+- **No discrete Q+A** found (prose study guide) → skip pool — notes only.
+- All extracted content from ingested file only (Behavioral Rule 9 — no hallucinated subject matter).
 
 ### Manual (`/lkpool add`)
 
 - User pastes one problem (question, type, options, answer, optional topic/unit).
-- Written as a single-element batch. `source_type: manual`, `verbatim: false`,
-  `source_file: "manual"`.
+- Written as single-element batch. `source_type: manual`, `verbatim: false`, `source_file: "manual"`.
 
 ### Dedup
 
-- Before appending, skip any problem whose **normalized** question text (lowercased,
-  whitespace-collapsed) already exists in this course's pool.
+- Before appending, skip any problem whose **normalized** question text (lowercased, whitespace-collapsed) already exists in this course's pool.
 - Report `"N added, M duplicates skipped"`.
 
 ---
 
 ## 3 — `data_writer.py` subcommands
 
-All structured writes go through `data_writer.py` (Behavioral Rule 15). Two new
-subcommands under a new `pool` group.
+All structured writes go through `data_writer.py` (Behavioral Rule 15). Two new subcommands under new `pool` group.
 
 ### `pool add`
 
 - **Required flags**: `--savedata`, `--course` (slug).
-- **Input**: a **JSON array of problem objects read from stdin** (mirrors the existing
-  `notes write` stdin pattern). One call writes many problems — a midterm of 30+
-  problems is a single invocation.
-- Behavior: load (or default) `problem_pool.json`; for each incoming problem —
-  validate `question_type` against the allowed set; normalize-dedup against existing
-  questions; assign `problem_id` = `prob_{course}_{NNN}` (increment from current max);
-  default missing optional fields (`options: []`, `tags: []`, `rationale: null`,
-  `verbatim` as provided or `false`); set `date_added`. Append survivors, bump
-  `last_updated`, save.
+- **Input**: **JSON array of problem objects read from stdin** (mirrors existing `notes write` stdin pattern). One call writes many problems — midterm of 30+ problems = single invocation.
+- Behavior: load (or default) `problem_pool.json`; for each incoming problem — validate `question_type` against allowed set; normalize-dedup against existing questions; assign `problem_id` = `prob_{course}_{NNN}` (increment from current max); default missing optional fields (`options: []`, `tags: []`, `rationale: null`, `verbatim` as provided or `false`); set `date_added`. Append survivors, bump `last_updated`, save.
 - **Output**: `{"success": true, "added": N, "skipped": M, "ids": [...]}`.
 
 Example invocation (batch from agent):
@@ -152,7 +132,7 @@ if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
 ### `pool remove`
 
 - **Required flags**: `--savedata`, `--course`, `--problem-id`.
-- Deletes the matching problem; bumps `last_updated`. Not found → `{"success": false, "error": "..."}`.
+- Deletes matching problem; bumps `last_updated`. Not found → `{"success": false, "error": "..."}`.
 - **Output**: `{"success": true, "removed": "<id>"}`.
 
 ### Subcommand reference additions (for `lkscripts.md`)
@@ -166,23 +146,16 @@ if (-not $result.success) { Write-Host "Pool write failed: $($result.error)" }
 
 ## 4 — `/lkpool` command
 
-New file `.claude/commands/lkpool.md` (plain markdown, same convention as existing
-`lk*` commands; first line is the base-context pointer line).
+New file `.claude/commands/lkpool.md` (plain markdown, same convention as existing `lk*` commands; first line is base-context pointer line).
 
 Variants:
 
-- `/lkpool {course}` — summary: total problem count, breakdown by unit and by
-  `source_type`, and a **coverage map** (which of the course's topics have ≥1 pool
-  problem vs none).
-- `/lkpool add {course}` — interactive: prompt for question, type, options (if mcq),
-  answer, optional topic/unit; build a one-element batch; call `pool add`.
-- `/lkpool list {course} [unit]` — table of problems: `problem_id`, `question_type`,
-  `topic`, `source`. Optional unit filter.
-- `/lkpool remove {problem_id}` — resolve course from the id prefix, confirm, call
-  `pool remove`.
+- `/lkpool {course}` — summary: total problem count, breakdown by unit and by `source_type`, and **coverage map** (which course topics have ≥1 pool problem vs none).
+- `/lkpool add {course}` — interactive: prompt for question, type, options (if mcq), answer, optional topic/unit; build one-element batch; call `pool add`.
+- `/lkpool list {course} [unit]` — table of problems: `problem_id`, `question_type`, `topic`, `source`. Optional unit filter.
+- `/lkpool remove {problem_id}` — resolve course from id prefix, confirm, call `pool remove`.
 
-Rules: multiple active courses + none specified → ask (Behavioral Rule 2). Never mix
-courses (Rule 1). Log every mutation (Rule 14).
+Rules: multiple active courses + none specified → ask (Behavioral Rule 2). Never mix courses (Rule 1). Log every mutation (Rule 14).
 
 ---
 
@@ -190,25 +163,17 @@ courses (Rule 1). Log every mutation (Rule 14).
 
 Augment **Step 0 (pre-quiz setup)** of `lkquiz.md`. No new quiz command.
 
-- Also read `problem_pool.json` for the units in scope.
+- Also read `problem_pool.json` for units in scope.
 - **Coverage map** — split scope topics into those with pool problems and those without.
-- **Verbatim pool problems** — pull problems where `unit_id ∈ scope`. These count
-  toward the question total. Prioritize `EXAM-CRITICAL` tags and topics tied to the next
-  upcoming exam.
-- **Generated gap-fillers** — for scope topics **not** represented in the pool, generate
-  fresh questions that match the pool's observed style (question-type mix, phrasing,
-  difficulty). The existing adaptive-weight table (from `progress.json` quiz history)
-  still applies on top.
-- **Format mirror** — when the pool has problems for the scope, derive the MCQ /
-  short-answer ratio from the pool (this overrides the current default ~70/30).
+- **Verbatim pool problems** — pull problems where `unit_id ∈ scope`. Count toward question total. Prioritize `EXAM-CRITICAL` tags and topics tied to next upcoming exam.
+- **Generated gap-fillers** — for scope topics **not** in pool, generate fresh questions matching pool's observed style (question-type mix, phrasing, difficulty). Existing adaptive-weight table (from `progress.json` quiz history) still applies on top.
+- **Format mirror** — when pool has problems for scope, derive MCQ / short-answer ratio from pool (overrides current default ~70/30).
 - **Mix policy**:
-  - Normal scope → blend; cap the verbatim share so the user still gets fresh practice.
-  - `mock` keyword (new scope token, e.g. `/lkquiz pther_350a exam_1 mock`) → verbatim-heavy,
-    and ensure every exam topic is covered (verbatim where available, generated otherwise).
+  - Normal scope → blend; cap verbatim share so user still gets fresh practice.
+  - `mock` keyword (new scope token, e.g. `/lkquiz pther_350a exam_1 mock`) → verbatim-heavy, ensure every exam topic covered (verbatim where available, generated otherwise).
 - **Empty pool** → behavior identical to today (materials-only).
 
-Scope grammar in `lkquiz.md` gains the `mock` token. The Step 4 log entry notes
-`(mock)` or `(pool-augmented)` when the pool contributed.
+Scope grammar in `lkquiz.md` gains `mock` token. Step 4 log entry notes `(mock)` or `(pool-augmented)` when pool contributed.
 
 ---
 
@@ -228,7 +193,7 @@ Scope grammar in `lkquiz.md` gains the `mock` token. The Step 4 log entry notes
 ## Constraints honored
 
 - **Rule 5** (quizzes materials-only) — pool problems ARE ingested materials; no web content.
-- **Rule 9** (no hallucinated subject matter) — extraction is strictly from ingested files; manual adds are user-supplied.
+- **Rule 9** (no hallucinated subject matter) — extraction strictly from ingested files; manual adds user-supplied.
 - **Rule 15** (writes via `data_writer.py`) — new `pool add` / `pool remove` subcommands; no direct JSON writes.
 - **Rule 1 / 2** (never mix or silently pick a course) — `/lkpool` asks when ambiguous.
 - **Rule 14** (log every action) — pool mutations logged.
@@ -239,5 +204,5 @@ Scope grammar in `lkquiz.md` gains the `mock` token. The Step 4 log entry notes
 
 - No cross-course shared pools.
 - No difficulty scoring model beyond mirroring observed style.
-- No editing of an existing problem in place (remove + re-add covers it).
+- No editing existing problem in place (remove + re-add covers it).
 - No spaced-repetition scheduling on individual problems.
