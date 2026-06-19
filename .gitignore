@@ -12,6 +12,7 @@ scripts/tmp_extract.json
 scripts/tmp_pages/
 scripts/tmp_split/
 scripts/tmp_html/
+scripts/tmp_test_ibb/
 
 # OS
 .DS_Store

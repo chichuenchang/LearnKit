@@ -44,16 +44,30 @@ def norm(s):
     return re.sub(r"[^a-z0-9 ]", "", s.lower()).split()
 
 
-def find_phrase(words, phrase):
+def in_half(bbox, half):
+    """True if the word's vertical centre falls in the chosen half of the page."""
+    cy = bbox[1] + bbox[3] / 2.0
+    if half == "top":
+        return cy < 0.5
+    if half == "bottom":
+        return cy >= 0.5
+    return True
+
+
+def find_phrase(words, phrase, half="full"):
     """Locate a contiguous label phrase in the page's text-layer words.
 
-    Returns its bounding box as normalized [x, y, w, h] (full-page space), or
-    None when the phrase is not found."""
+    Only words inside the chosen half are considered, so a label that repeats on
+    both slides of a 2-up handout page binds to the correct half instead of the
+    first page-wide match (no cross-half collision). Returns its bounding box as
+    normalized [x, y, w, h] (full-page space), or None when not found."""
     toks = norm(phrase)
     if not toks:
         return None
     flat = []
     for w in words:
+        if not in_half(w["bbox"], half):
+            continue
         for t in norm(w["text"]):
             flat.append((w, t))
     n = len(flat)
@@ -86,7 +100,7 @@ def to_crop(box, half):
 
 def build(spec):
     """Crop pages per the spec and return (image_records, coverage_report)."""
-    img = json.load(open(spec["img_json"], encoding="utf-8"))
+    img = json.load(open(spec["img_json"], encoding="utf-8-sig"))
     pages = {p["page"]: p for p in img["pages"]}
     pdir = pathlib.Path(spec["pages_dir"])
     dst = pathlib.Path(spec["images_dir"])
@@ -108,7 +122,7 @@ def build(spec):
         crop.save(dst / name)
         srecs = []
         for sname, stype in cap["structures"]:
-            b = find_phrase(words, sname)
+            b = find_phrase(words, sname, half)
             if b:
                 srecs.append({"name": sname, "type": stype, "source": "slide",
                               "label_bbox": to_crop(b, half), "confidence": 1.0})
@@ -123,7 +137,7 @@ def build(spec):
 
 def main():
     try:
-        spec = json.load(sys.stdin)
+        spec = json.loads(sys.stdin.buffer.read().decode("utf-8-sig"))
     except Exception as e:
         print(json.dumps({"success": False, "error": f"invalid spec JSON on stdin: {e}"}))
         return
