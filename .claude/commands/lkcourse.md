@@ -28,7 +28,7 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (prefix/short-c
    courses\{slug}\materials\multi_unit\
    courses\{slug}\data\
    ```
-5. Make default empty JSON: `course_structure.json`, `progress.json`, `problem_pool.json` (default empty values: lkschemas.md)
+5. Make default empty JSON: `course_structure.json`, `problem_pool.json` (default empty values: lkschemas.md)
 6. Make `courses\{slug}\activity_log.md`:
    ```markdown
    # {course_code} — Activity Log
@@ -87,4 +87,4 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (prefix/short-c
 
 ### `/lkcourse list`
 
-Table of all active + archived courses: status, progress, semester.
+Table of all active + archived courses: status, semester.

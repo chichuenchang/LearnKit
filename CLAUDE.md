@@ -54,7 +54,6 @@ GLOBAL DATA (under $savedataRoot\data\):
 
 PER-COURSE DATA (under $savedataRoot\courses\{course_slug}\):
   data\course_structure.json  — unit/exam map built from syllabus
-  data\progress.json          — study progress and quiz history by unit
   data\problem_pool.json      — past quiz/exam problems (pool); served + style-exemplar source for /lkquiz
   data\image_bank.json        — labeled diagrams/figures, any subject (image + label positions) for /lkimage
   activity_log.md             — per-course log: events for that course only
@@ -166,12 +165,12 @@ Full schema ref in `.claude/commands/lkschemas.md`. Skills read that file before
 ## SECTION 6 — COMMANDS AND WORKFLOWS
 
 ### `/lkingest` — Process new course materials
-Full spec in `.claude/commands/lkingest.md`. Inputs: `.pdf`, `.pptx`, `.docx`, `.txt`, `.md`, `.html`. Per file: auto-split PDFs over `auto_split_pages` into parts, extract text, identify course/unit, archive source to `raw\{unit}\`, render pages (PDF) or pull `<img>` figures (HTML) + capture labeled diagrams to `image_bank.json` (+ `materials\{unit}\images\`), generate **self-contained image-rich `.md` note** (text + figures embedded inline as base64), extract problems to `problem_pool.json` (quiz/exam/practice files — including **image-based problems** carrying a `figure`), then update `progress.json` + activity logs. Handles `raw\` drop folder and pasted paths.
+Full spec in `.claude/commands/lkingest.md`. Inputs: `.pdf`, `.pptx`, `.docx`, `.txt`, `.md`, `.html`. Per file: auto-split PDFs over `auto_split_pages` into parts, extract text, identify course/unit, archive source to `raw\{unit}\`, render pages (PDF) or pull `<img>` figures (HTML) + capture labeled diagrams to `image_bank.json` (+ `materials\{unit}\images\`), generate **self-contained image-rich `.md` note** (text + figures embedded inline as base64), extract problems to `problem_pool.json` (quiz/exam/practice files — including **image-based problems** carrying a `figure`), then update activity logs. Handles `raw\` drop folder and pasted paths.
 
 ---
 
-### `/lkquiz {course_code} {scope}` — Interactive adaptive quiz
-Full spec in `.claude/commands/lkquiz.md`. Adaptive weighting from quiz history, interactive question loop, results summary, data updates, logging. `--html` renders image-based pool problems (those with a `figure`) as self-contained HTML quiz (terminal can't show images).
+### `/lkquiz {course_code} {scope}` — Interactive quiz
+Full spec in `.claude/commands/lkquiz.md`. Auto-adapts: includes image-based problems when the scope's materials are image-rich (proportion from per-course `image_quiz_ratio` or agent estimate). When image problems are included, renders the entire quiz as a single self-contained HTML page; otherwise runs as an interactive terminal quiz. Results summary with logging.
 
 ---
 
@@ -221,20 +220,13 @@ After confirmed deadlines saved, write log to course's `activity_log.md`. See Se
 2. Same title + course, different date → ask: `"'{title}' already recorded on {date1}. Update to {date2}? [Y/n]"` — modify in place
 3. Same title + course, different details → ask: `"'{title}' already recorded but scope changed. Update? [Y/n]"` — modify `details` in place
 
----
-
-### `/lkprogress` — Study dashboard
-Full spec in `.claude/commands/lkprogress.md`. Variants: `/lkprogress`, `/lkprogress {course_code}`.
-
----
-
 ### `/lkpool` — Problem pool management
 Full spec in `.claude/commands/lkpool.md`. Variants: `/lkpool {course}` (summary + coverage map), `/lkpool add {course}`, `/lkpool list {course} [unit]`, `/lkpool remove {problem_id}`. Holds past quiz/exam problems used by `/lkquiz`.
 
 ---
 
 ### `/lkimage` — Image bank
-Full spec in `.claude/commands/lkimage.md`. Variants: `/lkimage {course}` (summary), `/lkimage {course} {scope}` (review), `/lkimage {image_id}`, `/lkimage quiz {course} {scope}` (image MCQ quiz → HTML), `/lkimage remove {image_id}`. Labeled illustrations captured during ingest; structure labels are `[slide]` (grounded) or `[AI — verify]` (flagged).
+Full spec in `.claude/commands/lkimage.md`. Variants: `/lkimage {course}` (summary), `/lkimage {course} {scope}` (review), `/lkimage {image_id}`, `/lkimage remove {image_id}`. Labeled illustrations captured during ingest; structure labels are `[slide]` (grounded) or `[AI — verify]` (flagged).
 
 ---
 
@@ -311,17 +303,16 @@ Full spec in `.claude/commands/lkscripts.md` — covers `extract_text.py` usage,
 8. **Respect skip decisions** — user skips file during ingestion → leave untouched; don't retry until user runs `/lkingest` again
 9. **No hallucinated subject-matter knowledge** — all content facts from ingested materials only. No pre-loaded domain knowledge for any subject. Topic not in materials → `"No materials covering '{topic}' ingested for {course_code} yet."` If partially covered, state exactly which units cover it and which do not.
 9a. **Image labels exception** — In **image bank** only, label names may be AI-identified **when not printed on the slide**, but MUST be stored `source:"ai"` with `verified:false` and surfaced as `[AI — verify]`. Printed slide labels (text-layer / OCR) stay grounded default; AI-fill never overrides or invents a printed label. (Applies to any subject's diagrams — anatomy, chemistry, geography, etc.)
-10. **Immediate progress updates** — update JSON after each quiz session; startup banner reflects latest state
-11. **`misc.md` always fresh** — read at start of every `/lkquiz`; surface entries from past 14 days under `## Course Notes` before main content
-13. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
-14. **Log every action** — quiz, ingest, deadline change, course event → log entry; never skip
-15. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error.
-16. **Python path from config only** — always use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Never hardcode interpreter path. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/lksetup`.
-17. **Study experience first** — notes are studied by a human for a grade; images are *why* the image pipeline exists (esp. anatomy). Keep notes image-rich; never thin figures to chase a text/fidelity metric (patch text instead). Judge by *"can the student learn this from the note alone?"* See `.claude/commands/lkingest.md`.
+10. **`misc.md` always fresh** — read at start of every `/lkquiz`; surface entries from past 14 days under `## Course Notes` before main content
+11. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
+12. **Log every action** — quiz, ingest, deadline change, course event → log entry; never skip
+13. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error.
+14. **Python path from config only** — always use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Never hardcode interpreter path. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/lksetup`.
+15. **Study experience first** — notes are studied by a human for a grade; images are *why* the image pipeline exists (esp. anatomy). Keep notes image-rich; never thin figures to chase a text/fidelity metric (patch text instead). Judge by *"can the student learn this from the note alone?"* See `.claude/commands/lkingest.md`.
 
 ---
 
 ## SECTION 11 — LOGGING
 
-Log every action — mandate: Rule 14 above.
+Log every action — mandate: Rule 12 above.
 Format spec in `.claude/commands/lklogging.md`. Skills read that file before writing entries.

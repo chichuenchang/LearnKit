@@ -11,7 +11,7 @@ Valid `type`: `exam`, `quiz`, `assignment`, `lab`, `lab_practical`, `presentatio
 Default empty: `{"last_updated": null, "deadlines": []}`
 
 ## Per-course `data\course_structure.json`
-**top-level**: `unit_label` — display label for `display_name` gen, `unit_id` prefix, quiz filenames. Valid values (default `"Unit"`):
+**top-level**: `unit_label` — display label for `display_name` gen, `unit_id` prefix, quiz filenames. Valid values (default `"Unit"`). `image_quiz_ratio` (float 0–1, default `null`) — fraction of quiz questions that should be image-based; `null` → agent estimates from scope image-richness.
 
 | `unit_label` | `unit_id` prefix | quiz short code |
 |---|---|---|
@@ -23,44 +23,15 @@ Default empty: `{"last_updated": null, "deadlines": []}`
 | `"Lecture"` | `lec_NN` | `l01` |
 | `"Book"` | `book_NN` | `b01` |
 
-**units[]**: `unit_id`, `display_name`, `slug`, `weeks` (array), `topics` (array), `associated_exams` (array), `keywords` (8–15 subject-specific terms — drives unit assignment and adaptive quiz weighting)
+**units[]**: `unit_id`, `display_name`, `slug`, `weeks` (array), `topics` (array), `associated_exams` (array), `keywords` (8–15 subject-specific terms — drives unit assignment)
 **exams[]**: `exam_id`, `title`, `units_covered` (array), `date`, `time`, `location`
-Default empty: `{"course": null, "course_id": null, "unit_label": "Unit", "built_from": null, "last_updated": null, "units": [], "exams": []}`
-
-## Per-course `data\progress.json`
-`status` progression: `not_started` → `in_progress` → `materials_complete` → `quiz_passed` → `mastered`
-
-```json
-{
-  "course": null,
-  "course_id": null,
-  "last_updated": null,
-  "weak_areas_global": [],
-  "units": {
-    "{unit_slug}": {
-      "status": "not_started",
-      "materials_ingested": 0,
-      "confidence_level": 0,
-      "weak_areas": [],
-      "quiz_history": [
-        {
-          "quiz_id": "", "date": "", "score_pct": 0,
-          "total_questions": 0, "correct": 0, "incorrect": 0, "skipped": 0,
-          "partial": false, "adaptive_used": false,
-          "weak_topics": [],
-          "question_type_accuracy": {"mcq": "", "short_answer": ""}
-        }
-      ]
-    }
-  }
-}
-```
+Default empty: `{"course": null, "course_id": null, "unit_label": "Unit", "image_quiz_ratio": null, "built_from": null, "last_updated": null, "units": [], "exams": []}`
 
 ## Per-course `data\problem_pool.json`
 Past quiz/exam problems. Served verbatim by `/lkquiz`; used as style exemplars to generate gap-filling questions. Written only via `data_writer.py pool add` / `pool remove`.
 
 **top-level**: `course`, `course_id`, `last_updated`, `problems[]`
-**problems[]**: `problem_id` (`prob_{course_id}_{NNN}`), `unit_id` (or null), `unit_slug` (or null), `topic` (same vocabulary as progress.json `weak_topics`), `question_type` (`mcq` | `short_answer` | `matching` | `labeling` | `true_false` | `essay`), `question`, `options` (array; `[]` unless mcq), `answer`, `rationale` (or null), `tags` (Section 1 tags), `source` (label e.g. "Midterm 1 2025"), `source_file` (filename or "manual"), `source_type` (`past_exam` | `practice_quiz` | `exam_review` | `manual`), `verbatim` (bool), `figure` (or null), `date_added`
+**problems[]**: `problem_id` (`prob_{course_id}_{NNN}`), `unit_id` (or null), `unit_slug` (or null), `topic` (subject-specific topic term), `question_type` (`mcq` | `short_answer` | `matching` | `labeling` | `true_false` | `essay`), `question`, `options` (array; `[]` unless mcq), `answer`, `rationale` (or null), `tags` (Section 1 tags), `source` (label e.g. "Midterm 1 2025"), `source_file` (filename or "manual"), `source_type` (`past_exam` | `practice_quiz` | `exam_review` | `manual`), `verbatim` (bool), `figure` (or null), `date_added`
 **figure** (image-based problems, else null): `image_path` (PNG under `materials\{unit}\images\`), `bbox` (normalized `[x,y,w,h]` display crop, or null = whole image), `caption`. Served as HTML quiz via `image_quiz.py` (figure embedded; no mask). Persisted by `pool add` only when `image_path` present.
 Default empty: `{"course": null, "course_id": null, "last_updated": null, "problems": []}`
 

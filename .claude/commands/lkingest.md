@@ -104,9 +104,6 @@ On confirm: **copy** into project. Never delete or move originals.
 
 8. **Fire all data writes synchronously** (silent — no output, no task notification), then print `"Done — {N} file(s) ingested."`. Sequential, no race conditions:
    ```powershell
-   # --- progress ingest (one per file) ---
-   & $pythonExe $writerPath progress ingest `
-       --savedata $savedataRoot --course {course_id} --unit {unit_slug} | Out-Null ;
    # --- log entry (one per affected course) ---
    & $pythonExe $writerPath log entry `
        --savedata $savedataRoot --course {course_id} `
@@ -146,13 +143,11 @@ Entered from step 4 when: file type = `syllabus` AND `course_structure.json` has
    - **Generate `display_name`**: `"{unit_label} N: {title}"` — e.g. `"Week 1: Vertebral Column"`, `"Chapter 3: Enzymes"`.
    - **Generate `unit_id`**: Derive prefix from `unit_label` per mapping in lkschemas.md (e.g. `"Week"` → `week_NN`, `"Chapter"` → `chap_NN`). Zero-padded two digits.
 
-3. **Initialize `progress.json`**: Per unit: `status: "not_started"`, `materials_ingested: 0`, `quiz_history: []`, `weak_areas: []`, `confidence_level: 0`.
+3. **Write deadlines** to `data\global_deadlines.json`. Apply duplicate detection (Section 6, CLAUDE.md).
 
-4. **Write deadlines** to `data\global_deadlines.json`. Apply duplicate detection (Section 6, CLAUDE.md).
+4. **Update `courses_index.json`**: Set `syllabus_ingested: true` on course entry.
 
-5. **Update `courses_index.json`**: Set `syllabus_ingested: true` on course entry.
-
-6. **Write `courses\{slug}\materials\syllabus\course_overview.md`**:
+5. **Write `courses\{slug}\materials\syllabus\course_overview.md`**:
    ```markdown
    # {Course Code} — {Course Name}
    **Semester**: {semester} | **Instructor**: {instructor} | **Ingested**: {date}
@@ -176,9 +171,9 @@ Entered from step 4 when: file type = `syllabus` AND `course_structure.json` has
    [Attendance, late policy, exam format, anything that affects grades]
    ```
 
-7. **Ensure `misc.md` and `activity_log.md` exist**: Course created inline (not via `/lkcourse add`) → create both using `/lkcourse add` templates in Section 6, CLAUDE.md (steps 6–7).
+6. **Ensure `misc.md` and `activity_log.md` exist**: Course created inline (not via `/lkcourse add`) → create both using `/lkcourse add` templates in Section 6, CLAUDE.md (steps 6–7).
 
-8. **Confirm**:
+7. **Confirm**:
    ```
    Syllabus processed — {course_code}
    Units loaded   : {N}
@@ -186,7 +181,7 @@ Entered from step 4 when: file type = `syllabus` AND `course_structure.json` has
    Next exam      : {title} on {date} ({N} days)
    ```
 
-9. **Unclassified materials exist**: `"You have N unclassified files from before syllabus load. Re-classify now? [Y/n]"` Y → run unit identification against new keywords, move to correct folders.
+8. **Unclassified materials exist**: `"You have N unclassified files from before syllabus load. Re-classify now? [Y/n]"` Y → run unit identification against new keywords, move to correct folders.
 
 Return to main pipeline at step 7 (generate notes) after branch completes.
 

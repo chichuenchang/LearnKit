@@ -34,7 +34,7 @@ if (-not $r.success) { Write-Host "Failed: $($r.error)" }
 `source_type` defaults `manual`, `verbatim` false. Confirm: `"Added {id} to {course_code} pool."` Log: `[POOL] Added 1 problem (manual) -> {unit or 'unmapped'}`. Image-based problem → include `figure` object (`image_path` to persistent PNG under `materials\{unit}\images`, optional `bbox`/`caption`) — see lkschemas.md; image problems usually captured during `/lkingest` (step 7d), not added manually.
 
 ### `/lkpool list {course} [unit]` — list
-Read `problem_pool.json`. Print table: `problem_id`, `question_type`, `topic`, `source`. Mark rows with non-null `figure` with `[img]` tag (studied via `/lkquiz --html`). Optional unit filter (match `unit_id` or `unit_slug`). Truncate question preview to ~60 chars if shown.
+Read `problem_pool.json`. Print table: `problem_id`, `question_type`, `topic`, `source`. Mark rows with non-null `figure` with `[img]` tag (served as image questions by `/lkquiz`). Optional unit filter (match `unit_id` or `unit_slug`). Truncate question preview to ~60 chars if shown.
 
 ### `/lkpool remove {problem_id}` — delete
 Derive course slug from id: strip `prob_` prefix + trailing `_{NNN}` segment (NNN always 3-digit final segment) → remainder is course slug. Show problem, confirm, then:
