@@ -116,7 +116,7 @@ Use these exact flags. Don't guess — wrong flags cause silent failure or ambig
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |
 | `notes write` | `--dest` | — (reads content from stdin; raw write, no figure embedding — prefer `notes_embed.py` for notes) |
-| `log entry` | `--savedata --course --entry` | — |
+| `log entry` | `--savedata --entry` | `--course` (omit = global log only) |
 
 **Flag notes:**
 - `--course` = course slug (e.g. `pther_350a`) — used by `progress`, `pool`, `log entry`
