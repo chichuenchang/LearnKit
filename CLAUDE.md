@@ -61,6 +61,7 @@ PER-COURSE DATA (under $savedataRoot\courses\{course_slug}\):
   materials\{unit_slug}\      — generated study notes (.md, self-contained: figures embedded inline as base64) + images\ — NO source files (sources live in raw\)
   materials\{unit_slug}\images\ — extracted illustration PNGs (referenced by image_bank.json)
   raw\{unit_slug}\            — per-course archive of original sources, mirrored by unit (weeks/units/chapters per unit_label); notes link here via **Raw material**: header
+  quiz\                       — generated self-contained HTML quiz pages (image-inclusive /lkquiz runs)
 
 DIRECTORIES:
   $savedataRoot\raw\      — drop zone (gitignored; files may also be provided as pasted paths)
@@ -276,8 +277,7 @@ Full spec in `.claude/commands/lkingest.md` — see "Syllabus Processing Branch"
 - **Source files**: `source_{original_basename_truncated_30}.{ext}` — lowercase, spaces → `_`
 - **Raw archive**: each ingested source also copied to `courses\{slug}\raw\{unit_slug}\source_{...}.{ext}` (mirrors `materials\{unit_slug}\`, organized by unit per `unit_label`); note's `**Raw material**:` header field points to it
 - **Study notes**: `{file_type}_{original_basename_truncated_30}.md`
-- **Quiz files**: `quiz_{unit_short}_{N}_{YYYYMMDD}.json` — `unit_short` derived from `unit_label` (see lkschemas.md mapping: `u01`, `w01`, `ch01`, `m01`, `t01`, `l01`, `b01`) — e.g. `quiz_u01_1_20260501.json`, `quiz_w01_1_20260501.json`, `quiz_ch01_1_20260501.json`
-- **Attempt files**: `attempt_{unit_short}_{N}_{YYYYMMDD}.json`
+- **Quiz HTML pages**: `quiz\quiz_{scope}_{YYYYMMDD}.html` — image-inclusive `/lkquiz` runs (self-contained, course-level `quiz\` dir)
 - **Deadline ID**: `dl_{course_id}_{NNN}` — e.g. `dl_biol_201_001` (increment from current max)
 - **Problem ID**: `prob_{course_id}_{NNN}` — e.g. `prob_pther_350a_001` (increment from current max in that course's `problem_pool.json`)
 - **Image ID**: `img_{course_id}_{NNN}` — e.g. `img_pther_350a_001` (increment from current max in that course's `image_bank.json`)
