@@ -4,8 +4,10 @@ Usage: python image_quiz.py --out <html_path>   (reads a quiz-spec JSON on stdin
 Output: JSON to stdout (ASCII-safe). The HTML embeds images as base64 data-URIs
 and uses inline CSS/JS only (fully offline, single file).
 
-Each question: { image_path, stem, options[], answer_index,
+Each question: { image_path?, stem, options[], answer_index,
                  crop_bbox?, target_bbox? }  (bboxes normalized [x,y,w,h]).
+  - image_path (optional): omit for a text-only MCQ card (mixed quizzes interleave
+    text and image questions). A named-but-missing image is skipped.
   - crop_bbox  (optional): crop the displayed image to this region first. Use for
     figure-bearing pool problems where the figure is part of the question.
   - target_bbox (optional): blank + highlight this region with a "?". Use for
@@ -24,6 +26,16 @@ from imgutil import crop_norm, data_uri
 CARD_TMPL = """  <section class="card" data-i="{i}">
     <div class="meta">Q {n} / {total}</div>
     <img alt="question image" src="{uri}">
+    <p class="stem">{stem}</p>
+    <div class="opts">
+{buttons}
+    </div>
+    <div class="fb"></div>
+  </section>"""
+
+# Same card with no image — used for text-only MCQs in a mixed quiz.
+CARD_TMPL_NOIMG = """  <section class="card" data-i="{i}">
+    <div class="meta">Q {n} / {total}</div>
     <p class="stem">{stem}</p>
     <div class="opts">
 {buttons}
@@ -120,28 +132,34 @@ def main():
         title = spec.get("title") or "LearnKit image quiz"
         questions = spec.get("questions") or []
 
-        # validate (image exists + opens) so the rendered total is accurate
+        # validate so the rendered total is accurate. A question with no
+        # image_path is a text-only card (img=None). A question that names an
+        # image which is missing/unreadable is a broken reference → skipped.
         valid = []
         for q in questions:
             ip = q.get("image_path")
-            if not ip or not os.path.exists(ip):
-                continue
-            try:
-                img = Image.open(ip).convert("RGB")
-            except Exception:
-                continue
+            if ip:
+                if not os.path.exists(ip):
+                    continue
+                try:
+                    img = Image.open(ip).convert("RGB")
+                except Exception:
+                    continue
+            else:
+                img = None
             valid.append((q, img))
 
         total = len(valid)
         cards = []
         for idx, (q, img) in enumerate(valid):
-            crop_bbox = q.get("crop_bbox")
-            if crop_bbox:
-                img = crop_norm(img, crop_bbox)
-            target_bbox = q.get("target_bbox")
-            if target_bbox:
-                _mask_highlight(img, target_bbox)
-            uri = data_uri(img)
+            if img is not None:
+                crop_bbox = q.get("crop_bbox")
+                if crop_bbox:
+                    img = crop_norm(img, crop_bbox)
+                target_bbox = q.get("target_bbox")
+                if target_bbox:
+                    _mask_highlight(img, target_bbox)
+                uri = data_uri(img)
             opts = q.get("options") or []
             ai = int(q.get("answer_index", 0))
             btns = []
@@ -151,8 +169,12 @@ def main():
                 btns.append(BTN_TMPL.format(correct=correct, letter=letter,
                                             text=htmllib.escape(str(opt))))
             stem = htmllib.escape(q.get("stem") or "What is the name of the highlighted structure?")
-            cards.append(CARD_TMPL.format(i=idx, n=idx + 1, total=total, uri=uri,
-                                          stem=stem, buttons="\n".join(btns)))
+            if img is not None:
+                cards.append(CARD_TMPL.format(i=idx, n=idx + 1, total=total, uri=uri,
+                                              stem=stem, buttons="\n".join(btns)))
+            else:
+                cards.append(CARD_TMPL_NOIMG.format(i=idx, n=idx + 1, total=total,
+                                                    stem=stem, buttons="\n".join(btns)))
 
         page = (PAGE_TMPL
                 .replace("__TITLE__", htmllib.escape(title))

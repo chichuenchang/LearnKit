@@ -21,7 +21,6 @@ DEFAULTS = {
     "textlayer_min_words": 5,                # min text-layer words before falling back to OCR
     "ocr_min_conf": 40,                      # min OCR word confidence (0-100) to keep a box
     "render_scale": 2,                       # fitz Matrix scale: PDF points → pixels multiplier
-    "passing_score": 70.0,                   # quiz score-pct at/above which a unit counts as passed
 }
 
 

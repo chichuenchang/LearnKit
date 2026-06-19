@@ -6,8 +6,6 @@ Usage: python data_writer.py <subcommand> [args]
 Output: JSON to stdout — {"success": true/false, ...}
 
 Subcommands:
-  progress quiz     Write quiz result to progress.json
-  progress ingest   Increment materials_ingested in progress.json
   pool add          Append problems (JSON array on stdin) to problem_pool.json
   pool remove       Delete a problem from problem_pool.json
   image add         Append image records (JSON array on stdin) to image_bank.json
@@ -23,12 +21,8 @@ import pathlib
 import sys
 from datetime import datetime, date
 
-from lkconfig import get as cfg
-
 VALID_DEADLINE_TYPES = {"exam", "quiz", "assignment", "lab", "lab_practical", "presentation", "other"}
 VALID_QUESTION_TYPES = {"mcq", "short_answer", "matching", "labeling", "true_false", "essay"}
-STATUS_PROGRESSION = ["not_started", "in_progress", "materials_complete", "quiz_passed", "mastered"]
-PASSING_SCORE = cfg("passing_score")
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -64,20 +58,6 @@ def today_str() -> str:
     return date.today().isoformat()
 
 
-def progress_path(savedata: pathlib.Path, course: str) -> pathlib.Path:
-    return savedata / "courses" / course / "data" / "progress.json"
-
-
-def progress_default(course: str) -> dict:
-    return {"course": None, "course_id": course, "last_updated": None,
-            "weak_areas_global": [], "units": {}}
-
-
-def unit_default() -> dict:
-    return {"status": "not_started", "materials_ingested": 0,
-            "quiz_history": [], "weak_areas": [], "confidence_level": 0}
-
-
 def pool_path(savedata: pathlib.Path, course: str) -> pathlib.Path:
     return savedata / "courses" / course / "data" / "problem_pool.json"
 
@@ -111,80 +91,6 @@ def _norm_figure(fig):
         "bbox": fig.get("bbox"),       # normalized [x,y,w,h] display crop, or null
         "caption": fig.get("caption"),
     }
-
-
-def advance_status(current: str, target: str) -> str:
-    try:
-        ci = STATUS_PROGRESSION.index(current)
-        ti = STATUS_PROGRESSION.index(target)
-        return STATUS_PROGRESSION[max(ci, ti)]
-    except ValueError:
-        return target
-
-
-# ── progress quiz ─────────────────────────────────────────────────────────────
-
-def cmd_progress_quiz(args):
-    savedata = pathlib.Path(args.savedata)
-    path = progress_path(savedata, args.course)
-    data = load_json(path, progress_default(args.course))
-    data.setdefault("units", {})
-
-    unit = data["units"].setdefault(args.unit, unit_default())
-
-    weak_topics = [t.strip() for t in args.weak_topics.split(",")] if args.weak_topics else []
-    qta = {}
-    if args.mcq:
-        qta["mcq"] = args.mcq
-    if args.sa:
-        qta["short_answer"] = args.sa
-
-    quiz_id = f"quiz_{args.unit[:6]}_{len(unit['quiz_history']) + 1}_{date.today().strftime('%Y%m%d')}"
-    entry = {
-        "quiz_id": quiz_id,
-        "date": today_str(),
-        "score_pct": round(float(args.score_pct), 1),
-        "total_questions": int(args.total),
-        "correct": int(args.correct),
-        "incorrect": int(args.incorrect),
-        "skipped": int(args.skipped),
-        "partial": bool(args.partial),
-        "adaptive_used": bool(args.adaptive),
-        "weak_topics": weak_topics,
-        "question_type_accuracy": qta,
-    }
-    unit["quiz_history"].append(entry)
-    unit["weak_areas"] = weak_topics
-
-    if float(args.score_pct) >= PASSING_SCORE:
-        unit["status"] = advance_status(unit["status"], "quiz_passed")
-
-    # update global weak areas
-    all_weak = set(data.get("weak_areas_global", []))
-    all_weak.update(weak_topics)
-    data["weak_areas_global"] = sorted(all_weak)
-    data["last_updated"] = now_iso()
-
-    save_json(path, data)
-    out({"success": True, "quiz_id": quiz_id, "status": unit["status"]})
-
-
-# ── progress ingest ───────────────────────────────────────────────────────────
-
-def cmd_progress_ingest(args):
-    savedata = pathlib.Path(args.savedata)
-    path = progress_path(savedata, args.course)
-    data = load_json(path, progress_default(args.course))
-    data.setdefault("units", {})
-
-    unit = data["units"].setdefault(args.unit, unit_default())
-    unit["materials_ingested"] = unit.get("materials_ingested", 0) + 1
-    if unit["status"] == "not_started":
-        unit["status"] = "in_progress"
-    data["last_updated"] = now_iso()
-
-    save_json(path, data)
-    out({"success": True, "materials_ingested": unit["materials_ingested"]})
 
 
 # ── pool add ──────────────────────────────────────────────────────────────────
@@ -495,30 +401,6 @@ def main():
     parser = argparse.ArgumentParser(prog="data_writer")
     sub = parser.add_subparsers(dest="group")
 
-    # progress
-    pg = sub.add_parser("progress")
-    pg_sub = pg.add_subparsers(dest="action")
-
-    pq = pg_sub.add_parser("quiz")
-    pq.add_argument("--savedata", required=True)
-    pq.add_argument("--course", required=True)
-    pq.add_argument("--unit", required=True)
-    pq.add_argument("--score-pct", required=True, type=float)
-    pq.add_argument("--correct", required=True, type=int)
-    pq.add_argument("--total", required=True, type=int)
-    pq.add_argument("--incorrect", required=True, type=int)
-    pq.add_argument("--skipped", default=0, type=int)
-    pq.add_argument("--partial", action="store_true")
-    pq.add_argument("--adaptive", action="store_true")
-    pq.add_argument("--weak-topics", default="")
-    pq.add_argument("--mcq", default="")
-    pq.add_argument("--sa", default="")
-
-    pi = pg_sub.add_parser("ingest")
-    pi.add_argument("--savedata", required=True)
-    pi.add_argument("--course", required=True)
-    pi.add_argument("--unit", required=True)
-
     # pool
     plg = sub.add_parser("pool")
     plg_sub = plg.add_subparsers(dest="action")
@@ -583,12 +465,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        if args.group == "progress":
-            if args.action == "quiz":
-                cmd_progress_quiz(args)
-            elif args.action == "ingest":
-                cmd_progress_ingest(args)
-        elif args.group == "pool":
+        if args.group == "pool":
             if args.action == "add":
                 cmd_pool_add(args)
             elif args.action == "remove":

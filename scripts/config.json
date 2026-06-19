@@ -5,6 +5,5 @@
   "auto_split_pages": 60,
   "textlayer_min_words": 5,
   "ocr_min_conf": 40,
-  "render_scale": 2,
-  "passing_score": 70.0
+  "render_scale": 2
 }
