@@ -86,7 +86,7 @@ def to_crop(box, half):
 
 def build(spec):
     """Crop pages per the spec and return (image_records, coverage_report)."""
-    img = json.load(open(spec["img_json"], encoding="utf-8"))
+    img = json.load(open(spec["img_json"], encoding="utf-8-sig"))
     pages = {p["page"]: p for p in img["pages"]}
     pdir = pathlib.Path(spec["pages_dir"])
     dst = pathlib.Path(spec["images_dir"])
@@ -123,7 +123,7 @@ def build(spec):
 
 def main():
     try:
-        spec = json.load(sys.stdin)
+        spec = json.loads(sys.stdin.buffer.read().decode("utf-8-sig"))
     except Exception as e:
         print(json.dumps({"success": False, "error": f"invalid spec JSON on stdin: {e}"}))
         return
