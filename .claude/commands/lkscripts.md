@@ -116,7 +116,7 @@ Use these exact flags. Don't guess — wrong flags cause silent failure or ambig
 | `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
 | `deadline complete` | `--savedata --deadline-id` | — |
 | `notes write` | `--dest` | — (reads content from stdin; raw write, no figure embedding — prefer `notes_embed.py` for notes) |
-| `log entry` | `--savedata --entry` | `--course` (omit = global log only) |
+| `log entry` | `--savedata --entry` | `--course` (per-course `activity_log.md`; omit = no-op) |
 
 **Flag notes:**
 - `--course` = course slug (e.g. `pther_350a`) — used by `progress`, `pool`, `log entry`
@@ -204,12 +204,8 @@ Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each cr
 --entry "[DEADLINE] Added: Term Quiz 1 on 2026-05-13" --course "pther_350a"
 ```
 ```powershell
-# Global log only
-Start-Job -ScriptBlock { param($e,$w,$s,$entry)
-    & $e $w log entry --savedata $s --entry $entry
-} -ArgumentList $pythonExe,$writerPath,$savedataRoot,$logEntry | Out-Null
-
-# Both global + per-course
+# Per-course log (async). --course is required to write anything;
+# omitting it is a silent no-op (no global log file exists).
 Start-Job -ScriptBlock { param($e,$w,$s,$entry,$c)
     & $e $w log entry --savedata $s --entry $entry --course $c
 } -ArgumentList $pythonExe,$writerPath,$savedataRoot,$logEntry,$courseSlug | Out-Null
