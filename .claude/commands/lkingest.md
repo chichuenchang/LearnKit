@@ -95,7 +95,7 @@ On confirm: **copy** into project. Never delete or move originals.
 
 7d. **Extract problems to pool** (only when file type ∈ `{practice_quiz, exam_review, past_exam}`): Scan extracted text for discrete Q+A pairs. None found (prose study guide) → skip, notes only. Per problem found:
    - Map to unit by keyword overlap (step 5 logic). Unmappable → `unit_id`/`unit_slug` null.
-   - Assign `topic` label from unit's `topics` / weak-topic vocabulary.
+   - Assign `topic` label from unit's `topics`.
    - Set `question_type`, `options` (mcq only), `answer`, optional `rationale` and Section 1 `tags`. All content strictly from file — no invented problems (Rule 6).
    - Set `source_type` = file classification, `verbatim: true`, `source_file` = ingested filename, `source` = inferred label (e.g. "Practice Quiz — Week 3").
    - **Image-based problem** (figure part of question — diagram, X-ray, "identify the structure"): copy figure to **persistent** PNG under `materials\{unit_slug}\images\` (PDF → 7a page PNG, reuse 7b's; HTML → `data.images[]` file), set problem's `figure` (shape in lkschemas.md) with `image_path` = that PNG. Never reference `tmp_*` path (cleaned at step 8). Text-only → omit `figure`.

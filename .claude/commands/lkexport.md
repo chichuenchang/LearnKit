@@ -5,8 +5,10 @@ Base context (path vars, behavioral rules) from CLAUDE.md. Python script protoco
 **Included:**
 ```
 savedata\data\
-savedata\courses\**\*.md           (study notes only — no source binaries)
-savedata\courses\**\data\*.json    (course_structure, problem_pool)
+savedata\courses\**\            (all course files except source binaries:
+                                notes .md, data JSON [course_structure,
+                                problem_pool, image_bank], quiz\*.html,
+                                materials\**\images\*.png)
 savedata\archive\
 savedata\user.config.json
 ```
