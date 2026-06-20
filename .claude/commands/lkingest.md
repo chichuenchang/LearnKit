@@ -2,7 +2,7 @@ Base context (path vars, behavioral rules, Section 1 tagging) from CLAUDE.md. Sc
 
 ## Guiding principle — study experience first
 
-Human crams from note alone — judge: *"can I learn topic from note alone?"* **Images are why pipeline exists**: visual subjects (esp. anatomy) — labeled figures beat prose. Make notes image-rich — embed every helpful figure, capture labeled diagrams to bank generously, never drop figures to chase text/fidelity metric (patch text instead). Rule 9 still governs text claims.
+Human crams from note alone — judge: *"can I learn topic from note alone?"* **Images are why pipeline exists**: visual subjects (esp. anatomy) — labeled figures beat prose. Make notes image-rich — embed every helpful figure, capture labeled diagrams to bank generously, never drop figures to chase text/fidelity metric (patch text instead). Rule 6 still governs text claims.
 
 ## `/lkingest` — Process new course materials
 
@@ -42,7 +42,7 @@ On confirm: **copy** into project. Never delete or move originals.
    - `exam_review` — "exam review", "study guide", "review sheet"
    - `past_exam` — "midterm", "final", past "exam" with discrete numbered/lettered question structure (distinct from `exam_review`, a prose study guide)
    - `assignment` — "assignment", "submit", "due date"
-   - `announcement` — "announcement", "reminder", "please note", deadline language without study content
+   - `announcement` — "announcement", "reminder", "please note", scheduling language without study content
    - `other` — anything else
 
 4. **If syllabus**: Check `course_structure.json` units populated. No → run **Syllabus Processing Branch** (below). Yes → offer update.
@@ -72,9 +72,9 @@ On confirm: **copy** into project. Never delete or move originals.
 7b. **Capture labeled diagrams/figures to image bank** (PDFs only): from 7a pages, for each page that is a **labeled diagram or figure** — any subject (anatomy, chemistry, geography, circuits, maps, …) — (skip title / text-only / summary pages):
    - Save page PNG → `materials\{unit_slug}\images\{source_slug}_p{NN}.png`.
    - From detected `words` (text-layer or OCR boxes), keep those labeling a part/region/term: record `name`, `bbox`, `confidence`, free-form subject-appropriate `type` (e.g. `bone`, `country`, `component`, `functional group`; or null), `source:"slide"`.
-   - Add notable UNlabeled structures as `source:"ai"`, `verified:false`, `label_bbox:null` (Rule 9a — flagged, `[AI — verify]`). Never override printed label or invent coordinates.
+   - Add notable UNlabeled structures as `source:"ai"`, `verified:false`, `label_bbox:null` (Rule 6a — flagged, `[AI — verify]`). Never override printed label or invent coordinates.
    - Set `title` (slide heading) and `label_source` (page's `source`). Build one JSON array of all kept pages → single `image add` call (lkscripts.md). Surface: `"Captured {N} illustration(s) — {S} slide labels, {A} AI-flagged."` No illustration pages → skip silently.
-   - **HTML source**: instead of 7a pages, use `data.images[]`. Each figure worth banking → copy to `materials\{unit_slug}\images\`, add record with `label_source:"none"`, `image_path` = copied PNG, `title` from nearby heading / `alt` text; no text-layer boxes (structures may be AI-flagged per Rule 9a). Same single `image add` call.
+   - **HTML source**: instead of 7a pages, use `data.images[]`. Each figure worth banking → copy to `materials\{unit_slug}\images\`, add record with `label_source:"none"`, `image_path` = copied PNG, `title` from nearby heading / `alt` text; no text-layer boxes (structures may be AI-flagged per Rule 6a). Same single `image add` call.
 
 7c. **Generate image-rich study note**, write via `notes_embed.py` (no Write tool): grade-focused, Section-1-tagged note. Inline — where diagram illustrates text — drop figure placeholder cropped to that single figure (2-up handout pages: top slide ≈ `0,0,1,0.5`, bottom slide ≈ `0,0.5,1,0.5`; tighten as needed):
    ```
@@ -96,7 +96,7 @@ On confirm: **copy** into project. Never delete or move originals.
 7d. **Extract problems to pool** (only when file type ∈ `{practice_quiz, exam_review, past_exam}`): Scan extracted text for discrete Q+A pairs. None found (prose study guide) → skip, notes only. Per problem found:
    - Map to unit by keyword overlap (step 5 logic). Unmappable → `unit_id`/`unit_slug` null.
    - Assign `topic` label from unit's `topics` / weak-topic vocabulary.
-   - Set `question_type`, `options` (mcq only), `answer`, optional `rationale` and Section 1 `tags`. All content strictly from file — no invented problems (Rule 9).
+   - Set `question_type`, `options` (mcq only), `answer`, optional `rationale` and Section 1 `tags`. All content strictly from file — no invented problems (Rule 6).
    - Set `source_type` = file classification, `verbatim: true`, `source_file` = ingested filename, `source` = inferred label (e.g. "Practice Quiz — Week 3").
    - **Image-based problem** (figure part of question — diagram, X-ray, "identify the structure"): copy figure to **persistent** PNG under `materials\{unit_slug}\images\` (PDF → 7a page PNG, reuse 7b's; HTML → `data.images[]` file), set problem's `figure` (shape in lkschemas.md) with `image_path` = that PNG. Never reference `tmp_*` path (cleaned at step 8). Text-only → omit `figure`.
 
@@ -125,8 +125,7 @@ Entered from step 4 when: file type = `syllabus` AND `course_structure.json` has
    - Instructor name
    - Grading breakdown (components + weights)
    - Unit/topic structure (week schedule → logical units)
-   - Exam/quiz schedule (titles, dates, times, locations, coverage)
-   - Assignment and lab deadlines
+   - Exam/quiz schedule (titles, dates, times, locations, coverage) — for the `course_overview.md` reference table only
 
 2. **Build `course_structure.json`**: Map weeks → units. Extract 8-15 subject-specific keywords per unit (terminology, procedure names, key concepts). Drive course ID and unit assignment.
    - **Determine `unit_label` field**: Count occurrences of each label pattern in syllabus text: "Week N", "Unit N", "Chapter N", "Module N", "Topic N", "Lecture N", "Book N". Highest-frequency label wins if >60% of matches → set automatically (note: `"Auto-detected: {label}-based organization"`). Else ask:
@@ -143,11 +142,9 @@ Entered from step 4 when: file type = `syllabus` AND `course_structure.json` has
    - **Generate `display_name`**: `"{unit_label} N: {title}"` — e.g. `"Week 1: Vertebral Column"`, `"Chapter 3: Enzymes"`.
    - **Generate `unit_id`**: Derive prefix from `unit_label` per mapping in lkschemas.md (e.g. `"Week"` → `week_NN`, `"Chapter"` → `chap_NN`). Zero-padded two digits.
 
-3. **Write deadlines** to `data\global_deadlines.json`. Apply duplicate detection (Section 6, CLAUDE.md).
+3. **Update `courses_index.json`**: Set `syllabus_ingested: true` on course entry.
 
-4. **Update `courses_index.json`**: Set `syllabus_ingested: true` on course entry.
-
-5. **Write `courses\{slug}\materials\syllabus\course_overview.md`**:
+4. **Write `courses\{slug}\materials\syllabus\course_overview.md`**:
    ```markdown
    # {Course Code} — {Course Name}
    **Semester**: {semester} | **Instructor**: {instructor} | **Ingested**: {date}
@@ -171,17 +168,16 @@ Entered from step 4 when: file type = `syllabus` AND `course_structure.json` has
    [Attendance, late policy, exam format, anything that affects grades]
    ```
 
-6. **Ensure `misc.md` and `activity_log.md` exist**: Course created inline (not via `/lkcourse add`) → create both using `/lkcourse add` templates in Section 6, CLAUDE.md (steps 6–7).
+5. **Ensure `misc.md` and `activity_log.md` exist**: Course created inline (not via `/lkcourse add`) → create both using `/lkcourse add` templates in Section 6, CLAUDE.md (steps 6–7).
 
-7. **Confirm**:
+6. **Confirm**:
    ```
    Syllabus processed — {course_code}
    Units loaded   : {N}
-   Deadlines added: {N} ({breakdown, e.g. 2 exams, 1 lab practical, 1 assignment})
-   Next exam      : {title} on {date} ({N} days)
+   Next exam      : {title} on {date} (from course_overview.md schedule)
    ```
 
-8. **Unclassified materials exist**: `"You have N unclassified files from before syllabus load. Re-classify now? [Y/n]"` Y → run unit identification against new keywords, move to correct folders.
+7. **Unclassified materials exist**: `"You have N unclassified files from before syllabus load. Re-classify now? [Y/n]"` Y → run unit identification against new keywords, move to correct folders.
 
 Return to main pipeline at step 7 (generate notes) after branch completes.
 

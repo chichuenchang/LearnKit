@@ -5,11 +5,6 @@ Standalone data schema reference. Read before querying or interpreting JSON data
 **archived_courses[]**: `course_id`, `course_code`, `course_name`, `semester`, `folder`, `status: "archived"`, `archived_date`
 Default empty: `{"last_updated": null, "active_courses": [], "archived_courses": []}`
 
-## `data\global_deadlines.json` (global)
-**deadlines[]**: `id`, `course_id`, `course_code`, `type`, `title`, `date`, `time`, `location`, `details`, `source_date`, `completed` (bool)
-Valid `type`: `exam`, `quiz`, `assignment`, `lab`, `lab_practical`, `presentation`, `other`
-Default empty: `{"last_updated": null, "deadlines": []}`
-
 ## Per-course `data\course_structure.json`
 **top-level**: `unit_label` — display label for `display_name` gen and `unit_id` prefix. Valid values (default `"Unit"`). `image_quiz_ratio` (float 0–1, default `null`) — fraction of quiz questions that should be image-based; `null` → agent estimates from scope image-richness.
 

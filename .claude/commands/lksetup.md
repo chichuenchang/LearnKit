@@ -34,7 +34,6 @@ Packages missing but Python found → offer `pip install pdfplumber python-pptx 
 Create subdirs under `$savedataRoot`: `data\`, `courses\`, `archive\`, `raw\`
 Create default data JSON only if absent (re-run safe):
 - `data\courses_index.json` → default empty
-- `data\global_deadlines.json` → default empty
 
 **Step 4 — User name**
 ```

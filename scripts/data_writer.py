@@ -10,8 +10,6 @@ Subcommands:
   pool remove       Delete a problem from problem_pool.json
   image add         Append image records (JSON array on stdin) to image_bank.json
   image remove      Delete an image record from image_bank.json
-  deadline add      Append entry to global_deadlines.json
-  deadline complete Mark deadline completed in global_deadlines.json
   notes write       Write study notes file from stdin
   log entry         Append one-liner to activity_log.md(s)
 """
@@ -21,7 +19,6 @@ import pathlib
 import sys
 from datetime import datetime, date
 
-VALID_DEADLINE_TYPES = {"exam", "quiz", "assignment", "lab", "lab_practical", "presentation", "other"}
 VALID_QUESTION_TYPES = {"mcq", "short_answer", "matching", "labeling", "true_false", "essay"}
 
 
@@ -279,64 +276,6 @@ def cmd_image_remove(args):
     out({"success": True, "removed": args.image_id})
 
 
-# ── deadline add ──────────────────────────────────────────────────────────────
-
-def cmd_deadline_add(args):
-    if args.type not in VALID_DEADLINE_TYPES:
-        fail(f"invalid type: {args.type!r}. Valid: {sorted(VALID_DEADLINE_TYPES)}")
-
-    savedata = pathlib.Path(args.savedata)
-    path = savedata / "data" / "global_deadlines.json"
-    data = load_json(path, {"last_updated": None, "deadlines": []})
-
-    # generate next id
-    prefix = f"dl_{args.course_id}_"
-    existing = [d["id"] for d in data["deadlines"] if d["id"].startswith(prefix)]
-    nums = []
-    for eid in existing:
-        try:
-            nums.append(int(eid.replace(prefix, "")))
-        except ValueError:
-            pass
-    next_num = (max(nums) + 1) if nums else 1
-    new_id = f"{prefix}{next_num:03d}"
-
-    entry = {
-        "id": new_id,
-        "course_id": args.course_id,
-        "course_code": args.course_code,
-        "type": args.type,
-        "title": args.title,
-        "date": args.date,
-        "time": args.time or None,
-        "location": args.location or None,
-        "details": args.details or None,
-        "source_date": today_str(),
-        "completed": False,
-    }
-    data["deadlines"].append(entry)
-    data["last_updated"] = now_iso()
-
-    save_json(path, data)
-    out({"success": True, "id": new_id})
-
-
-# ── deadline complete ─────────────────────────────────────────────────────────
-
-def cmd_deadline_complete(args):
-    savedata = pathlib.Path(args.savedata)
-    path = savedata / "data" / "global_deadlines.json"
-    data = load_json(path, {"last_updated": None, "deadlines": []})
-
-    for d in data["deadlines"]:
-        if d["id"] == args.deadline_id:
-            d["completed"] = True
-            data["last_updated"] = now_iso()
-            save_json(path, data)
-            out({"success": True, "id": args.deadline_id})
-    fail(f"deadline id not found: {args.deadline_id!r}")
-
-
 # ── notes write ──────────────────────────────────────────────────────────────
 
 def cmd_notes_write(args):
@@ -427,25 +366,6 @@ def main():
     ir.add_argument("--course", required=True)
     ir.add_argument("--image-id", required=True)
 
-    # deadline
-    dg = sub.add_parser("deadline")
-    dg_sub = dg.add_subparsers(dest="action")
-
-    da = dg_sub.add_parser("add")
-    da.add_argument("--savedata", required=True)
-    da.add_argument("--course-id", required=True)
-    da.add_argument("--course-code", required=True)
-    da.add_argument("--type", required=True, dest="type")
-    da.add_argument("--title", required=True)
-    da.add_argument("--date", required=True)
-    da.add_argument("--time", default="")
-    da.add_argument("--location", default="")
-    da.add_argument("--details", default="")
-
-    dc = dg_sub.add_parser("complete")
-    dc.add_argument("--savedata", required=True)
-    dc.add_argument("--deadline-id", required=True)
-
     # notes
     ng = sub.add_parser("notes")
     ng_sub = ng.add_subparsers(dest="action")
@@ -475,11 +395,6 @@ def main():
                 cmd_image_add(args)
             elif args.action == "remove":
                 cmd_image_remove(args)
-        elif args.group == "deadline":
-            if args.action == "add":
-                cmd_deadline_add(args)
-            elif args.action == "complete":
-                cmd_deadline_complete(args)
         elif args.group == "notes":
             if args.action == "write":
                 cmd_notes_write(args)

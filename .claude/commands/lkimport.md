@@ -19,7 +19,7 @@ After extract: re-run startup Steps 1–3 (reload JSONs, reprint banner).
 Report:
 ```
 Import complete — learnkit_export_slimj_20260511.zip
-Restored : N files (3 courses, 14 notes, 8 quiz logs, all deadlines)
+Restored : N files (3 courses, 14 notes, 8 quiz logs)
 Skipped  : machine.config.json (kept local config)
 ```
 

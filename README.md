@@ -62,7 +62,7 @@ learnkit/              ← public repo (clone this)
 savedata/              ← your private data (gitignored)
 ├── user.config.json   ← your name
 ├── machine.config.json← Python path (never exported)
-├── data/              ← global index, deadlines
+├── data/              ← global course index
 ├── courses/           ← per-course notes, quiz pools, image banks
 ├── archive/           ← completed courses
 └── raw/               ← drop zone for new files
@@ -77,7 +77,6 @@ savedata/              ← your private data (gitignored)
 | `/lksetup` | First-time onboarding, Python config, savedata init |
 | `/lkingest` | Process files from `savedata/raw/` or pasted paths → self-contained image-rich notes |
 | `/lkquiz [course] [scope]` | Interactive quiz (auto-adapts: terminal or HTML) |
-| `/lkdeadlines` | View all upcoming deadlines |
 | `/lkpool [course]` | Manage pool of past quiz/exam problems |
 | `/lkimage [course] [scope]` | Review image bank of labeled diagrams and figures |
 | `/lkcourse add` | Register new course |

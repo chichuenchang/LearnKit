@@ -97,16 +97,11 @@ Use these exact flags. Don't guess — wrong flags cause silent failure or ambig
 | `pool remove` | `--savedata --course --problem-id` | — |
 | `image add` | `--savedata --course` | — (reads JSON array of image records from stdin) |
 | `image remove` | `--savedata --course --image-id` | — |
-| `deadline add` | `--savedata --course-id --course-code --type --title --date` | `--time --location --details` |
-| `deadline complete` | `--savedata --deadline-id` | — |
 | `notes write` | `--dest` | — (reads content from stdin; raw write, no figure embedding — prefer `notes_embed.py` for notes) |
 | `log entry` | `--savedata --entry` | `--course` (per-course `activity_log.md`; omit = no-op) |
 
 **Flag notes:**
 - `--course` = course slug (e.g. `pther_350a`) — used by `pool`, `log entry`
-- `--course-id` = course slug — used by `deadline add`
-- `--course-code` = display code (e.g. `PTHER 350A`) — used by `deadline add`
-- `deadline add` requires BOTH `--course-id` and `--course-code` (separate flags, not interchangeable)
 - `log entry --course slug` writes to that course's `activity_log.md`
 
 **`pool add` — batch problem write (reads stdin, like `notes write`):**
@@ -186,7 +181,7 @@ Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each cr
 
 **Log entry format** — always prefix with type tag:
 ```powershell
---entry "[DEADLINE] Added: Term Quiz 1 on 2026-05-13" --course "pther_350a"
+--entry "[QUIZ] Term Quiz 1 — 16/20 (80%)" --course "pther_350a"
 ```
 ```powershell
 # Per-course log (async). --course is required to write anything;

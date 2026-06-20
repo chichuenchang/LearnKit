@@ -13,7 +13,6 @@ Read lkschemas.md and lklogging.md before reconciling.
 | `/lkquiz` | `[QUIZ]` one-liner in `courses\{slug}\activity_log.md` |
 | `/lkingest` | `[INGEST]` in `courses\{slug}\activity_log.md` · source archived to `raw\{unit}\` · image-rich note → `materials\{unit}\` · (PDF diagrams) captured to `image_bank.json` (+ `images\`) + `[IMAGE]` log · (quiz/exam/practice files) extracted problems in `problem_pool.json` + `[POOL]` log |
 | `/lkpool` | `problems[]` entry in `problem_pool.json` · `[POOL]` in `courses\{slug}\activity_log.md` |
-| `/lkdeadlines add` | Entry in `data\global_deadlines.json` · `[DEADLINE]` in `courses\{slug}\activity_log.md` |
 
 **Steps:**
 1. List all commands run this session (from context)

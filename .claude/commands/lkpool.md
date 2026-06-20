@@ -2,7 +2,7 @@ Base context (path variables, behavioral rules) from CLAUDE.md. Data schemas in 
 
 ## `/lkpool` — Problem pool management
 
-Manages each course's `data\problem_pool.json` — bank of past quiz/exam problems `/lkquiz` serves verbatim + mines for style. All writes through `data_writer.py` `pool add` / `pool remove` (Rule 13). Multiple active courses + none specified → ask (Rule 2). Never mix courses (Rule 1). Log every mutation (Rule 12).
+Manages each course's `data\problem_pool.json` — bank of past quiz/exam problems `/lkquiz` serves verbatim + mines for style. All writes through `data_writer.py` `pool add` / `pool remove` (Rule 10). Multiple active courses + none specified → ask (Rule 2). Never mix courses (Rule 1). Log every mutation (Rule 9).
 
 ### `/lkpool {course}` — summary
 Read `course_structure.json` + `problem_pool.json` (missing pool file → empty, 0 problems). Print:

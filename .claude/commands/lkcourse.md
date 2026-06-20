@@ -42,7 +42,7 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (prefix/short-c
    # {course_code} — Notes & Miscellaneous
    **Course**: {course_code} — {course_name} | **Semester**: {semester} | **Created**: {date}
 
-   > Use this file for anything important that doesn't fit elsewhere: deadline changes,
+   > Use this file for anything important that doesn't fit elsewhere:
    > instructor announcements, reminders, exam format updates, etc.
    > Agent reads this at the start of every study and quiz session.
 
@@ -63,7 +63,7 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (prefix/short-c
 1. Show confirmation:
    ```
    Archive {course_code} — {course_name}?
-   This will move savedata\courses\{slug}\ → savedata\archive\{slug}\ and stop tracking its deadlines.
+   This will move savedata\courses\{slug}\ → savedata\archive\{slug}\.
    Contents: 14 material files, 8 quizzes, 3 data files.
    Type YES to confirm:
    ```
@@ -79,9 +79,8 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (prefix/short-c
      Global weak areas at archive time: [list]
      ```
    - Move entry: `active_courses` → `archived_courses` in `courses_index.json`
-   - Remove course deadlines from `global_deadlines.json`
    - Read lklogging.md. Write `[COURSE]` to `courses\{slug}\activity_log.md` BEFORE moving: `"Course archived — {N} quizzes completed"`
-   - Print: `"{course_code} archived. Deadlines removed from tracker."`
+   - Print: `"{course_code} archived."`
 
 ---
 
