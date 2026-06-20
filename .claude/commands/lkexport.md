@@ -6,7 +6,7 @@ Base context (path vars, behavioral rules) from CLAUDE.md. Python script protoco
 ```
 savedata\data\
 savedata\courses\**\*.md           (study notes only — no source binaries)
-savedata\courses\**\data\*.json    (course_structure, progress, problem_pool)
+savedata\courses\**\data\*.json    (course_structure, problem_pool)
 savedata\archive\
 savedata\user.config.json
 ```

@@ -82,6 +82,31 @@ class ImageQuizTests(unittest.TestCase):
         self.assertEqual(res["question_count"], 1)
         self.assertIn("data:image/png;base64,", pathlib.Path(self.html).read_text(encoding="utf-8"))
 
+    def test_text_only_question_renders(self):
+        # no image_path → pure text MCQ card, must render (not skipped)
+        spec = {"title": "Text Quiz", "questions": [
+            {"stem": "Pure text question?", "options": ["A", "B"], "answer_index": 0}]}
+        res = run_quiz(spec, self.html)
+        self.assertTrue(res["success"], res.get("error"))
+        self.assertEqual(res["question_count"], 1)
+        txt = pathlib.Path(self.html).read_text(encoding="utf-8")
+        self.assertIn("Pure text question?", txt)
+        self.assertEqual(txt.count('class="card"'), 1)
+        self.assertNotIn("data:image/png;base64,", txt)        # no image embedded
+
+    def test_mixed_image_and_text(self):
+        # one image question + one text-only → both render, single embedded image
+        spec = {"title": "Mixed Quiz", "questions": [
+            {"image_path": self.png, "stem": "Image Q?",
+             "options": ["A", "B"], "answer_index": 0},
+            {"stem": "Text Q?", "options": ["C", "D"], "answer_index": 1}]}
+        res = run_quiz(spec, self.html)
+        self.assertTrue(res["success"], res.get("error"))
+        self.assertEqual(res["question_count"], 2)
+        txt = pathlib.Path(self.html).read_text(encoding="utf-8")
+        self.assertEqual(txt.count('class="card"'), 2)
+        self.assertEqual(txt.count("data:image/png;base64,"), 1)
+
     def test_empty_stdin_fails(self):
         proc = subprocess.run([sys.executable, SCRIPT, "--out", self.html],
                               input="", capture_output=True, text=True)

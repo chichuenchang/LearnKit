@@ -15,7 +15,6 @@ Shared internal helpers (not agent-invoked): `scripts\lkconfig.py` (config), `sc
 | `textlayer_min_words` | image_extract | min text-layer words before OCR fallback |
 | `ocr_min_conf` | image_extract | min OCR word confidence (0–100) to keep a label box |
 | `render_scale` | extract_text, image_extract | fitz Matrix scale (PDF points → pixels) |
-| `passing_score` | data_writer | quiz score-pct at/above which a unit counts as passed |
 
 CLI `--max-pages` (per-file) precedes config default for that run.
 
@@ -86,19 +85,6 @@ Remove-Item (Join-Path $scriptsRoot "tmp_split") -Recurse -ErrorAction SilentlyC
 
 ## `data_writer.py` — validated structured writes (no temp file)
 
-```powershell
-$writerPath = Join-Path $scriptsRoot "data_writer.py"
-$result = (& $pythonExe $writerPath progress quiz `
-    --savedata $savedataRoot `
-    --course "biol_201" `
-    --unit "unit_01_cell_structure" `
-    --score-pct 78.0 --correct 14 --total 18 --incorrect 3 --skipped 1 `
-    --weak-topics "cell cycle phases,membrane transport") | ConvertFrom-Json
-if (-not $result.success) {
-    Write-Host "Write failed: $($result.error)"
-}
-```
-
 Output lands on stdout — no temp file, no cleanup. Same error-check pattern for all subcommands.
 
 ### Complete subcommand reference
@@ -107,8 +93,6 @@ Use these exact flags. Don't guess — wrong flags cause silent failure or ambig
 
 | Subcommand | Required flags | Optional flags |
 |------------|---------------|----------------|
-| `progress quiz` | `--savedata --course --unit --score-pct --correct --total --incorrect` | `--skipped --partial --adaptive --weak-topics "a,b" --mcq "11/13" --sa "2/5"` |
-| `progress ingest` | `--savedata --course --unit` | — |
 | `pool add` | `--savedata --course` | — (reads JSON array of problems from stdin) |
 | `pool remove` | `--savedata --course --problem-id` | — |
 | `image add` | `--savedata --course` | — (reads JSON array of image records from stdin) |
@@ -119,7 +103,7 @@ Use these exact flags. Don't guess — wrong flags cause silent failure or ambig
 | `log entry` | `--savedata --entry` | `--course` (per-course `activity_log.md`; omit = no-op) |
 
 **Flag notes:**
-- `--course` = course slug (e.g. `pther_350a`) — used by `progress`, `pool`, `log entry`
+- `--course` = course slug (e.g. `pther_350a`) — used by `pool`, `log entry`
 - `--course-id` = course slug — used by `deadline add`
 - `--course-code` = display code (e.g. `PTHER 350A`) — used by `deadline add`
 - `deadline add` requires BOTH `--course-id` and `--course-code` (separate flags, not interchangeable)
@@ -180,9 +164,10 @@ $specJson = @'
 $r = ($specJson | & $pythonExe (Join-Path $scriptsRoot "image_quiz.py") --out $htmlPath) | ConvertFrom-Json
 # success → { html_path, question_count }.  Then: Start-Process $r.html_path
 ```
-Per question: `image_path`, `stem`, `options`, `answer_index` (required); `target_bbox` and `crop_bbox` optional (normalized `[x,y,w,h]`).
-- **Image-bank quiz** (`/lkimage quiz`): set `target_bbox` → region blanked + highlighted with "?" so student names it.
-- **Figure-bearing pool problems** (`/lkquiz --html`): set `crop_bbox` = problem's `figure.bbox` (or omit for whole image) and **no** `target_bbox` → figure shows unmasked with verbatim `stem`/`options`. Missing image → that question skipped.
+Per question: `stem`, `options`, `answer_index` (required); `image_path`, `target_bbox`, `crop_bbox` optional (bboxes normalized `[x,y,w,h]`). Used by the unified `/lkquiz` when a quiz includes image questions — one spec holds the whole quiz (text + image cards interleaved).
+- **Text-only card**: omit `image_path` → renders a plain MCQ card (mixed quizzes interleave these with image cards).
+- **Image-bank question** (name-the-structure): set `image_path` + `target_bbox` → region blanked + highlighted with "?" so student names it.
+- **Figure-bearing pool problem**: set `image_path` + `crop_bbox` = problem's `figure.bbox` (or omit `crop_bbox` for whole image) and **no** `target_bbox` → figure shows unmasked with verbatim `stem`/`options`. `image_path` named but missing → that question skipped.
 
 Agent builds `options` + `answer_index`; script only crops/masks (Pillow) + embeds images as base64 (single offline file).
 

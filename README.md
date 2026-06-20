@@ -1,6 +1,6 @@
 # LearnKit
 
-Claude Code study agent for university courses. Drop course materials — syllabuses, lecture slides, PDFs. LearnKit builds study guides, runs adaptive quizzes, tracks progress, keeps focus on what gets graded.
+Claude Code study agent for university courses. Drop course materials — syllabuses, lecture slides, PDFs. LearnKit builds study guides, runs quizzes, keeps focus on what gets graded.
 
 Works with any course. Each student keeps own private data.
 
@@ -63,7 +63,7 @@ savedata/              ← your private data (gitignored)
 ├── user.config.json   ← your name
 ├── machine.config.json← Python path (never exported)
 ├── data/              ← global index, deadlines
-├── courses/           ← per-course notes, progress, quiz history
+├── courses/           ← per-course notes, quiz pools, image banks
 ├── archive/           ← completed courses
 └── raw/               ← drop zone for new files
 ```
@@ -76,11 +76,10 @@ savedata/              ← your private data (gitignored)
 |---------|-------------|
 | `/lksetup` | First-time onboarding, Python config, savedata init |
 | `/lkingest` | Process files from `savedata/raw/` or pasted paths → self-contained image-rich notes |
-| `/lkquiz [course] [scope]` | Adaptive interactive quiz |
+| `/lkquiz [course] [scope]` | Interactive quiz (auto-adapts: terminal or HTML) |
 | `/lkdeadlines` | View all upcoming deadlines |
-| `/lkprogress` | Study dashboard across all courses |
 | `/lkpool [course]` | Manage pool of past quiz/exam problems |
-| `/lkimage [course] [scope]` | Review image bank, or `/lkimage quiz` for image MCQ quiz (HTML) |
+| `/lkimage [course] [scope]` | Review image bank of labeled diagrams and figures |
 | `/lkcourse add` | Register new course |
 | `/lkcourse complete` | Archive finished course |
 | `/lksave` | Reconcile missed data writes from current session |
@@ -108,7 +107,7 @@ cd learnkit && claude
 /lkimport C:\path\to\learnkit_export_name_date.zip
 ```
 
-All courses, notes, quiz history, progress restore automatically. Machine-specific config (Python path) set fresh by `/lksetup` — never included in export.
+All courses, notes, and quiz data restore automatically. Machine-specific config (Python path) set fresh by `/lksetup` — never included in export.
 
 ---
 
