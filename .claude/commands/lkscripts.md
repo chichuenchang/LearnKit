@@ -175,4 +175,4 @@ More text.
 $r = ($note | & $pythonExe (Join-Path $scriptsRoot "notes_embed.py") --dest $mdPath) | ConvertFrom-Json
 # success → { figures_embedded, missing }
 ```
-Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each cropped (Pillow) → base64 → `![caption](data:image/png;base64,...)` inline. No tokens → writes through unchanged (replaces `notes write` for note step). Missing/bad page → `*(figure unavailable)*`, never crashes.
+Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each cropped (Pillow) → base64 → `![caption](data:image/png;base64,...)` inline. No tokens → writes through unchanged (replaces `notes write` for note step). Missing/bad page → `*(figure unavailable: {caption})*`, never crashes.
