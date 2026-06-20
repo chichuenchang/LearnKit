@@ -1,4 +1,4 @@
-Base context (path variables, behavioral rules, Section 1 tagging) loaded from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol and data_writer.py reference in lkscripts.md. Log entry format spec in lklogging.md.
+Base context (path variables, behavioral rules, Section 1 tagging) loaded from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol and data_writer.py reference in lkscripts.md.
 
 ## `/lkquiz {course_code} {scope}` — Interactive quiz
 
@@ -154,13 +154,13 @@ $out = "{savedataRoot}\courses\{slug}\quiz\quiz_{scope}_{YYYYMMDD}.html"
 $r = ($specJson | & $pythonExe (Join-Path $scriptsRoot "image_quiz.py") --out $out) | ConvertFrom-Json
 if ($r.success) { Start-Process $r.html_path }
 ```
-Page scores **client-side** — nothing is written back. Log per course (Step 4 log entry only): `- [QUIZ] {scope} — {N} Q ({img_n} image) -> HTML`.
+Page scores **client-side** — nothing is written back.
 
 ---
 
 ### Step 3 — Results summary (terminal quiz only, after final Q or `end quiz`)
 
-Print one line, then proceed to Step 4:
+Print one line — the final output:
 
 ```
 Done — 14/18  78%  ✓ PASS
@@ -173,19 +173,4 @@ Done — 9/18  50%  ✗ FAIL
 
 If 0 questions answered → print nothing. (HTML quizzes score in the browser — no terminal summary.)
 
----
-
-### Step 4 — Log entry (after results)
-
-The only write. Fire silently — single synchronous PowerShell call, no narration:
-
-```powershell
-& $pythonExe $writerPath log entry `
-    --savedata $savedataRoot --course {course_id} `
-    --entry "- [QUIZ] {display_name} — {score}/{total} ({pct}%)" | Out-Null
-```
-Multi-unit entry format: `- [QUIZ] {Units/Weeks} 1–3 (Midterm 1) — 19/25 (76%)`.
-
-When pool problems served, append ` (mock)` (mock scope) or ` (pool-augmented)` (normal scope) to the `{display_name}` segment, e.g. `- [QUIZ] {display_name} (pool-augmented) — {score}/{total} ({pct}%)`.
-
-For an HTML quiz (Step 2-HTML) there is no terminal score — use the HTML log line from Step 2-HTML instead.
+Quiz is stateless — nothing is written back to disk.

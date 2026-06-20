@@ -1,4 +1,4 @@
-Base context (path vars, behavioral rules, Section 1 tagging) from CLAUDE.md. Schemas: lkschemas.md. Python protocol + data_writer.py: lkscripts.md. Log format: lklogging.md.
+Base context (path vars, behavioral rules, Section 1 tagging) from CLAUDE.md. Schemas: lkschemas.md. Python protocol + data_writer.py: lkscripts.md.
 
 ## Guiding principle — study experience first
 
@@ -102,16 +102,7 @@ On confirm: **copy** into project. Never delete or move originals.
 
    Build one JSON array of all problems, write via single `pool add` call (lkscripts.md). Surface: `"Extracted {added} problem(s) to {course_code} pool ({skipped} duplicate(s) skipped, {F} with figures)."`
 
-8. **Fire all data writes synchronously** (silent — no output, no task notification), then print `"Done — {N} file(s) ingested."`. Sequential, no race conditions:
-   ```powershell
-   # --- log entry (one per affected course) ---
-   & $pythonExe $writerPath log entry `
-       --savedata $savedataRoot --course {course_id} `
-       --entry "- [INGEST] {N} file(s) -> {unit(s)}: {filenames, comma-separated}" | Out-Null
-   ```
-   Step 7d added problems → also log per affected course: `- [POOL] Extracted {N} problem(s) from {filename} -> {unit(s)}`.
-   Step 7b captured illustrations → also log per course: `- [IMAGE] Captured {N} illustration(s) from {filename} -> {unit}`.
-   Finally clean temp render dirs: 7a render dir (`pages_dir` from `image_extract.py`), HTML image dir (`data.pages_dir` from `extract_text.py`, under `tmp_html`), and `tmp_split` dir if step 0 split. Persisted figures already live under `materials\...\images\`.
+8. **Clean up**, then print `"Done — {N} file(s) ingested."`. Clean temp render dirs: 7a render dir (`pages_dir` from `image_extract.py`), HTML image dir (`data.pages_dir` from `extract_text.py`, under `tmp_html`), and `tmp_split` dir if step 0 split. Persisted figures already live under `materials\...\images\`.
 
 ---
 
@@ -168,7 +159,7 @@ Entered from step 4 when: file type = `syllabus` AND `course_structure.json` has
    [Attendance, late policy, exam format, anything that affects grades]
    ```
 
-5. **Ensure `misc.md` and `activity_log.md` exist**: Course created inline (not via `/lkcourse add`) → create both using `/lkcourse add` templates in Section 6, CLAUDE.md (steps 6–7).
+5. **Ensure `misc.md` exists**: Course created inline (not via `/lkcourse add`) → create it using the `/lkcourse add` `misc.md` template in lkcourse.md.
 
 6. **Confirm**:
    ```

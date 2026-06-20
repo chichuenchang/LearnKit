@@ -50,7 +50,6 @@ PER-COURSE DATA (under $savedataRoot\courses\{course_slug}\):
   data\course_structure.json  — unit/exam map built from syllabus
   data\problem_pool.json      — past quiz/exam problems (pool); served + style-exemplar source for /lkquiz
   data\image_bank.json        — labeled diagrams/figures, any subject (image + label positions) for /lkimage
-  activity_log.md             — per-course log: events for that course only
   misc.md                     — free-form running log: instructor notes, anything important
   materials\{unit_slug}\      — generated study notes (.md, self-contained: figures embedded inline as base64) + images\ — NO source files (sources live in raw\)
   materials\{unit_slug}\images\ — extracted illustration PNGs (referenced by image_bank.json)
@@ -160,12 +159,12 @@ Full schema ref in `.claude/commands/lkschemas.md`. Skills read that file before
 ## SECTION 6 — COMMANDS AND WORKFLOWS
 
 ### `/lkingest` — Process new course materials
-Full spec in `.claude/commands/lkingest.md`. Inputs: `.pdf`, `.pptx`, `.docx`, `.txt`, `.md`, `.html`. Per file: auto-split PDFs over `auto_split_pages` into parts, extract text, identify course/unit, archive source to `raw\{unit}\`, render pages (PDF) or pull `<img>` figures (HTML) + capture labeled diagrams to `image_bank.json` (+ `materials\{unit}\images\`), generate **self-contained image-rich `.md` note** (text + figures embedded inline as base64), extract problems to `problem_pool.json` (quiz/exam/practice files — including **image-based problems** carrying a `figure`), then update activity logs. Handles `raw\` drop folder and pasted paths.
+Full spec in `.claude/commands/lkingest.md`. Inputs: `.pdf`, `.pptx`, `.docx`, `.txt`, `.md`, `.html`. Per file: auto-split PDFs over `auto_split_pages` into parts, extract text, identify course/unit, archive source to `raw\{unit}\`, render pages (PDF) or pull `<img>` figures (HTML) + capture labeled diagrams to `image_bank.json` (+ `materials\{unit}\images\`), generate **self-contained image-rich `.md` note** (text + figures embedded inline as base64), extract problems to `problem_pool.json` (quiz/exam/practice files — including **image-based problems** carrying a `figure`). Handles `raw\` drop folder and pasted paths.
 
 ---
 
 ### `/lkquiz {course_code} {scope}` — Interactive quiz
-Full spec in `.claude/commands/lkquiz.md`. Auto-adapts: includes image-based problems when the scope's materials are image-rich (proportion from per-course `image_quiz_ratio` or agent estimate). When image problems are included, renders the entire quiz as a single self-contained HTML page; otherwise runs as an interactive terminal quiz. Results summary with logging.
+Full spec in `.claude/commands/lkquiz.md`. Auto-adapts: includes image-based problems when the scope's materials are image-rich (proportion from per-course `image_quiz_ratio` or agent estimate). When image problems are included, renders the entire quiz as a single self-contained HTML page; otherwise runs as an interactive terminal quiz. Results summary printed to terminal.
 
 ---
 
@@ -204,16 +203,6 @@ Full spec in `.claude/commands/lkimage.md`. Variants: `/lkimage {course}` (summa
 
 ### `/lkcourse` — Course management
 Full spec in `.claude/commands/lkcourse.md`. Variants: `/lkcourse add {code} {name}`, `/lkcourse complete {code}`, `/lkcourse list`.
-
----
-
-### `/lklog` — View activity log
-Full spec in `.claude/commands/lklog.md`. Variants: `/lklog`, `/lklog {course}`, `/lklog {N}d`, `/lklog quiz {unit_id}`.
-
----
-
-### `/lksave` — Reconcile pending data writes
-Full spec in `.claude/commands/lksave.md`. Recovery command for missed writes in long sessions.
 
 ---
 
@@ -272,14 +261,6 @@ Full spec in `.claude/commands/lkscripts.md` — covers `extract_text.py` usage,
 6a. **Image labels exception** — In **image bank** only, label names may be AI-identified **when not printed on the slide**, but MUST be stored `source:"ai"` with `verified:false` and surfaced as `[AI — verify]`. Printed slide labels (text-layer / OCR) stay grounded default; AI-fill never overrides or invents a printed label. (Applies to any subject's diagrams — anatomy, chemistry, geography, etc.)
 7. **`misc.md` always fresh** — read at start of every `/lkquiz`; surface entries from past 14 days under `## Course Notes` before main content
 8. **Prepend to `misc.md`** — new entries go at top (after header), not bottom
-9. **Log every action** — quiz, ingest, course event → log entry; never skip
-10. **Use data_writer.py for all structured writes** — never write JSON files directly; never append to activity_log.md directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error.
-11. **Python path from config only** — always use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Never hardcode interpreter path. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/lksetup`.
-12. **Study experience first** — notes are studied by a human for a grade; images are *why* the image pipeline exists (esp. anatomy). Keep notes image-rich; never thin figures to chase a text/fidelity metric (patch text instead). Judge by *"can the student learn this from the note alone?"* See `.claude/commands/lkingest.md`.
-
----
-
-## SECTION 11 — LOGGING
-
-Log every action — mandate: Rule 9 above.
-Format spec in `.claude/commands/lklogging.md`. Skills read that file before writing entries.
+9. **Use data_writer.py for all structured writes** — never write JSON files directly. Always invoke `data_writer.py` subcommands. Agent reads `{"success": false, "error": "..."}` and surfaces the error.
+10. **Python path from config only** — always use `$pythonExe` (loaded at startup Step 0 from machine.config.json). Never hardcode interpreter path. If `$pythonExe` is `"python"` (fallback) and extraction fails, direct user to `/lksetup`.
+11. **Study experience first** — notes are studied by a human for a grade; images are *why* the image pipeline exists (esp. anatomy). Keep notes image-rich; never thin figures to chase a text/fidelity metric (patch text instead). Judge by *"can the student learn this from the note alone?"* See `.claude/commands/lkingest.md`.

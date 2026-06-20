@@ -1,4 +1,4 @@
-Base context (path vars, behavioral rules) from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol + data_writer.py ref in lkscripts.md. Log format spec in lklogging.md.
+Base context (path vars, behavioral rules) from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol + data_writer.py ref in lkscripts.md.
 
 ## `/lkcourse` — Course management
 
@@ -29,15 +29,7 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (prefix/short-c
    courses\{slug}\data\
    ```
 5. Make default empty JSON: `course_structure.json`, `problem_pool.json` (default empty values: lkschemas.md)
-6. Make `courses\{slug}\activity_log.md`:
-   ```markdown
-   # {course_code} — Activity Log
-   **Course**: {course_code} — {course_name} | **Semester**: {semester}
-   <!-- Entries are prepended below this line. Newest entries appear first. -->
-
-   ---
-   ```
-7. Make `courses\{slug}\misc.md`:
+6. Make `courses\{slug}\misc.md`:
    ```markdown
    # {course_code} — Notes & Miscellaneous
    **Course**: {course_code} — {course_name} | **Semester**: {semester} | **Created**: {date}
@@ -49,7 +41,7 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (prefix/short-c
    ---
 
    ```
-8. Read lklogging.md. Write `[COURSE]` log entry to `courses\{slug}\activity_log.md`. Print:
+7. Print:
    ```
    Course added: {course_code} — {course_name}
    Folder: savedata\courses\{slug}\
@@ -75,11 +67,8 @@ Store as `unit_label: "{chosen label}"` in course_structure.json (prefix/short-c
      Archived: {date}
      Semester: {semester}
      Materials ingested: N files
-     Quizzes completed: N
-     Global weak areas at archive time: [list]
      ```
    - Move entry: `active_courses` → `archived_courses` in `courses_index.json`
-   - Read lklogging.md. Write `[COURSE]` to `courses\{slug}\activity_log.md` BEFORE moving: `"Course archived — {N} quizzes completed"`
    - Print: `"{course_code} archived."`
 
 ---

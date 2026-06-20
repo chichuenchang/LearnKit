@@ -11,7 +11,6 @@ Subcommands:
   image add         Append image records (JSON array on stdin) to image_bank.json
   image remove      Delete an image record from image_bank.json
   notes write       Write study notes file from stdin
-  log entry         Append one-liner to activity_log.md(s)
 """
 import argparse
 import json
@@ -286,54 +285,6 @@ def cmd_notes_write(args):
     out({"success": True})
 
 
-# ── log entry ─────────────────────────────────────────────────────────────────
-
-def _append_log(log_path: pathlib.Path, entry: str):
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    today = date.today()
-    heading = f"## {today.strftime('%Y-%m-%d')} ({today.strftime('%A')})"
-
-    if log_path.exists():
-        content = log_path.read_text(encoding="utf-8-sig")
-    else:
-        content = ""
-
-    if heading in content:
-        # insert after heading line
-        lines = content.splitlines(keepends=True)
-        out_lines = []
-        inserted = False
-        for line in lines:
-            out_lines.append(line)
-            if not inserted and line.strip() == heading:
-                out_lines.append(entry + "\n")
-                inserted = True
-        content = "".join(out_lines)
-    else:
-        # find insertion point: after file header (lines starting with #, **, <!-- until first ---)
-        lines = content.splitlines(keepends=True)
-        insert_at = 0
-        for i, line in enumerate(lines):
-            if line.strip() == "---":
-                insert_at = i + 1
-                break
-        block = f"\n{heading}\n{entry}\n"
-        lines.insert(insert_at, block)
-        content = "".join(lines)
-
-    log_path.write_text(content, encoding="utf-8")
-
-
-def cmd_log_entry(args):
-    savedata = pathlib.Path(args.savedata)
-
-    if args.course:
-        course_log = savedata / "courses" / args.course / "activity_log.md"
-        _append_log(course_log, args.entry)
-
-    out({"success": True})
-
-
 # ── main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -373,15 +324,6 @@ def main():
     nw = ng_sub.add_parser("write")
     nw.add_argument("--dest", required=True)
 
-    # log
-    lg = sub.add_parser("log")
-    lg_sub = lg.add_subparsers(dest="action")
-
-    le = lg_sub.add_parser("entry")
-    le.add_argument("--savedata", required=True)
-    le.add_argument("--entry", required=True)
-    le.add_argument("--course", default="")
-
     args = parser.parse_args()
 
     try:
@@ -398,9 +340,6 @@ def main():
         elif args.group == "notes":
             if args.action == "write":
                 cmd_notes_write(args)
-        elif args.group == "log":
-            if args.action == "entry":
-                cmd_log_entry(args)
         else:
             fail(f"unknown subcommand: {args.group} {getattr(args, 'action', '')}")
     except Exception as e:

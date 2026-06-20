@@ -1,8 +1,8 @@
-Base context (path variables, behavioral rules) from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol + data_writer.py reference in lkscripts.md. Log entry format in lklogging.md.
+Base context (path variables, behavioral rules) from CLAUDE.md. Data schemas in lkschemas.md. Python script protocol + data_writer.py reference in lkscripts.md.
 
 ## `/lkpool` — Problem pool management
 
-Manages each course's `data\problem_pool.json` — bank of past quiz/exam problems `/lkquiz` serves verbatim + mines for style. All writes through `data_writer.py` `pool add` / `pool remove` (Rule 10). Multiple active courses + none specified → ask (Rule 2). Never mix courses (Rule 1). Log every mutation (Rule 9).
+Manages each course's `data\problem_pool.json` — bank of past quiz/exam problems `/lkquiz` serves verbatim + mines for style. All writes through `data_writer.py` `pool add` / `pool remove` (Rule 9). Multiple active courses + none specified → ask (Rule 2). Never mix courses (Rule 1).
 
 ### `/lkpool {course}` — summary
 Read `course_structure.json` + `problem_pool.json` (missing pool file → empty, 0 problems). Print:
@@ -31,7 +31,7 @@ $problemsJson = @'
 $r = ($problemsJson | & $pythonExe $writerPath pool add --savedata $savedataRoot --course "{slug}") | ConvertFrom-Json
 if (-not $r.success) { Write-Host "Failed: $($r.error)" }
 ```
-`source_type` defaults `manual`, `verbatim` false. Confirm: `"Added {id} to {course_code} pool."` Log: `[POOL] Added 1 problem (manual) -> {unit or 'unmapped'}`. Image-based problem → include `figure` object (`image_path` to persistent PNG under `materials\{unit}\images`, optional `bbox`/`caption`) — see lkschemas.md; image problems usually captured during `/lkingest` (step 7d), not added manually.
+`source_type` defaults `manual`, `verbatim` false. Confirm: `"Added {id} to {course_code} pool."` Image-based problem → include `figure` object (`image_path` to persistent PNG under `materials\{unit}\images`, optional `bbox`/`caption`) — see lkschemas.md; image problems usually captured during `/lkingest` (step 7d), not added manually.
 
 ### `/lkpool list {course} [unit]` — list
 Read `problem_pool.json`. Print table: `problem_id`, `question_type`, `topic`, `source`. Mark rows with non-null `figure` with `[img]` tag (served as image questions by `/lkquiz`). Optional unit filter (match `unit_id` or `unit_slug`). Truncate question preview to ~60 chars if shown.
@@ -43,4 +43,4 @@ Derive course slug from id: strip `prob_` prefix + trailing `_{NNN}` segment (NN
 $r = (& $pythonExe $writerPath pool remove --savedata $savedataRoot --course "{slug}" --problem-id "{problem_id}") | ConvertFrom-Json
 if (-not $r.success) { Write-Host "Failed: $($r.error)" }
 ```
-Confirm: `"Removed {id}."` Log: `[POOL] Removed {id}`.
+Confirm: `"Removed {id}."`

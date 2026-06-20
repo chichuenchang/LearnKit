@@ -25,8 +25,6 @@ Run `export_savedata.py --savedata $savedataRoot --output $exportPath`. Parse JS
 ```
 Export complete — learnkit_export_slimj_20260511.zip
 Location : C:\Users\{user}\Projects\learnkit\
-Contents : N files (3 courses, 14 notes, 8 quiz logs)
+Contents : N files (3 courses, 14 notes, 8 quizzes)
 Size     : 142 KB
 ```
-
-Log: `- [EXPORT] savedata packed → {filename} ({size_kb} KB)`

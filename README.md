@@ -81,10 +81,8 @@ savedata/              ← your private data (gitignored)
 | `/lkimage [course] [scope]` | Review image bank of labeled diagrams and figures |
 | `/lkcourse add` | Register new course |
 | `/lkcourse complete` | Archive finished course |
-| `/lksave` | Reconcile missed data writes from current session |
 | `/lkexport [path]` | Pack savedata into portable zip |
 | `/lkimport <path>` | Restore savedata from zip |
-| `/lklog` | View activity log |
 
 ---
 

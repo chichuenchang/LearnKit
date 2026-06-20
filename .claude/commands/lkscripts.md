@@ -98,11 +98,9 @@ Use these exact flags. Don't guess — wrong flags cause silent failure or ambig
 | `image add` | `--savedata --course` | — (reads JSON array of image records from stdin) |
 | `image remove` | `--savedata --course --image-id` | — |
 | `notes write` | `--dest` | — (reads content from stdin; raw write, no figure embedding — prefer `notes_embed.py` for notes) |
-| `log entry` | `--savedata --entry` | `--course` (per-course `activity_log.md`; omit = no-op) |
 
 **Flag notes:**
-- `--course` = course slug (e.g. `pther_350a`) — used by `pool`, `log entry`
-- `log entry --course slug` writes to that course's `activity_log.md`
+- `--course` = course slug (e.g. `pther_350a`) — used by `pool`, `image`
 
 **`pool add` — batch problem write (reads stdin, like `notes write`):**
 ```powershell
@@ -178,16 +176,3 @@ $r = ($note | & $pythonExe (Join-Path $scriptsRoot "notes_embed.py") --dest $mdP
 # success → { figures_embedded, missing }
 ```
 Token = `{{FIG: <page_png> | x,y,w,h | caption}}` (crop normalized 0-1). Each cropped (Pillow) → base64 → `![caption](data:image/png;base64,...)` inline. No tokens → writes through unchanged (replaces `notes write` for note step). Missing/bad page → `*(figure unavailable)*`, never crashes.
-
-**Log entry format** — always prefix with type tag:
-```powershell
---entry "[QUIZ] Term Quiz 1 — 16/20 (80%)" --course "pther_350a"
-```
-```powershell
-# Per-course log (async). --course is required to write anything;
-# omitting it is a silent no-op (no global log file exists).
-Start-Job -ScriptBlock { param($e,$w,$s,$entry,$c)
-    & $e $w log entry --savedata $s --entry $entry --course $c
-} -ArgumentList $pythonExe,$writerPath,$savedataRoot,$logEntry,$courseSlug | Out-Null
-```
-All other `data_writer.py` subcommands stay synchronous — their success/failure matters.
